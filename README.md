@@ -80,8 +80,9 @@ Inputs:
     weighted 0.7 — "right route, right stop";
   - pin in the wrong country: proximity to the deep origin's *border* (not
     centroid), 1500 km decay scale;
-  - partial credit tiers: right UN M49 subregion (50), right continent
-    (25), anchored to the deep origin;
+  - region/continent matches (UN M49 subregion / continent, anchored to
+    the deep origin) are shown as reveal-time labels only — they never
+    add points beyond border proximity;
   - outer limit: pins farther than 5000 km from every hop score 0.
   - Result: Saudi Arabia > France > wrong-but-near > zero (covered by
     explicit tests, including the Russia-vs-Netherlands case).

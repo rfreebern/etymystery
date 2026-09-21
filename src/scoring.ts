@@ -9,10 +9,11 @@
  * word's DEEPEST origin (the last entry of originChain); intermediate hops
  * (e.g. the French in Arabic -> French -> English) score partial credit
  * (INTERMEDIATE_WEIGHT) only when the pin lands directly inside them, while
- * the deep origin additionally gets border-proximity falloff and
- * subregion/continent fallback. Pins farther than MAX_RELEVANCE_KM from
- * every hop score nothing. This yields: deep origin > on-the-route country
- * > nearby wrong country > far away = zero.
+ * the deep origin gets border-proximity falloff. Region/continent matches
+ * are reveal-time LABELS only: they never add points beyond border
+ * proximity. Pins farther than MAX_RELEVANCE_KM from every hop score
+ * nothing. This yields: deep origin > on-the-route country > nearby wrong
+ * country > far away = zero.
  */
 
 import type { BankEntry, LanguageInfo, LatLng, RoundScore } from "./types";
@@ -27,10 +28,15 @@ export const GEO_DECAY_KM = 1500;
 export const INSIDE_PENALTY_MAX = 0.1;
 /** Distance at which the in-country penalty reaches its max. */
 export const INSIDE_PENALTY_DISTANCE_KM = 3000;
-/** Partial credit for guessing within the answer's subregion. */
-export const SUBREGION_CREDIT = 0.5;
-/** Partial credit for guessing within the answer's continent. */
-export const CONTINENT_CREDIT = 0.25;
+/** Ordering of credit labels by match quality (labels only; score unaffected). */
+const CREDIT_RANK: Record<RoundScore["credit"], number> = {
+  none: 0,
+  proximity: 1,
+  continent: 2,
+  subregion: 3,
+  intermediate: 4,
+  country: 5,
+};
 /** Weight of a direct hit on an intermediate hop's country (deep origin = 1.0). */
 export const INTERMEDIATE_WEIGHT = 0.7;
 /** Pins farther than this from every hop score nothing. */
@@ -138,7 +144,9 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
     }
   }
 
-  // 3. Wrong country: proximity to the deep origin's border.
+  // 3. Wrong country: proximity to the deep origin's border. This is both
+  //    the floor and the ceiling for wrong-country pins: region matches
+  //    never add points beyond it.
   let best: GeographicDetail = { score: 0, credit: "none", matchedCountry: null, distanceKm: null };
   for (const country of deep.countries) {
     const d = ctx.distanceToCountryKm(country, guess);
@@ -149,7 +157,8 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
     }
   }
 
-  // 4. Partial credit for the right region/continent of the guessed country.
+  // 4. Region/continent matches are reveal-time labels only: they never add
+  //    points beyond border proximity (score is unchanged here).
   const primary = deep.countries[0];
   if (primary) {
     const answerRegion = ctx.regionOf(primary);
@@ -158,17 +167,14 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
         if (!ctx.contains(code, guess)) continue;
         const guessed = ctx.regionOf(code);
         if (!guessed) break;
-        let credit: RoundScore["credit"] = "none";
-        let boost = 0;
+        let level: RoundScore["credit"] | null = null;
         if (answerRegion.subregion && guessed.subregion === answerRegion.subregion) {
-          credit = "subregion";
-          boost = SUBREGION_CREDIT;
+          level = "subregion";
         } else if (answerRegion.continent && guessed.continent === answerRegion.continent) {
-          credit = "continent";
-          boost = CONTINENT_CREDIT;
+          level = "continent";
         }
-        if (Math.round(100 * boost) > best.score) {
-          best = { score: Math.round(100 * boost), credit, matchedCountry: code, distanceKm: null };
+        if (level && CREDIT_RANK[level] > CREDIT_RANK[best.credit]) {
+          best = { ...best, credit: level };
         }
         break;
       }

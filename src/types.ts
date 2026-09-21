@@ -87,6 +87,6 @@ export interface RoundScore {
   matchedCountry: CountryCode | null;
   /** Geographic detail: distance in km used for the proximity component. */
   distanceKm: number | null;
-  /** Geographic detail: matched credit level. */
+  /** Best match level found (label for the reveal; region levels never add points). */
   credit: "country" | "intermediate" | "subregion" | "continent" | "proximity" | "none";
 }

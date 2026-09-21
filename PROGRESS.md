@@ -36,9 +36,12 @@ CLI smoke-tested end-to-end with fixture files.
 - scripts/build-bank.ts — CLI (gzip support, arg validation, report)
 - scoring v2 (hop-aware): answer anchored to DEEPEST origin; intermediate hops
   score only on direct pin (Variant B, weight 0.7); outer limit 5000 km from
-  any hop scores 0; GeocodeContext gained languageOf(); bank-builder re-
-  anchored to deepest origin with intermediate-metadata warnings; new credit
-  label 'intermediate'; 81 tests green (incl. SA > FR > wrong > Tokyo=0)
+  any hop scores 0; region/continent matches are reveal LABELS only and
+  never add points beyond border proximity (user rule); GeocodeContext
+  gained languageOf(); bank-builder re-anchored to deepest origin with
+  intermediate-metadata warnings; credit labels: country > intermediate >
+  subregion > continent > proximity; 81 tests green (incl. SA > FR >
+  wrong > Tokyo=0)
 - README.md, LICENSES.md
 
 ## Remaining (next session)

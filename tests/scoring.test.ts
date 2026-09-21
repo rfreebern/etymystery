@@ -165,41 +165,41 @@ describe("scoreGeographic - country-aware leniency", () => {
   it("REQUIREMENT: edge-of-Russia beats Netherlands-for-Norway", () => {
     const russia = scoreGeographic(russianWord, { lat: 43.1, lng: 131.9 }, ctx).score;
     const utrecht = scoreGeographic(norwegianWord, { lat: 52.08, lng: 5.12 }, ctx);
-    expect(utrecht.credit).toBe("proximity");
+    expect(utrecht.credit).toBe("continent"); // Netherlands: right-continent label
     expect(utrecht.matchedCountry).toBe("NO");
     expect(utrecht.score).toBeGreaterThan(55);
     expect(utrecht.score).toBeLessThan(75);
     expect(russia).toBeGreaterThan(utrecht.score);
   });
 
-  it("scores wrong-country pins by border proximity, not centroid", () => {
+  it("scores near misses by border proximity and labels the subregion match", () => {
     const stockholm = scoreGeographic(norwegianWord, { lat: 59.33, lng: 18.07 }, ctx);
     expect(stockholm.score).toBeGreaterThan(75);
-    expect(stockholm.credit).toBe("proximity");
+    expect(stockholm.credit).toBe("subregion");
   });
 
-  it("awards subregion partial credit when proximity is poor", () => {
-    // 4000 km: inside the 5000 km relevance limit but far enough that
-    // border proximity (7 pts) cannot beat the subregion credit.
-    const farCtx: GeocodeContext = { ...ctx, distanceToCountryKm: () => 4_000 };
-    const detail = scoreGeographic(arabicWord, { lat: 39, lng: 35 }, farCtx);
-    expect(detail.credit).toBe("subregion");
-    expect(detail.score).toBe(50);
+  it("labels subregion matches without inflating the score", () => {
+    // Ankara is in the right subregion (Western Asia) but ~780 km from the
+    // Saudi border: points come from border proximity (60), label says subregion.
+    const ankara = scoreGeographic(arabicWord, { lat: 39, lng: 35 }, ctx);
+    expect(ankara.credit).toBe("subregion");
+    expect(ankara.score).toBe(60);
   });
 
-  it("awards continent partial credit within the relevance limit", () => {
+  it("labels continent matches without inflating the score", () => {
     // Chengdu is ~4600 km from the Saudi border: right continent (Asia),
-    // wrong subregion, and proximity decay is too weak to compete.
+    // but points come from proximity alone (5).
     const chengdu = scoreGeographic(arabicWord, { lat: 30.6, lng: 104.1 }, ctx);
     expect(chengdu.credit).toBe("continent");
-    expect(chengdu.score).toBe(25);
+    expect(chengdu.score).toBe(5);
   });
 
-  it("is stable when proximity and continent credits tie (Delhi)", () => {
-    // Delhi's nearest Saudi-rect edge is ~2100 km away, so proximity and
-    // continent credit both land on 25; either label is fine, score is not.
+  it("scores Delhi by proximity and labels the continent match", () => {
+    // Delhi's nearest Saudi-rect edge is ~2100 km away: 25 points of pure
+    // border proximity, with the continent match shown as a label.
     const delhi = scoreGeographic(arabicWord, { lat: 28.61, lng: 77.21 }, ctx);
     expect(delhi.score).toBe(25);
+    expect(delhi.credit).toBe("continent");
   });
 
   it("scores zero beyond the outer relevance limit (Tokyo for an Arabic word)", () => {
