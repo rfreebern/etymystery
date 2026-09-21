@@ -28,25 +28,57 @@ file host serves the whole game.
       bank.ts         buildWordBank / interleave / appendToBank / validators
       daily.ts        day math + getDailyPuzzle
       scoring.ts      temporal + country-aware geographic scoring
+      geo-utils.ts    haversine + spherical point-to-border distance
     scripts/        Node-side data pipeline
       lib/etymology-db.ts   etymology-db CSV ingest + origin-chain builder
       lib/languages.ts      language metadata TSV (code -> modern geography)
       lib/tiering.ts        difficulty heuristic (curation overrides it)
       lib/bank-builder.ts   orchestration: edges + languages + curation -> bank
       build-bank.ts         CLI
-    tests/          vitest suites (75 tests)
+      gen-countries.ts      world-countries -> web/src/countries.json
+    web/            static client (Vite + d3-geo, no backend)
+      index.html
+      src/main.ts           round flow, timeline slider, reveal, summary
+      src/game.ts           session state machine (pure, injectable storage)
+      src/map.ts            SVG world map: pin drops + reveal highlighting
+      src/geo-context.ts    GeocodeContext over Natural Earth + country table
+      src/countries.json    generated country table (ISO2 -> ccn3/region)
+      public/word-bank.json         the bank, served as a static file
+      public/countries-110m.json    world-atlas TopoJSON (Natural Earth)
+    curated/        hand-curated starter dataset (see below)
+    tests/          vitest suites (102 tests)
 
 ## Commands
 
     npm install
     npm run typecheck      # tsc --noEmit
     npm test               # vitest run
+    npm run dev            # vite dev server for web/ (http://localhost:5173)
+    npm run build:web      # static build -> web/dist/
+    npm run preview        # serve the built site
+    npm run build:seed     # rebuild web/public/word-bank.json from curated/
+    npm run gen:countries  # regenerate web/src/countries.json
     npm run build:bank -- \
       --edges data/etymology-db.csv.gz \
       --languages data/languages.tsv \
       --curation data/curation.json \
       --out data/word-bank.json \
       --version 1 [--epoch-start 2026-01-01] [--english-code en] [--max-depth 3]
+
+## Playing it
+
+`npm run dev` serves the game. Ten rounds a day, one per difficulty tier.
+Each round: drop a pin where the word came from, drag the year slider, lock it
+in. The reveal shows the two score components separately plus the full origin
+route, and progress is kept in `localStorage` under
+`etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day resumes and a
+finished day is never re-scored. `npm run build:web` emits a fully static
+`web/dist/` — any file host serves it.
+
+The committed `web/public/word-bank.json` is a **30-word seed bank** (3 days
+of puzzles, 22 languages) generated from `curated/`. It exists so the client is
+playable end to end; grow it by curating more words and re-running
+`npm run build:seed`.
 
 ## Data pipeline
 
@@ -65,6 +97,13 @@ Inputs:
    hand against OED/Etymonline/your reference of choice), optional tier
    overrides and reveal blurbs. Words without a year are excluded and
    counted in the build report — this is the curation worklist.
+
+The repo also ships a tiny hand-written stand-in for inputs 1 and 2 so the
+client can be built without the 4.2M-edge download: `curated/seed-edges.csv`
+(32 edges, in etymology-db's exact column schema) and `curated/languages.tsv`
+(22 language codes with modern geography). Together with the 30-word
+`curated/curation.json`, `npm run build:seed` regenerates the seed bank
+committed at `web/public/word-bank.json`.
 
 ## Scoring
 
@@ -90,9 +129,14 @@ Inputs:
   on reveal.
 
 Geographic scoring binds to the map through the `GeocodeContext` adapter
-(`contains`, `distanceToCountryKm`, `allCountryCodes`, `regionOf`) so the
-client can plug in d3-geo over world-atlas TopoJSON (Natural Earth,
-public domain) without coupling the core to any map library.
+(`contains`, `distanceToCountryKm`, `allCountryCodes`, `regionOf`,
+`languageOf`) so the core never depends on a map library. Border distance
+lives in `src/geo-utils.ts`: the great-circle distance from the pin to the
+nearest segment of every ring in the country's (Multi)Polygon, so a pin can
+sit 0 km inside a frontier yet thousands of km from the capital — which is
+exactly the leniency this game wants. The real adapter is
+`web/src/geo-context.ts` (d3-geo + world-atlas TopoJSON), joined to the
+generated country table through the UN M49 numeric code.
 
 ## Licensing
 
@@ -103,9 +147,9 @@ curation artifacts.
 
 ## Roadmap
 
-- [ ] Web UI: map (world-atlas TopoJSON + d3-geo), timeline selector,
+- [x] Web UI: map (world-atlas TopoJSON + d3-geo), timeline selector,
       daily flow, reveal screens
-- [ ] Curated starter bank (~1-2k words, all 10 tiers) + languages.tsv
-      bootstrap from etymology-db's wiktionary_codes.csv
+- [ ] Grow the curated bank to ~1-2k words (today: 30 words = 3 days) and
+      bootstrap `languages.tsv` from etymology-db's `wiktionary_codes.csv`
 - [ ] Frequency import (wordfreq export) for tier heuristics
 - [ ] GitHub Action: nightly append-only bank rebuild + capacity report
