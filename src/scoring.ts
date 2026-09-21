@@ -17,6 +17,10 @@
  */
 
 import type { BankEntry, LanguageInfo, LatLng, RoundScore } from "./types";
+import { haversineKm } from "./geo-utils";
+
+export { haversineKm };
+
 
 /** Full temporal credit within this many years of the answer. */
 export const SCORING_WINDOW_YEARS = 50;
@@ -65,18 +69,6 @@ export interface GeographicDetail {
   credit: RoundScore["credit"];
   matchedCountry: string | null;
   distanceKm: number | null;
-}
-
-/** Great-circle distance in km between two points. */
-export function haversineKm(a: LatLng, b: LatLng): number {
-  const R = 6371.0088;
-  const toRad = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * toRad;
-  const dLng = (b.lng - a.lng) * toRad;
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(a.lat * toRad) * Math.cos(b.lat * toRad) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
 /** Temporal proximity on 0..100. */

@@ -12,12 +12,26 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:bank": "tsx scripts/build-bank.ts"
+    "build:bank": "tsx scripts/build-bank.ts",
+    "dev": "vite web",
+    "build:web": "vite build web",
+    "preview": "vite preview web",
+    "build:seed": "tsx scripts/build-bank.ts --edges curated/seed-edges.csv --languages curated/languages.tsv --curation curated/curation.json --out web/public/word-bank.json --version 1 --epoch-start 2026-09-21",
+    "gen:countries": "tsx scripts/gen-countries.ts"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "^22.10.0",
+    "@types/topojson-client": "^3.1.5",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
+    "vite": "^7.3.6",
     "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2",
+    "world-countries": "^5.1.0"
   }
 }

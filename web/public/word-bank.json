@@ -1,0 +1,1405 @@
+{
+  "version": 1,
+  "epochStartDay": 20717,
+  "seed": 3314190493,
+  "tiers": [
+    [
+      {
+        "id": "karaoke",
+        "word": "karaoke",
+        "year": 1975,
+        "tier": 1,
+        "originChain": [
+          "Japanese"
+        ],
+        "originLanguage": "Japanese",
+        "countries": [
+          "JP"
+        ],
+        "point": {
+          "lat": 36,
+          "lng": 138
+        },
+        "blurb": "Japanese kara 'empty' + oke (short for okestora) 'orchestra' — an 'empty orchestra'."
+      },
+      {
+        "id": "pizza",
+        "word": "pizza",
+        "year": 1935,
+        "tier": 1,
+        "originChain": [
+          "Italian"
+        ],
+        "originLanguage": "Italian",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 43,
+          "lng": 12
+        },
+        "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
+      },
+      {
+        "id": "coffee",
+        "word": "coffee",
+        "year": 1590,
+        "tier": 1,
+        "originChain": [
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "From Arabic qahwah, likely via Turkish kahve and Dutch koffie."
+      }
+    ],
+    [
+      {
+        "id": "robot",
+        "word": "robot",
+        "year": 1923,
+        "tier": 2,
+        "originChain": [
+          "Czech"
+        ],
+        "originLanguage": "Czech",
+        "countries": [
+          "CZ"
+        ],
+        "point": {
+          "lat": 50,
+          "lng": 15
+        },
+        "blurb": "Coined in Czech (robota, 'forced labor') by Karel Capek's 1920 play R.U.R."
+      },
+      {
+        "id": "tsunami",
+        "word": "tsunami",
+        "year": 1880,
+        "tier": 2,
+        "originChain": [
+          "Japanese"
+        ],
+        "originLanguage": "Japanese",
+        "countries": [
+          "JP"
+        ],
+        "point": {
+          "lat": 36,
+          "lng": 138
+        },
+        "blurb": "Japanese tsu 'harbor' + nami 'wave'."
+      },
+      {
+        "id": "jungle",
+        "word": "jungle",
+        "year": 1780,
+        "tier": 2,
+        "originChain": [
+          "Hindi"
+        ],
+        "originLanguage": "Hindi",
+        "countries": [
+          "IN"
+        ],
+        "point": {
+          "lat": 22,
+          "lng": 79
+        },
+        "blurb": "From Hindi jangal 'wilderness, forest', from Sanskrit jangala."
+      }
+    ],
+    [
+      {
+        "id": "ballet",
+        "word": "ballet",
+        "year": 1635,
+        "tier": 3,
+        "originChain": [
+          "French"
+        ],
+        "originLanguage": "French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From French ballet, from Italian balletto, a diminutive of ballo 'dance'."
+      },
+      {
+        "id": "yogurt",
+        "word": "yogurt",
+        "year": 1625,
+        "tier": 3,
+        "originChain": [
+          "Turkish"
+        ],
+        "originLanguage": "Turkish",
+        "countries": [
+          "TR"
+        ],
+        "point": {
+          "lat": 39,
+          "lng": 35
+        },
+        "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
+      },
+      {
+        "id": "safari",
+        "word": "safari",
+        "year": 1860,
+        "tier": 3,
+        "originChain": [
+          "Swahili"
+        ],
+        "originLanguage": "Swahili",
+        "countries": [
+          "KE",
+          "TZ"
+        ],
+        "point": {
+          "lat": -6,
+          "lng": 39
+        },
+        "blurb": "From Swahili safari 'journey', from Arabic safar 'to travel'."
+      }
+    ],
+    [
+      {
+        "id": "elapse",
+        "word": "elapse",
+        "year": 1640,
+        "tier": 4,
+        "originChain": [
+          "Middle French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle French, from Latin elapsus, 'to slip away' (e- + labi)."
+      },
+      {
+        "id": "samovar",
+        "word": "samovar",
+        "year": 1830,
+        "tier": 4,
+        "originChain": [
+          "Russian"
+        ],
+        "originLanguage": "Russian",
+        "countries": [
+          "RU"
+        ],
+        "point": {
+          "lat": 56,
+          "lng": 38
+        },
+        "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
+      },
+      {
+        "id": "kiosk",
+        "word": "kiosk",
+        "year": 1625,
+        "tier": 4,
+        "originChain": [
+          "Turkish"
+        ],
+        "originLanguage": "Turkish",
+        "countries": [
+          "TR"
+        ],
+        "point": {
+          "lat": 39,
+          "lng": 35
+        },
+        "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
+      }
+    ],
+    [
+      {
+        "id": "geyser",
+        "word": "geyser",
+        "year": 1785,
+        "tier": 5,
+        "originChain": [
+          "Icelandic"
+        ],
+        "originLanguage": "Icelandic",
+        "countries": [
+          "IS"
+        ],
+        "point": {
+          "lat": 65,
+          "lng": -18
+        },
+        "blurb": "From Icelandic Geysir, the famous hot spring, from geysa 'to gush'."
+      },
+      {
+        "id": "tycoon",
+        "word": "tycoon",
+        "year": 1857,
+        "tier": 5,
+        "originChain": [
+          "Japanese"
+        ],
+        "originLanguage": "Japanese",
+        "countries": [
+          "JP"
+        ],
+        "point": {
+          "lat": 36,
+          "lng": 138
+        },
+        "blurb": "Japanese taikun, 'great lord' — the shogun's title, later applied to US magnates."
+      },
+      {
+        "id": "paparazzi",
+        "word": "paparazzi",
+        "year": 1968,
+        "tier": 5,
+        "originChain": [
+          "Italian"
+        ],
+        "originLanguage": "Italian",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 43,
+          "lng": 12
+        },
+        "blurb": "Italian, from Fellini's La Dolce Vita (1960): the photographer Paparazzo."
+      }
+    ],
+    [
+      {
+        "id": "boondocks",
+        "word": "boondocks",
+        "year": 1945,
+        "tier": 6,
+        "originChain": [
+          "Tagalog"
+        ],
+        "originLanguage": "Tagalog",
+        "countries": [
+          "PH"
+        ],
+        "point": {
+          "lat": 14,
+          "lng": 121
+        },
+        "blurb": "From Tagalog bundok 'mountain', via US troops in the Philippines."
+      },
+      {
+        "id": "rickshaw",
+        "word": "rickshaw",
+        "year": 1875,
+        "tier": 6,
+        "originChain": [
+          "Japanese"
+        ],
+        "originLanguage": "Japanese",
+        "countries": [
+          "JP"
+        ],
+        "point": {
+          "lat": 36,
+          "lng": 138
+        },
+        "blurb": "Japanese jinrikisha, 'man-powered vehicle' — shortened in English."
+      },
+      {
+        "id": "typhoon",
+        "word": "typhoon",
+        "year": 1585,
+        "tier": 6,
+        "originChain": [
+          "Cantonese"
+        ],
+        "originLanguage": "Cantonese",
+        "countries": [
+          "CN"
+        ],
+        "point": {
+          "lat": 23,
+          "lng": 113
+        },
+        "blurb": "From Cantonese taai fung 'great wind', blended with earlier trade-wind forms."
+      }
+    ],
+    [
+      {
+        "id": "tea",
+        "word": "tea",
+        "year": 1650,
+        "tier": 7,
+        "originChain": [
+          "Dutch",
+          "Min Nan Chinese"
+        ],
+        "originLanguage": "Min Nan Chinese",
+        "countries": [
+          "CN"
+        ],
+        "point": {
+          "lat": 24.5,
+          "lng": 118
+        },
+        "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+      },
+      {
+        "id": "serendipity",
+        "word": "serendipity",
+        "year": 1754,
+        "tier": 7,
+        "originChain": [
+          "Persian"
+        ],
+        "originLanguage": "Persian",
+        "countries": [
+          "IR"
+        ],
+        "point": {
+          "lat": 32,
+          "lng": 54
+        },
+        "blurb": "Coined by Horace Walpole from the Persian tale of the Three Princes of Serendip (Sri Lanka)."
+      },
+      {
+        "id": "caravan",
+        "word": "caravan",
+        "year": 1590,
+        "tier": 7,
+        "originChain": [
+          "Persian"
+        ],
+        "originLanguage": "Persian",
+        "countries": [
+          "IR"
+        ],
+        "point": {
+          "lat": 32,
+          "lng": 54
+        },
+        "blurb": "From Persian karvan, a company of desert travellers."
+      }
+    ],
+    [
+      {
+        "id": "they",
+        "word": "they",
+        "year": 1200,
+        "tier": 8,
+        "originChain": [
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+      },
+      {
+        "id": "window",
+        "word": "window",
+        "year": 1225,
+        "tier": 8,
+        "originChain": [
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
+      },
+      {
+        "id": "guru",
+        "word": "guru",
+        "year": 1690,
+        "tier": 8,
+        "originChain": [
+          "Hindi"
+        ],
+        "originLanguage": "Hindi",
+        "countries": [
+          "IN"
+        ],
+        "point": {
+          "lat": 22,
+          "lng": 79
+        },
+        "blurb": "From Hindi guru 'teacher', from Sanskrit guru 'venerable, weighty'."
+      }
+    ],
+    [
+      {
+        "id": "taboo",
+        "word": "taboo",
+        "year": 1777,
+        "tier": 9,
+        "originChain": [
+          "Tongan"
+        ],
+        "originLanguage": "Tongan",
+        "countries": [
+          "TO"
+        ],
+        "point": {
+          "lat": -21.2,
+          "lng": -175.2
+        },
+        "blurb": "From Tongan tabu, 'sacred, forbidden', also via Cook's voyages."
+      },
+      {
+        "id": "mammoth",
+        "word": "mammoth",
+        "year": 1700,
+        "tier": 9,
+        "originChain": [
+          "Russian"
+        ],
+        "originLanguage": "Russian",
+        "countries": [
+          "RU"
+        ],
+        "point": {
+          "lat": 56,
+          "lng": 38
+        },
+        "blurb": "From Russian mammut, probably from a Siberian (Mansi) source word."
+      },
+      {
+        "id": "tattoo",
+        "word": "tattoo",
+        "year": 1769,
+        "tier": 9,
+        "originChain": [
+          "Tahitian"
+        ],
+        "originLanguage": "Tahitian",
+        "countries": [
+          "PF"
+        ],
+        "point": {
+          "lat": -17.6,
+          "lng": -149.4
+        },
+        "blurb": "From Tahitian tatau, recorded on Cook's voyages."
+      }
+    ],
+    [
+      {
+        "id": "malaria",
+        "word": "malaria",
+        "year": 1740,
+        "tier": 10,
+        "originChain": [
+          "Italian"
+        ],
+        "originLanguage": "Italian",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 43,
+          "lng": 12
+        },
+        "blurb": "Italian mala aria, 'bad air' — from the old belief about swamp vapours."
+      },
+      {
+        "id": "juggernaut",
+        "word": "juggernaut",
+        "year": 1638,
+        "tier": 10,
+        "originChain": [
+          "Sanskrit"
+        ],
+        "originLanguage": "Sanskrit",
+        "countries": [
+          "IN",
+          "NP"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 84
+        },
+        "blurb": "From Sanskrit Jagannatha, 'lord of the world', whose festival cart was said to crush devotees."
+      },
+      {
+        "id": "orange",
+        "word": "orange",
+        "year": 1300,
+        "tier": 10,
+        "originChain": [
+          "Sanskrit"
+        ],
+        "originLanguage": "Sanskrit",
+        "countries": [
+          "IN",
+          "NP"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 84
+        },
+        "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+      }
+    ]
+  ],
+  "languages": {
+    "English": {
+      "name": "English",
+      "countries": [
+        "GB",
+        "US",
+        "AU"
+      ],
+      "representativePoint": {
+        "lat": 54,
+        "lng": -2
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Arabic": {
+      "name": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "representativePoint": {
+        "lat": 24,
+        "lng": 46
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Japanese": {
+      "name": "Japanese",
+      "countries": [
+        "JP"
+      ],
+      "representativePoint": {
+        "lat": 36,
+        "lng": 138
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Italian": {
+      "name": "Italian",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 43,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Czech": {
+      "name": "Czech",
+      "countries": [
+        "CZ"
+      ],
+      "representativePoint": {
+        "lat": 50,
+        "lng": 15
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Hindi": {
+      "name": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 22,
+        "lng": 79
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "French": {
+      "name": "French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 2
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Swahili": {
+      "name": "Swahili",
+      "countries": [
+        "KE",
+        "TZ"
+      ],
+      "representativePoint": {
+        "lat": -6,
+        "lng": 39
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Turkish": {
+      "name": "Turkish",
+      "countries": [
+        "TR"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": 35
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Russian": {
+      "name": "Russian",
+      "countries": [
+        "RU"
+      ],
+      "representativePoint": {
+        "lat": 56,
+        "lng": 38
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Icelandic": {
+      "name": "Icelandic",
+      "countries": [
+        "IS"
+      ],
+      "representativePoint": {
+        "lat": 65,
+        "lng": -18
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Tagalog": {
+      "name": "Tagalog",
+      "countries": [
+        "PH"
+      ],
+      "representativePoint": {
+        "lat": 14,
+        "lng": 121
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Cantonese": {
+      "name": "Cantonese",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 23,
+        "lng": 113
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Min Nan Chinese": {
+      "name": "Min Nan Chinese",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 24.5,
+        "lng": 118
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Dutch": {
+      "name": "Dutch",
+      "countries": [
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 52,
+        "lng": 5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Persian": {
+      "name": "Persian",
+      "countries": [
+        "IR"
+      ],
+      "representativePoint": {
+        "lat": 32,
+        "lng": 54
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Old Norse": {
+      "name": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "representativePoint": {
+        "lat": 61,
+        "lng": 9
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Tahitian": {
+      "name": "Tahitian",
+      "countries": [
+        "PF"
+      ],
+      "representativePoint": {
+        "lat": -17.6,
+        "lng": -149.4
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Tongan": {
+      "name": "Tongan",
+      "countries": [
+        "TO"
+      ],
+      "representativePoint": {
+        "lat": -21.2,
+        "lng": -175.2
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Sanskrit": {
+      "name": "Sanskrit",
+      "countries": [
+        "IN",
+        "NP"
+      ],
+      "representativePoint": {
+        "lat": 24,
+        "lng": 84
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Middle French": {
+      "name": "Middle French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 2
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Latin": {
+      "name": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    }
+  },
+  "masterSequence": [
+    {
+      "id": "karaoke",
+      "word": "karaoke",
+      "year": 1975,
+      "tier": 1,
+      "originChain": [
+        "Japanese"
+      ],
+      "originLanguage": "Japanese",
+      "countries": [
+        "JP"
+      ],
+      "point": {
+        "lat": 36,
+        "lng": 138
+      },
+      "blurb": "Japanese kara 'empty' + oke (short for okestora) 'orchestra' — an 'empty orchestra'."
+    },
+    {
+      "id": "robot",
+      "word": "robot",
+      "year": 1923,
+      "tier": 2,
+      "originChain": [
+        "Czech"
+      ],
+      "originLanguage": "Czech",
+      "countries": [
+        "CZ"
+      ],
+      "point": {
+        "lat": 50,
+        "lng": 15
+      },
+      "blurb": "Coined in Czech (robota, 'forced labor') by Karel Capek's 1920 play R.U.R."
+    },
+    {
+      "id": "ballet",
+      "word": "ballet",
+      "year": 1635,
+      "tier": 3,
+      "originChain": [
+        "French"
+      ],
+      "originLanguage": "French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From French ballet, from Italian balletto, a diminutive of ballo 'dance'."
+    },
+    {
+      "id": "elapse",
+      "word": "elapse",
+      "year": 1640,
+      "tier": 4,
+      "originChain": [
+        "Middle French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle French, from Latin elapsus, 'to slip away' (e- + labi)."
+    },
+    {
+      "id": "geyser",
+      "word": "geyser",
+      "year": 1785,
+      "tier": 5,
+      "originChain": [
+        "Icelandic"
+      ],
+      "originLanguage": "Icelandic",
+      "countries": [
+        "IS"
+      ],
+      "point": {
+        "lat": 65,
+        "lng": -18
+      },
+      "blurb": "From Icelandic Geysir, the famous hot spring, from geysa 'to gush'."
+    },
+    {
+      "id": "boondocks",
+      "word": "boondocks",
+      "year": 1945,
+      "tier": 6,
+      "originChain": [
+        "Tagalog"
+      ],
+      "originLanguage": "Tagalog",
+      "countries": [
+        "PH"
+      ],
+      "point": {
+        "lat": 14,
+        "lng": 121
+      },
+      "blurb": "From Tagalog bundok 'mountain', via US troops in the Philippines."
+    },
+    {
+      "id": "tea",
+      "word": "tea",
+      "year": 1650,
+      "tier": 7,
+      "originChain": [
+        "Dutch",
+        "Min Nan Chinese"
+      ],
+      "originLanguage": "Min Nan Chinese",
+      "countries": [
+        "CN"
+      ],
+      "point": {
+        "lat": 24.5,
+        "lng": 118
+      },
+      "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+    },
+    {
+      "id": "they",
+      "word": "they",
+      "year": 1200,
+      "tier": 8,
+      "originChain": [
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+    },
+    {
+      "id": "taboo",
+      "word": "taboo",
+      "year": 1777,
+      "tier": 9,
+      "originChain": [
+        "Tongan"
+      ],
+      "originLanguage": "Tongan",
+      "countries": [
+        "TO"
+      ],
+      "point": {
+        "lat": -21.2,
+        "lng": -175.2
+      },
+      "blurb": "From Tongan tabu, 'sacred, forbidden', also via Cook's voyages."
+    },
+    {
+      "id": "malaria",
+      "word": "malaria",
+      "year": 1740,
+      "tier": 10,
+      "originChain": [
+        "Italian"
+      ],
+      "originLanguage": "Italian",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 43,
+        "lng": 12
+      },
+      "blurb": "Italian mala aria, 'bad air' — from the old belief about swamp vapours."
+    },
+    {
+      "id": "pizza",
+      "word": "pizza",
+      "year": 1935,
+      "tier": 1,
+      "originChain": [
+        "Italian"
+      ],
+      "originLanguage": "Italian",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 43,
+        "lng": 12
+      },
+      "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
+    },
+    {
+      "id": "tsunami",
+      "word": "tsunami",
+      "year": 1880,
+      "tier": 2,
+      "originChain": [
+        "Japanese"
+      ],
+      "originLanguage": "Japanese",
+      "countries": [
+        "JP"
+      ],
+      "point": {
+        "lat": 36,
+        "lng": 138
+      },
+      "blurb": "Japanese tsu 'harbor' + nami 'wave'."
+    },
+    {
+      "id": "yogurt",
+      "word": "yogurt",
+      "year": 1625,
+      "tier": 3,
+      "originChain": [
+        "Turkish"
+      ],
+      "originLanguage": "Turkish",
+      "countries": [
+        "TR"
+      ],
+      "point": {
+        "lat": 39,
+        "lng": 35
+      },
+      "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
+    },
+    {
+      "id": "samovar",
+      "word": "samovar",
+      "year": 1830,
+      "tier": 4,
+      "originChain": [
+        "Russian"
+      ],
+      "originLanguage": "Russian",
+      "countries": [
+        "RU"
+      ],
+      "point": {
+        "lat": 56,
+        "lng": 38
+      },
+      "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
+    },
+    {
+      "id": "tycoon",
+      "word": "tycoon",
+      "year": 1857,
+      "tier": 5,
+      "originChain": [
+        "Japanese"
+      ],
+      "originLanguage": "Japanese",
+      "countries": [
+        "JP"
+      ],
+      "point": {
+        "lat": 36,
+        "lng": 138
+      },
+      "blurb": "Japanese taikun, 'great lord' — the shogun's title, later applied to US magnates."
+    },
+    {
+      "id": "rickshaw",
+      "word": "rickshaw",
+      "year": 1875,
+      "tier": 6,
+      "originChain": [
+        "Japanese"
+      ],
+      "originLanguage": "Japanese",
+      "countries": [
+        "JP"
+      ],
+      "point": {
+        "lat": 36,
+        "lng": 138
+      },
+      "blurb": "Japanese jinrikisha, 'man-powered vehicle' — shortened in English."
+    },
+    {
+      "id": "serendipity",
+      "word": "serendipity",
+      "year": 1754,
+      "tier": 7,
+      "originChain": [
+        "Persian"
+      ],
+      "originLanguage": "Persian",
+      "countries": [
+        "IR"
+      ],
+      "point": {
+        "lat": 32,
+        "lng": 54
+      },
+      "blurb": "Coined by Horace Walpole from the Persian tale of the Three Princes of Serendip (Sri Lanka)."
+    },
+    {
+      "id": "window",
+      "word": "window",
+      "year": 1225,
+      "tier": 8,
+      "originChain": [
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
+    },
+    {
+      "id": "mammoth",
+      "word": "mammoth",
+      "year": 1700,
+      "tier": 9,
+      "originChain": [
+        "Russian"
+      ],
+      "originLanguage": "Russian",
+      "countries": [
+        "RU"
+      ],
+      "point": {
+        "lat": 56,
+        "lng": 38
+      },
+      "blurb": "From Russian mammut, probably from a Siberian (Mansi) source word."
+    },
+    {
+      "id": "juggernaut",
+      "word": "juggernaut",
+      "year": 1638,
+      "tier": 10,
+      "originChain": [
+        "Sanskrit"
+      ],
+      "originLanguage": "Sanskrit",
+      "countries": [
+        "IN",
+        "NP"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 84
+      },
+      "blurb": "From Sanskrit Jagannatha, 'lord of the world', whose festival cart was said to crush devotees."
+    },
+    {
+      "id": "coffee",
+      "word": "coffee",
+      "year": 1590,
+      "tier": 1,
+      "originChain": [
+        "Arabic"
+      ],
+      "originLanguage": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 46
+      },
+      "blurb": "From Arabic qahwah, likely via Turkish kahve and Dutch koffie."
+    },
+    {
+      "id": "jungle",
+      "word": "jungle",
+      "year": 1780,
+      "tier": 2,
+      "originChain": [
+        "Hindi"
+      ],
+      "originLanguage": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "point": {
+        "lat": 22,
+        "lng": 79
+      },
+      "blurb": "From Hindi jangal 'wilderness, forest', from Sanskrit jangala."
+    },
+    {
+      "id": "safari",
+      "word": "safari",
+      "year": 1860,
+      "tier": 3,
+      "originChain": [
+        "Swahili"
+      ],
+      "originLanguage": "Swahili",
+      "countries": [
+        "KE",
+        "TZ"
+      ],
+      "point": {
+        "lat": -6,
+        "lng": 39
+      },
+      "blurb": "From Swahili safari 'journey', from Arabic safar 'to travel'."
+    },
+    {
+      "id": "kiosk",
+      "word": "kiosk",
+      "year": 1625,
+      "tier": 4,
+      "originChain": [
+        "Turkish"
+      ],
+      "originLanguage": "Turkish",
+      "countries": [
+        "TR"
+      ],
+      "point": {
+        "lat": 39,
+        "lng": 35
+      },
+      "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
+    },
+    {
+      "id": "paparazzi",
+      "word": "paparazzi",
+      "year": 1968,
+      "tier": 5,
+      "originChain": [
+        "Italian"
+      ],
+      "originLanguage": "Italian",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 43,
+        "lng": 12
+      },
+      "blurb": "Italian, from Fellini's La Dolce Vita (1960): the photographer Paparazzo."
+    },
+    {
+      "id": "typhoon",
+      "word": "typhoon",
+      "year": 1585,
+      "tier": 6,
+      "originChain": [
+        "Cantonese"
+      ],
+      "originLanguage": "Cantonese",
+      "countries": [
+        "CN"
+      ],
+      "point": {
+        "lat": 23,
+        "lng": 113
+      },
+      "blurb": "From Cantonese taai fung 'great wind', blended with earlier trade-wind forms."
+    },
+    {
+      "id": "caravan",
+      "word": "caravan",
+      "year": 1590,
+      "tier": 7,
+      "originChain": [
+        "Persian"
+      ],
+      "originLanguage": "Persian",
+      "countries": [
+        "IR"
+      ],
+      "point": {
+        "lat": 32,
+        "lng": 54
+      },
+      "blurb": "From Persian karvan, a company of desert travellers."
+    },
+    {
+      "id": "guru",
+      "word": "guru",
+      "year": 1690,
+      "tier": 8,
+      "originChain": [
+        "Hindi"
+      ],
+      "originLanguage": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "point": {
+        "lat": 22,
+        "lng": 79
+      },
+      "blurb": "From Hindi guru 'teacher', from Sanskrit guru 'venerable, weighty'."
+    },
+    {
+      "id": "tattoo",
+      "word": "tattoo",
+      "year": 1769,
+      "tier": 9,
+      "originChain": [
+        "Tahitian"
+      ],
+      "originLanguage": "Tahitian",
+      "countries": [
+        "PF"
+      ],
+      "point": {
+        "lat": -17.6,
+        "lng": -149.4
+      },
+      "blurb": "From Tahitian tatau, recorded on Cook's voyages."
+    },
+    {
+      "id": "orange",
+      "word": "orange",
+      "year": 1300,
+      "tier": 10,
+      "originChain": [
+        "Sanskrit"
+      ],
+      "originLanguage": "Sanskrit",
+      "countries": [
+        "IN",
+        "NP"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 84
+      },
+      "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+    }
+  ]
+}

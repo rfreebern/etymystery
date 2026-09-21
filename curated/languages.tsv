@@ -1,0 +1,23 @@
+code	name	countries	region	continent	lat	lng
+en	English	GB;US;AU	Northern Europe	Europe	54	-2
+ar	Arabic	SA;EG;DZ	Western Asia	Asia	24	46
+ja	Japanese	JP	Eastern Asia	Asia	36	138
+it	Italian	IT	Southern Europe	Europe	43	12
+cs	Czech	CZ	Eastern Europe	Europe	50	15
+hi	Hindi	IN	Southern Asia	Asia	22	79
+fr	French	FR	Western Europe	Europe	47	2
+sw	Swahili	KE;TZ	Eastern Africa	Africa	-6	39
+tr	Turkish	TR	Western Asia	Asia	39	35
+ru	Russian	RU	Eastern Europe	Europe	56	38
+is	Icelandic	IS	Northern Europe	Europe	65	-18
+tl	Tagalog	PH	South-Eastern Asia	Asia	14	121
+yue	Cantonese	CN	Eastern Asia	Asia	23	113
+nan	Min Nan Chinese	CN	Eastern Asia	Asia	24.5	118
+nl	Dutch	NL	Western Europe	Europe	52	5
+fa	Persian	IR	Southern Asia	Asia	32	54
+non	Old Norse	NO;IS;DK	Northern Europe	Europe	61	9
+ty	Tahitian	PF	Polynesia	Oceania	-17.6	-149.4
+to	Tongan	TO	Polynesia	Oceania	-21.2	-175.2
+sa	Sanskrit	IN;NP	Southern Asia	Asia	24	84
+frm	Middle French	FR	Western Europe	Europe	47	2
+la	Latin	IT	Southern Europe	Europe	42	12
