@@ -1,0 +1,23 @@
+{
+  "name": "etymystery",
+  "version": "0.1.0",
+  "description": "Daily etymology game: trace a word's origins geographically and historically. Client-side only, powered by open data.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:bank": "tsx scripts/build-bank.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
