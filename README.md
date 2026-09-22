@@ -36,6 +36,8 @@ file host serves the whole game.
       lib/bank-builder.ts   orchestration: edges + languages + curation -> bank
       build-bank.ts         CLI
       gen-countries.ts      world-countries -> web/src/countries.json
+      lib/language-geo.ts   code list + overlay + world-countries -> languages.tsv
+      bootstrap-languages.ts CLI for the above
     web/            static client (Vite + d3-geo, no backend)
       index.html
       src/main.ts           round flow, timeline slider, reveal, summary
@@ -45,8 +47,12 @@ file host serves the whole game.
       src/countries.json    generated country table (ISO2 -> ccn3/region)
       public/word-bank.json         the bank, served as a static file
       public/countries-110m.json    world-atlas TopoJSON (Natural Earth)
-    curated/        hand-curated starter dataset (see below)
-    tests/          vitest suites (102 tests)
+    curated/        hand-curated inputs (committed, small)
+      language-geo.json     language code -> anchor countries + point overlay
+      languages.tsv         seed language table (22 languages, bank v1)
+      curation.json         seed words: attested year + tier + blurb
+      seed-edges.csv        seed etymology edges (etymology-db schema)
+    tests/          vitest suites (118 tests)
 
 ## Commands
 
@@ -58,6 +64,10 @@ file host serves the whole game.
     npm run preview        # serve the built site
     npm run build:seed     # rebuild web/public/word-bank.json from curated/
     npm run gen:countries  # regenerate web/src/countries.json
+    npm run bootstrap:languages -- \
+      --codes data/wiktionary_codes.csv \
+      --overlay curated/language-geo.json \
+      --out data/languages.tsv [--include-proto]
     npm run build:bank -- \
       --edges data/etymology-db.csv.gz \
       --languages data/languages.tsv \
@@ -90,20 +100,35 @@ Inputs:
    2023-12-05). The pipeline filters to donor relations
    (borrowed_from, learned_borrowing_from, inherited_from, ...) and walks
    origin chains up to `--max-depth` hops.
-2. **languages.tsv** — curated mapping from Wiktionary language codes to
-   modern geography (columns: code, name, countries, region, continent,
-   lat, lng). Start from `wiktionary_codes.csv` shipped with etymology-db.
+2. **languages.tsv** — Wiktionary language code -> modern geography (columns:
+   code, name, countries, region, continent, lat, lng). Generate it from
+   `wiktionary_codes.csv` (which ships with etymology-db) with:
+
+       curl -o data/wiktionary_codes.csv \
+         https://raw.githubusercontent.com/droher/etymology-db/master/wiktionary_codes.csv
+       npm run bootstrap:languages -- --codes data/wiktionary_codes.csv
+
+   The generator merges two sources: the committed `curated/language-geo.json`
+   overlay (hand-picked anchor countries + answer point for the languages that
+   matter in English etymology, incl. historical ones like Latin and Old Norse)
+   and an automated derivation from `world-countries` for the long tail. Codes
+   are only included when one of the two can place them; everything else is
+   reported. **Reconstructed proto/family codes** (`ine-pro`, `gem-pro`, …) are
+   excluded by default — anchoring a reconstruction to a modern country would
+   be indefensible — and can be opted into with `--include-proto`. The build
+   report's `missingLanguage` list is the work list for growing the overlay.
 3. **curation.json** — hand-curated attestation years (facts, checked by
    hand against OED/Etymonline/your reference of choice), optional tier
    overrides and reveal blurbs. Words without a year are excluded and
    counted in the build report — this is the curation worklist.
 
-The repo also ships a tiny hand-written stand-in for inputs 1 and 2 so the
-client can be built without the 4.2M-edge download: `curated/seed-edges.csv`
-(32 edges, in etymology-db's exact column schema) and `curated/languages.tsv`
-(22 language codes with modern geography). Together with the 30-word
-`curated/curation.json`, `npm run build:seed` regenerates the seed bank
-committed at `web/public/word-bank.json`.
+The repo also ships a tiny stand-in for input 1 so the client can be built
+without the 4.2M-edge download: `curated/seed-edges.csv` (32 edges, in
+etymology-db's exact column schema). Together with the 22-language
+`curated/languages.tsv` and the 30-word `curated/curation.json`,
+`npm run build:seed` regenerates the seed bank committed at
+`web/public/word-bank.json`. Running the generator above against the real code
+list currently yields 237 languages (188 from the overlay, 49 derived).
 
 ## Scoring
 

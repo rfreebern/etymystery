@@ -4,10 +4,13 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 2)
+## Status (as of 2026-09-21, session 3)
 
 Engine + data pipeline + web client COMPLETE and playable end to end against a
-30-word seed bank: 102/102 tests passing, typecheck clean, static build green.
+30-word seed bank: 118/118 tests passing, typecheck clean, static build green.
+Language geography is now generated (237 languages from the real Wiktionary
+code list) rather than hand-written. The 4.2M-edge etymology dataset is the only
+missing input, and it needs a manual OneDrive download (see Remaining).
 
 ## Done
 
@@ -65,18 +68,53 @@ Engine + data pipeline + web client COMPLETE and playable end to end against a
 - New tests: geo-utils.test.ts (11), geo-context.test.ts (5, incl. the real-map
   Vladivostok-beats-Utrecht case), game.test.ts (5) -> 102 total
 
+**Session 3 — language geography bootstrap** (this batch)
+
+- curated/language-geo.json — hand-curated overlay: anchor countries + answer
+  point for 188 language codes, including historical (Latin, Old Norse, Old
+  English, Koine/Byzantine Greek, Old Church Slavonic, Akkadian, Avestan …) and
+  17 reconstruct-only proto languages marked `kind: "proto"`.
+- scripts/lib/language-geo.ts — testable core: parses the code list, merges the
+  overlay with a derivation from world-countries (name matching + aliases, modal
+  subregion/continent, area-weighted representative point), excludes proto codes
+  by default, reports what it could not place, and serializes the TSV contract.
+- scripts/bootstrap-languages.ts — CLI (+ `npm run bootstrap:languages`);
+  writes data/languages.tsv, self-checks by re-parsing with the production
+  parser, and warns about overlay codes Wiktionary does not define.
+- tests/language-geo.test.ts (16 tests) incl. that the overlay reproduces the
+  committed 22-language seed table exactly (bank v1 stays reproducible).
+- Result on the real 8,652-code list: 237 languages (188 overlay, 49 derived,
+  268 proto skipped, 8,147 unmatched dialects/etymology-only codes).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 102 passed (8 files)
+    npx vitest run            # 118 passed (9 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
+    npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
+      --out data/languages.tsv   # 237 languages, 0 overlay typos
 
 ## Remaining (next session)
 
-1. Real curation: download the etymology-db CSV (OneDrive links in its README),
-   bootstrap languages.tsv from its wiktionary_codes.csv, then hand-curate
-   curation.json (years are facts — check them by hand) up to ~1-2k words and
-   run `npm run build:seed`. Capacity today is 3 days of play.
+1. Real curation — in this order:
+   a. Download the etymology-db CSV by HAND in a browser (its OneDrive share
+      link 302s to microsoftpersonalcontent.com and returns 401 to curl, so it
+      cannot be fetched with a tool without an authenticated session) and save
+      it as data/etymology-db.csv.gz. data/ is gitignored on purpose.
+   b. curl -o data/wiktionary_codes.csv \
+        https://raw.githubusercontent.com/droher/etymology-db/master/wiktionary_codes.csv
+      npm run bootstrap:languages -- --codes data/wiktionary_codes.csv
+   c. npm run build:bank -- --edges data/etymology-db.csv.gz \
+        --languages data/languages.tsv --curation curated/curation.json \
+        --out data/word-bank.json --version 2
+      Then read the report: `missingLanguage` is the overlay growth work list
+      (current snapshot from the code list: Austrian German, Canadian/Acadian
+      French, Kölsch, Insular/Borders Scots, Middle Irish (MIr.), Lombardic, and
+      the Latin/Greek abbreviations LL/ML/EL.), `missingYear` is the curation
+      work list.
+   d. Hand-curate years for the top candidates, re-run, then append to the
+      shipped bank (appendToBank — never re-shuffle shipped positions).
+      Capacity today is 3 days of play; ~1-2k words = 100-200 days.
 2. GitHub Action: nightly append-only bank rebuild + capacity report.
 3. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
@@ -109,3 +147,26 @@ Engine + data pipeline + web client COMPLETE and playable end to end against a
 - Commit identity for this repo is `etymystery <dev@etymystery.local>`, applied
   with `git -c user.name=... -c user.email=...` (it differs from the global
   git config, so plain `git commit` would break history consistency).
+- wiktionary_codes.csv contains NAME-SHAPED codes (`Late Latin`, `Koine`,
+  `British English`) and abbreviations (`LL`, `ML`, `EL.`) alongside ISO ones.
+  Do not invent codes: two of my first overlay drafts used `ave` and `ku`, which
+  do not exist (Avestan is `ae`, Kurdish is `ckb`/`kmr`/`sdh`). The CLI prints
+  an "overlay codes not present in the Wiktionary list (typos?)" warning — heed
+  it.
+- world-countries region names are CLDR-flavoured, not strict UN M49: expect
+  `Central Europe`, `Southeast Europe`, `North America`,
+  `Australia and New Zealand`. Overlay labels are derived from anchor countries
+  for exactly this reason; only specify them by hand when a multi-country tie
+  would resolve alphabetically (see the Koine Greek note).
+- The language `region`/`continent` in languages.tsv are DISPLAY metadata only.
+  scoreGeographic compares the pinned country's metadata against the deep
+  origin's FIRST country via GeocodeContext.regionOf() on both sides, so a
+  vocabulary mismatch in languages.tsv cannot corrupt scoring. Both sides come
+  from web/src/countries.json.
+- 268 of the 8,652 Wiktionary codes are `*-pro` reconstructions. They are
+  excluded by default because anchoring a reconstruction to a modern country is
+  indefensible; `--include-proto` adds only the 17 that are in the overlay, so
+  it is not a way to recover the other 251.
+- Generated files never live in git: `data/languages.tsv` is derived from the
+  public code list + the committed overlay, so regenerate it rather than
+  committing it. `curated/` holds only the small hand-authored artifacts.

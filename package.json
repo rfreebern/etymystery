@@ -17,7 +17,8 @@
     "build:web": "vite build web",
     "preview": "vite preview web",
     "build:seed": "tsx scripts/build-bank.ts --edges curated/seed-edges.csv --languages curated/languages.tsv --curation curated/curation.json --out web/public/word-bank.json --version 1 --epoch-start 2026-09-21",
-    "gen:countries": "tsx scripts/gen-countries.ts"
+    "gen:countries": "tsx scripts/gen-countries.ts",
+    "bootstrap:languages": "tsx scripts/bootstrap-languages.ts"
   },
   "devDependencies": {
     "@types/d3-geo": "^3.1.1",
