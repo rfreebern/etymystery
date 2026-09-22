@@ -54,8 +54,10 @@ function dateLabel(utcMs: number): string {
 
 async function boot(): Promise<void> {
   const [bankRaw, topoRaw] = await Promise.all([
-    fetch("/word-bank.json").then((r) => r.json()),
-    fetch("/countries-110m.json").then((r) => r.json()),
+    // Document-relative, not "/word-bank.json": the built site is served from a
+    // subdirectory on GitHub Pages, where a root-anchored path would 404.
+    fetch("word-bank.json").then((r) => r.json()),
+    fetch("countries-110m.json").then((r) => r.json()),
   ]);
   const bank = bankRaw as WordBank;
   validateBank(bank);

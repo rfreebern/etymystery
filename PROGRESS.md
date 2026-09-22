@@ -290,6 +290,29 @@ retroactively fixed three unwinnable rounds in the shipped bank.
   refusal of an unsupported origin, the audit's pos/origin rules, and the
   extended work-list column.
 
+**Session 3 (cont. 8) — published to GitHub Pages** (this batch)
+
+- Pushed `main` to `git@github.com:rfreebern/etymystery.git` (the remote already
+  pointed at the last green commit, so this was a fast-forward).
+- .github/workflows/pages.yml: on pushes to `main` (and manually) it runs `npm ci`,
+  the typecheck and the test suite, builds `web/dist`, then deploys with
+  configure-pages/upload-pages-artifact/deploy-pages. Tests gate the deploy, so a
+  red build cannot publish.
+- web/vite.config.ts (new) sets `base: "./"`, and the client now fetches
+  `word-bank.json` / `countries-110m.json` document-relative instead of from the
+  domain root. Project sites live at `/<repo>/`, so the previous root-anchored
+  URLs would have 404'd: verified by serving the build from a subdirectory — page,
+  both assets and both data files returned 200, while the old root-anchored paths
+  returned 404.
+- The served bank was validated over HTTP with the real `validateBank` (v1, 10
+  rounds/day, 30 words), and the built bundle contains no absolute
+  `/word-bank.json` reference.
+- README gained a "Hosting" section, including the one step that cannot be done
+  from a push: Settings → Pages → Source: GitHub Actions.
+- The one-entry-per-sense refactor is parked on branch `feat/one-entry-per-pos`
+  (commit 5caf295) so `main` stayed shippable; it does not typecheck yet and is the
+  next piece of work.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
@@ -332,7 +355,10 @@ retroactively fixed three unwinnable rounds in the shipped bank.
    have no defensible home on a modern map.
 3. GitHub Action: typecheck + tests + validate the shipped bank + days-of-play
    countdown (works today; the nightly rebuild needs the 143 MB asset).
-4. Publish: create a remote and host web/dist (nothing is published yet).
+4. Hosting is wired: `main` pushes deploy to GitHub Pages via
+   `.github/workflows/pages.yml`. Remaining is a one-time repo setting (Settings →
+   Pages → Source: GitHub Actions) — until then the deploy step fails with a
+   permissions error and nothing is published.
 5. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
 

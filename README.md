@@ -224,6 +224,29 @@ exactly the leniency this game wants. The real adapter is
 `web/src/geo-context.ts` (d3-geo + world-atlas TopoJSON), joined to the
 generated country table through the UN M49 numeric code.
 
+## Hosting
+
+`npm run build:web` emits a fully static `web/dist/`, so any file host serves it.
+The included workflow (`.github/workflows/pages.yml`) publishes it to GitHub
+Pages on every push to `main`: it runs the typecheck and the test suite first, so
+a red build cannot deploy.
+
+Project sites are served from a subdirectory
+(`https://<user>.github.io/<repo>/`), which is why `web/vite.config.ts` sets
+`base: "./"` and the client fetches its data with document-relative paths
+(`word-bank.json`, not `/word-bank.json`). Root-anchored URLs work locally and
+404 on Pages, so keep both rules in mind when adding assets.
+
+One-time setup, once per repository: **Settings → Pages → Source: GitHub
+Actions.** Until that is set the deploy step fails with a permissions error
+(a push cannot grant it). Pages on a private repository requires GitHub Pro or
+Team; on any free plan the repository has to be public, or point the same build
+output at another static host.
+
+The published site serves whatever `web/public/word-bank.json` contains — today
+the 30-word seed bank, so it is a working demo rather than the full game (see
+[CURATION.md](CURATION.md) for what grows it).
+
 ## Licensing
 
 See LICENSES.md. In short: code is proprietary to this project until you
