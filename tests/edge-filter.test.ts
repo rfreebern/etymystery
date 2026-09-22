@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCsvRowParser, forEachCsvRow, parseCsv } from "../scripts/lib/etymology-db";
 import { createEdgeFilter, formatCsvRow, quoteCsvField, MINIMAL_EDGE_HEADER } from "../scripts/lib/edge-filter";
 import { buildBankFromInputs, type UncuratedCandidate } from "../scripts/lib/bank-builder";
+import { parseFrequencyList } from "../scripts/lib/frequency";
 
 describe("createCsvRowParser (chunk safety)", () => {
   const csv = 'a,b,c\r\n1,"quoted, comma",3\r\n4,"two\r\nlines",6\r\n7,"say ""hi""",9\n';
@@ -99,6 +100,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     "12,Ancient Greek,μουσική,derived_from,13,Proto-Indo-European,men-,0,,,",
     "13,English,ab-,borrowed_from,14,Latin,ab,0,,,",
     "14,English,vacuum,borrowed_from,15,Latin,vacuum,0,,,",
+    "15,English,gift,inherited_from,16,Old English,gift,0,,,",
   ].join("\n");
 
   const LANGUAGES = [
@@ -106,6 +108,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     "en\tEnglish\tGB;US\tNorthern Europe\tEurope\t54\t-2",
     "grc\tAncient Greek\tGR;TR\tSouthern Europe\tEurope\t38\t23",
     "la\tLatin\tIT\tSouthern Europe\tEurope\t42\t12",
+    "ang\tOld English\tGB\tNorthern Europe\tEurope\t52\t-1",
   ].join("\n");
 
   // One curated word per tier keeps validateBank happy; `music` has a curated
@@ -116,6 +119,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
       { year: 1000 + i, tier: i + 1, blurb: "From Latin." },
     ]),
     ["music", { year: 1250, tier: 2, blurb: "From Ancient Greek." }],
+    ["gift", { year: 1100, tier: 3, blurb: "From Old English." }],
   ]);
 
   function build(deepestAttested: boolean) {
@@ -129,13 +133,13 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
       deepestAttested,
       onUncurated: (candidate) => uncurated.push(candidate),
     });
-    return { ...result, uncurated };
+    return { ...result, bank: result.bank!, uncurated };
   }
 
   it("normalizes names to codes and anchors at the deepest placeable origin", () => {
     const { bank, report } = build(false);
     const words = bank.tiers.flat().map((entry) => entry.word);
-    expect(words).toHaveLength(10);
+    expect(words).toHaveLength(11); // 10 tiered words + gift
     expect(words).toContain("worda");
     expect(words).not.toContain("music"); // deepest hop is unplaceable
     expect(words).not.toContain("ab-"); // prefix stub, not a word
@@ -165,5 +169,33 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     expect(music.originLanguage).toBe("Ancient Greek");
     expect(music.countries).toEqual(["GR", "TR"]);
     expect(report.salvageableWithAttestedAnchor).toBe(0);
+  });
+
+  it("can exclude answer origins (a word that came from England is a dull puzzle)", () => {
+    const { bank, report } = buildBankFromInputs({
+      edgesText: EDGES,
+      languagesText: LANGUAGES,
+      curation: CURATION,
+      version: 2,
+      epochStartDay: 20717,
+      excludeOriginCodes: new Set(["ang"]),
+    });
+    expect(report.excludedByOrigin).toBe(1);
+    expect(bank!.tiers.flat().map((entry) => entry.word)).not.toContain("gift");
+    expect(bank!.tiers.flat()).toHaveLength(10);
+  });
+
+  it("ranks tier assignment with frequency and reports unranked candidates", () => {
+    const { report } = buildBankFromInputs({
+      edgesText: EDGES,
+      languagesText: LANGUAGES,
+      curation: CURATION,
+      version: 2,
+      epochStartDay: 20717,
+      frequency: parseFrequencyList("vacuum 300\ngift 5000000\n"),
+    });
+    // worda..wordj are not in the frequency list; music never gets this far
+    // because its deepest hop is unplaceable.
+    expect(report.withoutFrequencyRank).toBe(10);
   });
 });

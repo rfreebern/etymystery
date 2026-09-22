@@ -78,7 +78,9 @@ file host serves the whole game.
       --curation data/curation.json \
       --out data/word-bank.json \
       --version 2 [--epoch-start 2026-09-21] [--english-code en] [--max-depth 3] \
-      [--deepest-attested] [--worklist data/curation-worklist.tsv]
+      [--deepest-attested] [--frequency data/en-frequency.txt] \
+      [--exclude-origin en,ang,enm] [--worklist-only] \
+      [--worklist data/curation-worklist.tsv]
 
 ## Playing it
 
@@ -149,13 +151,34 @@ the languages that block the most English words. On the 2023-12 release it
 reduces **4,222,599 rows to 771,573** (143 MB -> 9.1 MB) in ~20 s, and reports
 that 96.9% of English donor rows are covered by the generated language table.
 
+### Curation order
+
+`--frequency <file>` ranks the work list and feeds the tier heuristic. Fetch an
+English list with:
+
+    curl -o data/en-frequency.txt \
+      https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_50k.txt
+
+Two measurements matter. **Coverage:** of the 41,985 candidates, 584 are in the
+top 1,000 English words, 2,380 in the top 5,000, 4,065 in the top 10,000 and
+11,349 in the top 50,000 — so curating the top 5,000 words yields ~2,380
+playable words, about 238 days at 10 rounds a day. **Ordering:** raw frequency
+puts function words first (`you`, `the`, `to`, `that`), whose answer is always
+"England, ~900 AD"; a puzzle where pinning Britain always wins is broken.
+`--exclude-origin en,ang,enm` drops those 10,622 words and leaves 26,590
+candidates starting with genuinely interesting answers (`just` ← Old French,
+`must` ← Middle Persian, `money` ← Old French).
+
+Curation must check the *chain*, not only the year: etymology-db is a faithful
+parse of Wiktionary, not a validated dataset, so it contains dubious relations
+(`name` ← Wolof, `so` ← Japanese). The supplied chain is a claim to verify.
+
 The repo also ships a tiny stand-in for input 1 so the client can be built
 without the 4.2M-edge download: `curated/seed-edges.csv` (32 edges, in
 etymology-db's exact column schema). Together with the 22-language
 `curated/languages.tsv` and the 30-word `curated/curation.json`,
 `npm run build:seed` regenerates the seed bank committed at
-`web/public/word-bank.json`. Running the generator above against the real code
-list currently yields 312 languages (263 from the overlay, 49 derived).
+`web/public/word-bank.json`.
 
 ## Scoring
 
@@ -203,5 +226,6 @@ curation artifacts.
       daily flow, reveal screens
 - [ ] Grow the curated bank to ~1-2k words (today: 30 words = 3 days) and
       bootstrap `languages.tsv` from etymology-db's `wiktionary_codes.csv`
-- [ ] Frequency import (wordfreq export) for tier heuristics
+- [x] Frequency import (FrequencyWords / OpenSubtitles 2018) for the curation
+      order and tier heuristics
 - [ ] GitHub Action: nightly append-only bank rebuild + capacity report

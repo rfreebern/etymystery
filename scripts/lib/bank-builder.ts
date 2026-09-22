@@ -9,6 +9,7 @@
 import { buildWordBank, validateEntry } from "../../src/bank";
 import type { BankEntry, LanguageInfo, WordBank } from "../../src/types";
 import { DONOR_RELATION_PRIORITY, buildChains, extractEdges, type EtymEdge, type OriginChain } from "./etymology-db";
+import type { FrequencyList } from "./frequency";
 import { parseLanguageTsv } from "./languages";
 import { assignTier } from "./tiering";
 
@@ -38,6 +39,24 @@ export interface BuildBankOptions {
   deepestAttested?: boolean;
   /** Called for every candidate word that needs a curated year. */
   onUncurated?: (candidate: UncuratedCandidate) => void;
+  /**
+   * Word-frequency ranks. When supplied they feed the tier heuristic and are
+   * attached to each work-list candidate, so curation can start with the words
+   * players actually know.
+   */
+  frequency?: FrequencyList;
+  /**
+   * Answer origins to skip. Excluding `en,ang,enm` ("the word came from
+   * England") removes the words whose answer is the same place as the asker,
+   * which are unguessable-looking but trivially won by always pinning Britain.
+   */
+  excludeOriginCodes?: ReadonlySet<string>;
+  /**
+   * Build the WordBank itself (default true). Set false to generate only the
+   * report and work list: curation rounds can then be inspected without the
+   * bank being shippable yet (e.g. while a filter leaves a tier empty).
+   */
+  assembleBank?: boolean;
 }
 
 export interface BuildBankReport {
@@ -53,6 +72,10 @@ export interface BuildBankReport {
    * placeable hop. Setting `deepestAttested` would recover these.
    */
   salvageableWithAttestedAnchor: number;
+  /** Candidates with a usable chain but no frequency rank (usually rarities). */
+  withoutFrequencyRank: number;
+  /** Words dropped because their answer origin language was excluded. */
+  excludedByOrigin: number;
   warnings: string[];
 }
 
@@ -63,6 +86,8 @@ export interface UncuratedCandidate {
   chainDepth: number;
   deepestLanguage: string;
   chain: string[];
+  /** 1-based frequency rank when a frequency list was supplied. */
+  frequencyRank?: number;
 }
 
 const DONOR_RELTYPES: ReadonlySet<string> = new Set(Object.keys(DONOR_RELATION_PRIORITY));
@@ -73,7 +98,11 @@ function autoBlurb(chainNames: string[]): string {
   return chainNames.length > 1 ? `From ${immediate}, ultimately from ${deepest}.` : `From ${immediate}.`;
 }
 
-export function buildBankFromInputs(options: BuildBankOptions): { bank: WordBank; report: BuildBankReport } {
+export function buildBankFromInputs(options: BuildBankOptions): {
+  /** null when `assembleBank: false` — work-list generation does not need one. */
+  bank: WordBank | null;
+  report: BuildBankReport;
+} {
   const report: BuildBankReport = {
     candidateWords: 0,
     acceptedWords: 0,
@@ -82,6 +111,8 @@ export function buildBankFromInputs(options: BuildBankOptions): { bank: WordBank
     skippedEntries: 0,
     tierCounts: new Array<number>(10).fill(0),
     salvageableWithAttestedAnchor: 0,
+    withoutFrequencyRank: 0,
+    excludedByOrigin: 0,
     warnings: [],
   };
 
@@ -142,6 +173,10 @@ export function buildBankFromInputs(options: BuildBankOptions): { bank: WordBank
       if (placeable.length > 0) report.salvageableWithAttestedAnchor += 1;
       continue;
     }
+    if (options.excludeOriginCodes?.has(deepest)) {
+      report.excludedByOrigin += 1;
+      continue;
+    }
     if (!meta.representativePoint || meta.countries.length === 0) {
       report.warnings.push(
         `language "${deepest}" (${meta.name}) lacks a representative point or countries; skipping its words`,
@@ -160,15 +195,18 @@ export function buildBankFromInputs(options: BuildBankOptions): { bank: WordBank
       }
     }
     const chainNames = chain.chainLangs.map((code) => byCode[code]?.name ?? code);
+    const frequencyRank = options.frequency?.rankOf(term);
+    if (options.frequency && frequencyRank === undefined) report.withoutFrequencyRank += 1;
     const curated = options.curation[term];
     if (!curated || !Number.isFinite(curated.year)) {
       report.missingYear += 1;
       options.onUncurated?.({
         term,
-        tier: assignTier({ chainDepth: chain.chainLangs.length }),
+        tier: assignTier({ chainDepth: chain.chainLangs.length, frequencyRank }),
         chainDepth: chain.chainLangs.length,
         deepestLanguage: meta.name,
         chain: chainNames,
+        frequencyRank,
       });
       continue;
     }
@@ -176,7 +214,7 @@ export function buildBankFromInputs(options: BuildBankOptions): { bank: WordBank
       id: term,
       word: term,
       year: Math.round(curated.year),
-      tier: curated.tier ?? assignTier({ chainDepth: chain.chainLangs.length }),
+      tier: curated.tier ?? assignTier({ chainDepth: chain.chainLangs.length, frequencyRank }),
       originChain: chainNames,
       originLanguage: meta.name,
       countries: meta.countries,
@@ -195,11 +233,13 @@ export function buildBankFromInputs(options: BuildBankOptions): { bank: WordBank
   }
   report.acceptedWords = entries.length;
 
-  const bank = buildWordBank({
-    version: options.version,
-    epochStartDay: options.epochStartDay,
-    entries,
-    languages: languagesByName,
-  });
+  const bank = options.assembleBank === false
+    ? null
+    : buildWordBank({
+        version: options.version,
+        epochStartDay: options.epochStartDay,
+        entries,
+        languages: languagesByName,
+      });
   return { bank, report };
 }

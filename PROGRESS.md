@@ -7,12 +7,14 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 ## Status (as of 2026-09-21, session 3)
 
 Engine + data pipeline + web client COMPLETE and playable end to end against a
-30-word seed bank: 129/129 tests passing, typecheck clean, static build green.
+30-word seed bank: 138/138 tests passing, typecheck clean, static build green.
 Language geography is generated (312 languages from the real Wiktionary code
 list, 96.9% of English donor rows covered) and the **real 4.2M-row etymology
-dataset has been ingested**: the pipeline yields 41,985 candidate words whose
-origin can be mapped, of which 17 are bankable today because only the 30 seed
-words have curated years. Curation is the remaining bottleneck, not plumbing.
+dataset has been ingested**: 41,985 candidate words whose origin can be mapped,
+17 bankable today because only the 30 seed words have curated years. Curation is
+the bottleneck, and it is now **ordered**: frequency ranking shows 2,380 of the
+top 5,000 English words are usable (238 days of puzzles) once the "came from
+England" words are excluded.
 
 ## Done
 
@@ -125,10 +127,38 @@ words have curated years. Curation is the remaining bottleneck, not plumbing.
 - tests: 129 total (+11) incl. chunk-safety, filter rules, and a name-keyed
   end-to-end build covering the normalization seam.
 
+**Session 3 (cont. 2) — frequency ranking for the curation order** (this batch)
+
+- scripts/lib/frequency.ts: parses rank lists in "word count" (FrequencyWords,
+  CC BY-SA 4.0 via OpenSubtitles 2018), "word<TAB>count" (wordfreq exports) or
+  bare-word forms; ranks by count, normalizes case, keeps the best rank for
+  duplicates, deterministic on ties.
+- build-bank `--frequency <file>`: ranks the work list (most common first,
+  unranked rarities last) and feeds `assignTier`'s existing frequencyRank input;
+  new work-list column `freq_rank`; prints a frequency coverage curve and the 15
+  most common uncurated words.
+- Measurements: coverage of the 41,985 candidates — top 1k 584, 5k 2,380,
+  10k 4,065, 50k 11,349. Raw frequency ordering surfaced a PRODUCT problem: the
+  first rows are function words (`you`, `the`, `to`, `that`) whose answer is
+  always "England ~900 AD", i.e. a game where always pinning Britain is optimal.
+- build-bank `--exclude-origin en,ang,enm`: drops words whose answer origin is
+  the asker's own language/country (10,622 words), leaving 26,590 candidates that
+  begin with `just` ← Old French, `must` ← Middle Persian, `money` ← Old French.
+- build-bank `--worklist-only` + `assembleBank: false`: generate the report and
+  work list without assembling a shippable bank. Needed because a filter can
+  legitimately empty a tier while only 30 words are curated, and validateBank
+  rightly refuses to emit such a bank. `buildBankFromInputs` now returns
+  `bank: WordBank | null`.
+- LICENSES.md: FrequencyWords/OpenSubtitles attribution, world-countries row, and
+  an explicit note that Google-corpus lists and SUBTLEX-derived data are avoided
+  while the chosen source is CC BY-SA 4.0.
+- tests: 138 total (+9) for parsing/ranking, origin exclusion, and the
+  unranked-candidate count.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 129 passed (10 files)
+    npx vitest run            # 138 passed (11 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -140,14 +170,21 @@ words have curated years. Curation is the remaining bottleneck, not plumbing.
       --out data/word-bank.json --version 2 --epoch-start 2026-09-21 \
       --worklist data/curation-worklist.tsv
                                  # 41,985 candidates, 17 bankable, 37,211 uncurated
+    # ranked curation order (add --frequency data/en-frequency.txt):
+    npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
+      --languages data/languages.tsv --curation curated/curation.json \
+      --out /dev/null --version 2 --frequency data/en-frequency.txt \
+      --exclude-origin en,ang,enm --worklist-only \
+      --worklist data/curation-worklist-interesting.tsv
+                                 # 26,590 words; top 5k coverage 1,007
 
 ## Remaining (next session)
 
-1. Curation is now THE bottleneck (everything upstream works):
-   a. Add a frequency signal so 37k candidates can be ranked, then curate the
-      top ~1-2k words' years by hand (years are facts). This is the "frequency
-      import" roadmap item and it is now a prerequisite, not a nicety: the raw
-      work list is alphabetical and full of rarities (`aalii`, `aardtappel`).
+1. Curation is now THE bottleneck, and the order is ready:
+   a. Curate years for the ranked work list, starting at
+      data/curation-worklist-interesting.tsv (26,590 words, most common first,
+      `--exclude-origin en,ang,enm`). Verify the CHAIN as well as the year: it
+      comes from an unvalidated parse.
    b. Build the real bank as `appendToBank(v1, curatedWords)` with the SAME
       epoch (20717) and version bump, so shipped tier positions never move.
    c. Ship it: copy to web/public/word-bank.json, rebuild the web app.
@@ -234,3 +271,19 @@ words have curated years. Curation is the remaining bottleneck, not plumbing.
 - run_commands batch items really do run CONCURRENTLY: a language-coverage check
   read data/languages.tsv *while* the bootstrap step was rewriting it and
   reported stale numbers. Chain dependent steps in ONE command string.
+- Rank the work list by frequency, but do NOT ship that order raw: the most
+  common English words are function words whose answer is the asker's own
+  country (`the`, `you`, `to`, `that` -> England). Exclude `en,ang,enm` for the
+  curation order (10,622 words).
+- etymology-db chains are UNVALIDATED (its README says so). Spot checks show
+  dubious relations (`name` <- Wolof, `so` <- Japanese), so the chain is a claim
+  the curator must check, not just the year.
+- A curation filter can legitimately empty a tier (only 30 words are curated),
+  and validateBank then refuses to emit a bank. Use `--worklist-only`
+  (assembleBank: false) to get the report and work list anyway; `bank` in the
+  result is nullable because of it.
+- Frequency source choice is a licensing decision: FrequencyWords is CC BY-SA 4.0
+  (attribution to OpenSubtitles required) and plain text; the Google Trillion
+  corpus lists have no explicit license and SUBTLEX redistribution needs
+  permission, so both are deliberately unused. Update LICENSES.md whenever a new
+  data source enters the pipeline.

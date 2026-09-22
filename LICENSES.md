@@ -14,6 +14,8 @@ the project owner (MIT is a reasonable default for this kind of project).
 | kaikki.org / wiktextract | CC BY-SA + GFDL | Weekly JSONL extracts; see citation request below |
 | Natural Earth / world-atlas | Public domain | Country polygons for the map |
 | Glottolog (if used for language coords) | CC BY 4.0 | Language centroids/geoography |
+| FrequencyWords (hermitdave) | CC BY-SA 4.0 (code MIT) | English word-frequency ranks for the curation order; derived from the **OpenSubtitles 2018** corpus (attribution required to OpenSubtitles) |
+| world-countries | MIT (ODbL for the data) | Country metadata: ISO codes, subregion/continent, coordinates |
 
 **Share-alike obligation:** because the word bank is derived from CC BY-SA
 data, `word-bank.json` and the curation artifacts are distributed under
@@ -27,6 +29,11 @@ open.
   and [kaikki.org](https://kaikki.org)."
 - Map data: "[Natural Earth](https://www.naturalearthdata.com) via
   [world-atlas](https://github.com/topojson/world-atlas)."
+- Word-frequency ranks (used only to order the curation work list, never
+  shipped in the bank): "Frequency data from
+  [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0),
+  derived from the [OpenSubtitles](https://www.opensubtitles.org/) 2018 corpus."
+- Country metadata: "[world-countries](https://github.com/mledoze/countries)."
 
 ## Academic citation requested by kaikki.org
 
@@ -45,3 +52,7 @@ open.
   while writing `curation.json`.
 - **WordWeb / Wordnik**: proprietary/licensed content, not redistributable
   into this project.
+- **Google Books / Google Trillion Word Corpus lists** (`google-10000-english`
+  and similar): no explicit license, so not used. The SUBTLEX lists that
+  `wordfreq` redistributes with permission are also avoided here; the chosen
+  source is CC BY-SA 4.0 and needs only attribution.

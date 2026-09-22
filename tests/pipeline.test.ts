@@ -166,7 +166,8 @@ describe("assignTier", () => {
 });
 
 describe("buildBankFromInputs", () => {
-  const { bank, report } = build();
+  const { bank: assembledBank, report } = build();
+  const bank = assembledBank!;
 
   it("produces a valid bank (validation runs inside)", () => {
     expect(bank.version).toBe(1);
@@ -216,7 +217,7 @@ describe("buildBankFromInputs", () => {
       epochStartDay: 0,
     });
     expect(result.report.missingLanguage["kg"]).toBe(1);
-    expect(result.bank.masterSequence.some((e) => e.word === "zombie")).toBe(false);
+    expect(result.bank!.masterSequence.some((e) => e.word === "zombie")).toBe(false);
   });
 });
 
@@ -232,6 +233,6 @@ describe("buildBankFromInputs", () => {
       epochStartDay: 0,
     });
     expect(result.report.warnings.some((w) => w.includes('"frm"'))).toBe(true);
-    const elapse = result.bank.tiers.flat().find((e) => e.word === "elapse")!;
+    const elapse = result.bank!.tiers.flat().find((e) => e.word === "elapse")!;
     expect(elapse.originChain).toEqual(["frm", "Latin"]); // raw code fallback for display
   });
