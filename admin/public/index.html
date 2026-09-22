@@ -13,9 +13,37 @@
       <span class="grow"></span>
       <span id="status" class="status"></span>
       <label class="toggle"><input type="checkbox" id="stacked" checked /> stack sources</label>
-      <button id="merge" class="secondary">Merge batch → curation.json</button>
+      <label class="toggle">zoom
+        <select id="zoom">
+          <option value="0.6">60%</option>
+          <option value="0.7">70%</option>
+          <option value="0.8" selected>80%</option>
+          <option value="0.9">90%</option>
+          <option value="1">100%</option>
+        </select>
+      </label>
+      <button id="help" class="secondary" title="keyboard shortcuts">? shortcuts</button>
+      <button id="merge" class="secondary">Merge batch → curation.json<span class="kbd-hint">m</span></button>
       <button id="next-batch" class="secondary">Pull next batch</button>
     </header>
+
+    <aside id="help-panel" hidden>
+      <h2>Keyboard shortcuts</h2>
+      <dl>
+        <dt><kbd>Enter</kbd></dt><dd>save the current word and move to the next</dd>
+        <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>previous / next word (an entered year is saved on the way)</dd>
+        <dt><kbd>1</kbd>…<kbd>9</kbd></dt><dd>scroll to that source (the numbers are in each source header)</dd>
+        <dt><kbd>r</kbd></dt><dd>reload the first source frame</dd>
+        <dt><kbd>z</kbd></dt><dd>cycle iframe zoom (60 → 70 → 80 → 90 → 100%)</dd>
+        <dt><kbd>s</kbd></dt><dd>skip this word (adds it to the skip list)</dd>
+        <dt><kbd>m</kbd></dt><dd>merge the batch into curated/curation.json</dd>
+        <dt><kbd>?</kbd></dt><dd>show or hide this panel</dd>
+      </dl>
+      <p class="muted">
+        Typing in the year or blurb field never triggers these — only the shortcuts
+        above, and only when you are not in a text field.
+      </p>
+    </aside>
 
     <main>
       <section id="left" class="pane"></section>
@@ -23,8 +51,9 @@
     </main>
 
     <footer id="keys" class="muted">
-      <kbd>Enter</kbd> save &amp; next · <kbd>←</kbd>/<kbd>→</kbd> move · <kbd>1</kbd>–<kbd>9</kbd> focus source ·
-      <kbd>r</kbd> reload source · <kbd>s</kbd> skip word · <kbd>m</kbd> merge
+      <kbd>Enter</kbd> save &amp; next · <kbd>←</kbd>/<kbd>→</kbd> move ·
+      <kbd>1</kbd>–<kbd>9</kbd> jump to source · <kbd>r</kbd> reload · <kbd>z</kbd> zoom ·
+      <kbd>s</kbd> skip · <kbd>m</kbd> merge · <kbd>?</kbd> all shortcuts
     </footer>
     <script src="/app.js"></script>
   </body>

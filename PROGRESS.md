@@ -234,10 +234,38 @@ retroactively fixed three unwinnable rounds in the shipped bank.
   overlaps), playability, and agreement between bestPossibleTemporal and the real
   scorer at both ends of the window.
 
+**Session 3 (cont. 6) — admin app ergonomics** (this batch)
+
+- Merriam-Webster now always links to the `#word-history` anchor: the dated note
+  is the only part of the page worth reading for curation, and M-W blocks framing
+  with `X-Frame-Options: SAMEORIGIN` so it can only be linked.
+- Removed the OED source (no access); the source list is 9 now — 7 embeddable
+  iframes plus Merriam-Webster and HathiTrust as link cards.
+- Shortcut discoverability: a `?` help panel listing every key with a description
+  (toggle with `?`, the header button, or Escape), inline `<kbd>` hints on the
+  buttons themselves (Save & next = Enter, Save = Shift+Enter, Skip = s,
+  Merge = m), and the source numbers that were already in each header act as the
+  digit-jump hint. `Shift+Enter` now really saves without advancing, so the hint
+  is true rather than aspirational.
+- Iframe zoom: frames render at 80% by default (`z` cycles 60→100%, or pick from
+  the header; the choice persists in localStorage). Implementation is the
+  oversize-and-scale trick — the iframe viewport is made 1/zoom larger and then
+  `transform: scale(zoom)` from the top-left inside a fixed-height wrapper — which
+  also makes the embedded site lay out wider, so noticeably more of each
+  reference page is visible without scrolling.
+- New regression guard: admin/public/app.js is neither typechecked nor imported
+  by any test, so `new Function(source)` compiles it inside a test plus a check for
+  TypeScript-only syntax. That guard immediately caught a real bug I introduced —
+  a non-null assertion (`ZOOM_STEPS[next]!`) that tsc happily accepted in a .ts
+  file but which is a hard syntax error in a browser, i.e. the whole app would
+  have failed to load.
+- tests: 170 total (+4) for the M-W anchor, the removed source, client-JS
+  parsability/wiring, and the zoom/help markup.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 166 passed (14 files)
+    npx vitest run            # 170 passed (14 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -398,3 +426,12 @@ retroactively fixed three unwinnable rounds in the shipped bank.
   re-implement the decay envelope and could silently disagree with
   `scoreTemporal`. It now calls the real scorer with the clamped year, and a test
   asserts they agree at both ends of the window.
+- The admin client (`admin/public/app.js`) is plain JavaScript that nothing
+  typechecks and no test imports, so a TypeScript-only construct in it is invisible
+  until the browser rejects the whole file — a stray non-null assertion did exactly
+  that. Tests now compile it with `new Function(source)` and assert no `x!`
+  patterns; run `node --check admin/public/app.js` when editing it by hand.
+- Embedded iframes can be effectively zoomed out without touching the child
+  document: size the frame to 1/zoom of the wrapper and `transform: scale(zoom)`
+  from the top-left. The site also lays out at the larger viewport, so more content
+  fits on screen.

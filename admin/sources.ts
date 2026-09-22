@@ -82,10 +82,13 @@ export const REFERENCE_SOURCES: readonly ReferenceSource[] = [
   {
     id: "merriam-webster",
     label: "Merriam-Webster",
-    url: (word) => `https://www.merriam-webster.com/dictionary/${encodeURIComponent(word)}`,
+    // Linked (not embedded) and always anchored to the "Word History" section:
+    // the dated etymological note is the only part worth reading for curation,
+    // and M-W blocks framing with X-Frame-Options: SAMEORIGIN.
+    url: (word) => `https://www.merriam-webster.com/dictionary/${encodeURIComponent(word)}#word-history`,
     framable: false,
     blockedReason: "X-Frame-Options: SAMEORIGIN",
-    purpose: "'First Known Use' — a second date to cross-check",
+    purpose: "'Word History' — a second date to cross-check, straight to the anchor",
   },
   {
     id: "hathitrust",
@@ -95,14 +98,6 @@ export const REFERENCE_SOURCES: readonly ReferenceSource[] = [
     framable: false,
     blockedReason: "X-Frame-Options: SAMEORIGIN",
     purpose: "dated full-text search in digitised books",
-  },
-  {
-    id: "oed",
-    label: "OED (paywalled)",
-    url: (word) => `https://www.oed.com/search/dictionary/?scope=Entries&q=${encodeURIComponent(word)}`,
-    framable: false,
-    blockedReason: "not embeddable",
-    purpose: "authoritative dated citations, if you have access",
   },
 ];
 

@@ -12,6 +12,13 @@ const el = (id) => document.getElementById(id);
 let yearFloor = 0;
 let yearCeiling = 0;
 
+// Source frames are rendered at `zoom` (their viewport is made 1/zoom larger and
+// then scaled down), so 80% fits noticeably more of a page on screen.
+const FRAME_HEIGHT = 460;
+const ZOOM_STEPS = [0.6, 0.7, 0.8, 0.9, 1];
+const ZOOM_KEY = "etymystery-admin-zoom";
+let zoom = Number(localStorage.getItem(ZOOM_KEY)) || 0.8;
+
 let state = null;
 let sources = [];
 let dirty = false;
@@ -148,9 +155,9 @@ function render() {
       <textarea id="blurb" placeholder="From Arabic qahwah, likely via Turkish kahve and Dutch koffie.">${item.blurb}</textarea>
     </div>
     <div class="row">
-      <button id="save-next" class="primary">Save &amp; next</button>
-      <button id="save">Save</button>
-      <button id="skip">Skip word</button>
+      <button id="save-next" class="primary">Save &amp; next<span class="kbd-hint">Enter</span></button>
+      <button id="save">Save<span class="kbd-hint">⇧Enter</span></button>
+      <button id="skip">Skip word<span class="kbd-hint">s</span></button>
     </div>
     <div class="meta">
       chain source: ${item.inWorklist ? "work list" : "not in the work list (no mappable chain)"}<br />
@@ -174,7 +181,7 @@ function render() {
   el("year").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      void save({ advance: true });
+      void save({ advance: !event.shiftKey }); // Shift+Enter saves without moving on
     }
   });
   el("blurb").addEventListener("input", () => (dirty = true));
@@ -222,7 +229,11 @@ function renderSources() {
           </div></div>`;
       }
       return `<div class="source" data-index="${index}">${head}
-        <div class="frame-wrap"><iframe src="${source.href}" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+        <div class="frame-wrap" style="height:${FRAME_HEIGHT}px">
+          <iframe src="${source.href}" loading="lazy" referrerpolicy="no-referrer"
+            style="width:${(100 / zoom).toFixed(2)}%;height:${Math.round(FRAME_HEIGHT / zoom)}px;transform:scale(${zoom})"
+          ></iframe>
+        </div>
       </div>`;
     })
     .join("");
@@ -291,12 +302,35 @@ el("stacked").addEventListener("change", () => {
 el("merge").addEventListener("click", () => void merge());
 el("next-batch").addEventListener("click", () => void nextBatch());
 
+function applyZoom(next) {
+  zoom = Math.min(1, Math.max(0.5, next));
+  localStorage.setItem(ZOOM_KEY, String(zoom));
+  el("zoom").value = String(zoom);
+  renderSources();
+}
+
+el("zoom").value = String(zoom);
+el("zoom").addEventListener("change", () => applyZoom(Number(el("zoom").value)));
+
+let helpVisible = false;
+function toggleHelp(force) {
+  helpVisible = force === undefined ? !helpVisible : force;
+  el("help-panel").hidden = !helpVisible;
+}
+el("help").addEventListener("click", () => toggleHelp());
+
 document.addEventListener("keydown", (event) => {
   const typing = ["INPUT", "TEXTAREA"].includes(event.target.tagName);
   if (event.key === "Enter" && typing) return; // the field handles its own Enter
   if (event.key === "ArrowRight") return void move(1);
   if (event.key === "ArrowLeft") return void move(-1);
   if (typing) return;
+  if (event.key === "?") return toggleHelp();
+  if (event.key === "Escape" && helpVisible) return toggleHelp(false);
+  if (event.key === "z") {
+    const next = (ZOOM_STEPS.indexOf(zoom) + 1) % ZOOM_STEPS.length;
+    return applyZoom(ZOOM_STEPS[next] ?? zoom);
+  }
   if (event.key === "m") return void merge();
   if (event.key === "s") return void skipCurrent();
   if (event.key === "r") {

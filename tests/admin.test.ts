@@ -49,9 +49,20 @@ describe("reference sources", () => {
 
   it("records framing support honestly (measured, not assumed)", () => {
     const blocked = REFERENCE_SOURCES.filter((source) => !source.framable);
-    expect(blocked.map((source) => source.id).sort()).toEqual(["hathitrust", "merriam-webster", "oed"]);
+    expect(blocked.map((source) => source.id).sort()).toEqual(["hathitrust", "merriam-webster"]);
     for (const source of blocked) expect(source.blockedReason).toBeTruthy();
     for (const source of REFERENCE_SOURCES.filter((s) => s.framable)) expect(source.blockedReason).toBeUndefined();
+  });
+
+  it("sends Merriam-Webster straight to the Word History section", () => {
+    const mw = REFERENCE_SOURCES.find((source) => source.id === "merriam-webster")!;
+    expect(mw.url("money")).toBe("https://www.merriam-webster.com/dictionary/money#word-history");
+    expect(mw.url("kick the bucket")).toContain("kick%20the%20bucket#word-history");
+    expect(mw.framable).toBe(false); // linked, not embedded
+  });
+
+  it("no longer offers sources the curator has no access to", () => {
+    expect(REFERENCE_SOURCES.some((source) => source.id === "oed")).toBe(false);
   });
 
   it("gives every source a purpose line and an href for the word", () => {
@@ -131,6 +142,28 @@ describe("store", () => {
   it("ships defaults that match the CLI's paths", () => {
     expect(DEFAULT_PATHS.batch).toBe("data/curation-batch.json");
     expect(DEFAULT_PATHS.curation).toBe("curated/curation.json");
+  });
+});
+
+describe("client script", () => {
+  it("parses — it is neither typechecked nor imported by any test", () => {
+    const source = readFileSync("admin/public/app.js", "utf8");
+    // Compiling with new Function catches syntax errors without executing it.
+    expect(() => new Function(source)).not.toThrow();
+    // TypeScript-only syntax is a hard syntax error in a browser: this bit us once
+    // with a non-null assertion (`values[i]!`) that tsc accepted in a .ts file.
+    expect(source).not.toMatch(/\]!|\)!/);
+  });
+
+  it("keeps the zoom default, help panel and shortcut hints wired up", () => {
+    const source = readFileSync("admin/public/app.js", "utf8");
+    expect(source).toContain("let zoom = Number(localStorage.getItem(ZOOM_KEY)) || 0.8");
+    expect(source).toContain("scale(${zoom})");
+    expect(source).toContain('toggleHelp()');
+    const html = readFileSync("admin/public/index.html", "utf8");
+    expect(html).toContain('id="help-panel"');
+    expect(html).toContain('id="zoom"');
+    expect(html).toContain("<kbd>z</kbd>");
   });
 });
 

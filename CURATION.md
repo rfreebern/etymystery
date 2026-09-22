@@ -56,9 +56,17 @@ A local, dependency-free page for the same loop: the word, its chain, the answer
 and the three fields on the left; every reference source for that word on the
 right. Seven of them embed directly in iframes — Etymonline, Wiktionary (article
 and raw wikitext), Google Ngrams, The Free Dictionary, archive.org and a Bing
-search — and three cannot be embedded (Merriam-Webster, HathiTrust, OED send
+search — and two cannot be embedded (Merriam-Webster and HathiTrust send
 `X-Frame-Options: SAMEORIGIN`), so they render as prominent one-click links.
-Framing support in `admin/sources.ts` was measured with curl, not assumed.
+Merriam-Webster's link always points at its `#word-history` anchor, since the
+dated note is the only part worth reading. Framing support in `admin/sources.ts`
+was measured with curl, not assumed.
+
+Frames render at **80% zoom** by default (adjustable in the header or by pressing
+`z`), which shows noticeably more of each reference page at once. Press `?` for
+the full shortcut list — `Enter` saves and advances, `Shift+Enter` saves in
+place, `←`/`→` move between words, `1`–`9` jump to a source, `r` reloads it,
+`s` skips, `m` merges.
 
 The app writes the same `data/curation-batch.json`, `data/skip-words.txt` and
 `curated/curation.json` as the CLI, so the two can be interleaved: curate in the
