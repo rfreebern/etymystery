@@ -7,10 +7,12 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 ## Status (as of 2026-09-21, session 3)
 
 Engine + data pipeline + web client COMPLETE and playable end to end against a
-30-word seed bank: 118/118 tests passing, typecheck clean, static build green.
-Language geography is now generated (237 languages from the real Wiktionary
-code list) rather than hand-written. The 4.2M-edge etymology dataset is the only
-missing input, and it needs a manual OneDrive download (see Remaining).
+30-word seed bank: 129/129 tests passing, typecheck clean, static build green.
+Language geography is generated (312 languages from the real Wiktionary code
+list, 96.9% of English donor rows covered) and the **real 4.2M-row etymology
+dataset has been ingested**: the pipeline yields 41,985 candidate words whose
+origin can be mapped, of which 17 are bankable today because only the 30 seed
+words have curated years. Curation is the remaining bottleneck, not plumbing.
 
 ## Done
 
@@ -86,37 +88,78 @@ missing input, and it needs a manual OneDrive download (see Remaining).
 - Result on the real 8,652-code list: 237 languages (188 overlay, 49 derived,
   268 proto skipped, 8,147 unmatched dialects/etymology-only codes).
 
+**Session 3 (cont.) — real dataset ingest** (this batch)
+
+- The data comes from the repo's **GitHub release assets**, not the OneDrive
+  links in its README:
+  https://github.com/droher/etymology-db/releases/download/2023-12/etymology.csv.gz
+  (143 MB gz / 456 MB / 4,222,599 rows). The OneDrive links 302 to
+  microsoftpersonalcontent.com and 401 to any scripted client.
+- scripts/filter-edges.ts + `npm run filter:edges`: chunk-safe streaming gzip ->
+  CSV filter that keeps placeable-source donor rows and rewrites a minimal
+  5-column CSV. 4,222,599 rows -> 771,573 (143 MB -> 9.1 MB) in ~20 s. Prints
+  the blocked-donor histogram, which is the overlay work list.
+- scripts/lib/edge-filter.ts: the filtering rules + stats + RFC 4180 quoting.
+- createCsvRowParser in scripts/lib/etymology-db.ts: the CSV parser is now a
+  chunk-safe state machine (deferred quote/CR decisions), so a 456 MB file can
+  be streamed; forEachCsvRow is a thin wrapper and behavior is unchanged.
+- bank-builder now normalizes etymology-db language NAMES to CODES (the real
+  file says "Ancient Greek"; our table is keyed "grc"); without this the real
+  dataset produced an EMPTY bank.
+- bank-builder gained `deepestAttested` (anchor to the deepest PLACEABLE hop)
+  and `onUncurated` (work-list callback); build-bank gained `--deepest-attested`
+  and `--worklist`, plus a readable report instead of a JSON dump.
+- curated/language-geo.json grew to 280 entries / 312 generated languages,
+  driven by the real donor histogram: Ancient Greek (the #3 donor), Low and
+  Middle Low German, Frisian varieties, New/Renaissance/Medieval/Vulgar Latin,
+  Frankish, Gaulish, Old/Middle Chinese, Tocharian A/B, Hittite, Classical
+  Persian, Classical Nahuatl, Old Tupi, Creoles, regional French/Spanish/
+  Portuguese/German, native American and Australian languages, ...
+- isCandidateTerm no longer accepts prefix/suffix stubs ("ab-", "acantho-",
+  which Wiktionary stores as terms): 255 such rows were in the first work list.
+- Real run (bank v2 candidate, epoch 20717 = same as v1 so day numbering is
+  continuous): 41,985 candidate words, 17 bankable, 37,211 awaiting a curated
+  year, 0 invalid; --deepest-attested recovers 4,141 more (41,348 awaiting) and
+  cuts unplaceable deepest languages from 251 to 161. Work list:
+  data/curation-worklist.tsv (word, tier, chain depth, deepest language, chain).
+- tests: 129 total (+11) incl. chunk-safety, filter rules, and a name-keyed
+  end-to-end build covering the normalization seam.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 118 passed (9 files)
+    npx vitest run            # 129 passed (10 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
-      --out data/languages.tsv   # 237 languages, 0 overlay typos
+      --out data/languages.tsv   # 312 languages, 0 overlay typos
+    npx tsx scripts/filter-edges.ts --edges data/etymology-db.csv.gz \
+      --languages data/languages.tsv --out data/edges-filtered.csv.gz
+                                 # 4,222,599 rows -> 771,573 kept, ~20 s
+    npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
+      --languages data/languages.tsv --curation curated/curation.json \
+      --out data/word-bank.json --version 2 --epoch-start 2026-09-21 \
+      --worklist data/curation-worklist.tsv
+                                 # 41,985 candidates, 17 bankable, 37,211 uncurated
 
 ## Remaining (next session)
 
-1. Real curation — in this order:
-   a. Download the etymology-db CSV by HAND in a browser (its OneDrive share
-      link 302s to microsoftpersonalcontent.com and returns 401 to curl, so it
-      cannot be fetched with a tool without an authenticated session) and save
-      it as data/etymology-db.csv.gz. data/ is gitignored on purpose.
-   b. curl -o data/wiktionary_codes.csv \
-        https://raw.githubusercontent.com/droher/etymology-db/master/wiktionary_codes.csv
-      npm run bootstrap:languages -- --codes data/wiktionary_codes.csv
-   c. npm run build:bank -- --edges data/etymology-db.csv.gz \
-        --languages data/languages.tsv --curation curated/curation.json \
-        --out data/word-bank.json --version 2
-      Then read the report: `missingLanguage` is the overlay growth work list
-      (current snapshot from the code list: Austrian German, Canadian/Acadian
-      French, Kölsch, Insular/Borders Scots, Middle Irish (MIr.), Lombardic, and
-      the Latin/Greek abbreviations LL/ML/EL.), `missingYear` is the curation
-      work list.
-   d. Hand-curate years for the top candidates, re-run, then append to the
-      shipped bank (appendToBank — never re-shuffle shipped positions).
-      Capacity today is 3 days of play; ~1-2k words = 100-200 days.
-2. GitHub Action: nightly append-only bank rebuild + capacity report.
-3. Optional polish (not requested): share/streak summary, per-round distance
+1. Curation is now THE bottleneck (everything upstream works):
+   a. Add a frequency signal so 37k candidates can be ranked, then curate the
+      top ~1-2k words' years by hand (years are facts). This is the "frequency
+      import" roadmap item and it is now a prerequisite, not a nicety: the raw
+      work list is alphabetical and full of rarities (`aalii`, `aardtappel`).
+   b. Build the real bank as `appendToBank(v1, curatedWords)` with the SAME
+      epoch (20717) and version bump, so shipped tier positions never move.
+   c. Ship it: copy to web/public/word-bank.json, rebuild the web app.
+2. Decide the proto-language policy with the numbers now available:
+   default (respect "deepest origin") = 17 bankable / 4,141 words lost;
+   `--deepest-attested` = 21 bankable / 4,137 recovered. The lost words' answers
+   would be reconstructions (Proto-Indo-European, Proto-Germanic, ...), which
+   have no defensible home on a modern map.
+3. GitHub Action: typecheck + tests + validate the shipped bank + days-of-play
+   countdown (works today; the nightly rebuild needs the 143 MB asset).
+4. Publish: create a remote and host web/dist (nothing is published yet).
+5. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
 
 ## Gotchas learned (do not re-fight)
@@ -170,3 +213,24 @@ missing input, and it needs a manual OneDrive download (see Remaining).
 - Generated files never live in git: `data/languages.tsv` is derived from the
   public code list + the committed overlay, so regenerate it rather than
   committing it. `curated/` holds only the small hand-authored artifacts.
+- etymology-db's `lang` column holds language NAMES ("Ancient Greek", "Middle
+  English"), NOT codes. Anything that keys by code must normalize first; the
+  bank builder does this via the name column of languages.tsv. This seam
+  silently produced an EMPTY bank from the real file before it was fixed.
+- Download etymology-db from its GitHub RELEASE ASSETS, not the OneDrive links
+  in its README: `releases/download/2023-12/etymology.csv.gz`. OneDrive returns
+  302 -> microsoftpersonalcontent.com -> 401 for any scripted client.
+- Streaming CSV parsing must never look ahead (`chunk[i + 1]`) to decide an
+  escaped quote: the next character can live in the next chunk. The parser uses
+  deferred state (pendingQuote/pendingCr) and a test feeds it one character at a
+  time. CRLF inside a quoted field is normalized to LF so terms stay clean.
+- `isCandidateTerm` must reject prefix/suffix stubs (`ab-`, `acantho-`): both
+  ends have to be letters, otherwise 255 junk "words" reach the curation list.
+- A successor bank must reuse bank v1's epoch (20717) and be produced with
+  appendToBank, otherwise `dayIndexFor` shifts and served puzzles change.
+- The pipeline is now big enough that profiling with shell tools pays off:
+  `zcat file.csv.gz | awk -F, '$2=="en"'` and a short Python csv pass answered
+  the coverage questions in seconds without writing code.
+- run_commands batch items really do run CONCURRENTLY: a language-coverage check
+  read data/languages.tsv *while* the bootstrap step was rewriting it and
+  reported stale numbers. Chain dependent steps in ONE command string.

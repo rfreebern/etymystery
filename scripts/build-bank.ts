@@ -28,6 +28,8 @@ const { values } = parseArgs({
     "epoch-start": { type: "string", default: "2026-01-01" },
     "english-code": { type: "string", default: "en" },
     "max-depth": { type: "string", default: "3" },
+    "deepest-attested": { type: "boolean", default: false },
+    worklist: { type: "string" },
   },
 });
 
@@ -63,6 +65,7 @@ function readMaybeGzip(file: string): string {
 
 try {
   const curation: Record<string, CurationEntry> = JSON.parse(readFileSync(values.curation!, "utf8"));
+  const worklistRows: string[] = ["word\ttier\tchain_depth\tdeepest_language\tchain"];
   const { bank, report } = buildBankFromInputs({
     edgesText: readMaybeGzip(values.edges!),
     languagesText: readMaybeGzip(values.languages!),
@@ -71,6 +74,12 @@ try {
     epochStartDay,
     englishLangCode: values["english-code"],
     maxChainDepth,
+    deepestAttested: values["deepest-attested"],
+    onUncurated: (candidate) => {
+      worklistRows.push(
+        `${candidate.term}\t${candidate.tier}\t${candidate.chainDepth}\t${candidate.deepestLanguage}\t${candidate.chain.join(" <- ")}`,
+      );
+    },
   });
   mkdirSync(path.dirname(values.out!), { recursive: true });
   writeFileSync(values.out!, `${JSON.stringify(bank, null, 2)}\n`);
@@ -78,7 +87,28 @@ try {
     `wrote ${values.out}: bank v${bank.version}, ${bank.masterSequence.length} entries ` +
       `(${bank.masterSequence.length / 10} days of puzzles), epoch start day ${bank.epochStartDay}`,
   );
-  console.log(JSON.stringify(report, null, 2));
+  console.log(
+    `report: ${report.candidateWords} candidate words | ${report.acceptedWords} accepted (curated) | ` +
+      `${report.missingYear} awaiting a curated year | ${report.skippedEntries} skipped as invalid`,
+  );
+  console.log(
+    `        ${report.salvageableWithAttestedAnchor} dropped only because their deepest hop is unplaceable ` +
+      `(recoverable with --deepest-attested)`,
+  );
+  console.log(`tier counts: ${report.tierCounts.join(", ")}`);
+  const missing = Object.entries(report.missingLanguage).sort((a, b) => b[1] - a[1]);
+  if (missing.length) {
+    console.log(`unplaceable deepest languages (top 10 of ${missing.length}):`);
+    for (const [code, count] of missing.slice(0, 10)) console.log(`  ${String(count).padStart(6)}  ${code}`);
+  }
+  if (values.worklist) {
+    writeFileSync(values.worklist, `${worklistRows.join("\n")}\n`);
+    console.log(`wrote curation work list: ${values.worklist} (${worklistRows.length - 1} words)`);
+  }
+  if (report.warnings.length) {
+    console.log(`warnings (${report.warnings.length}), first 5:`);
+    for (const warning of report.warnings.slice(0, 5)) console.log(`  ${warning}`);
+  }
 } catch (err) {
   fail(err instanceof Error ? err.message : String(err));
 }

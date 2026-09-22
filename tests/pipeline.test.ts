@@ -117,6 +117,13 @@ describe("buildChains", () => {
     expect(isCandidateTerm("elapse")).toBe(true);
     expect(isCandidateTerm("bulk, term")).toBe(false);
     expect(isCandidateTerm("Runner")).toBe(false);
+    // Wiktionary stores prefix/suffix stubs as terms too: those are not words.
+    expect(isCandidateTerm("ab-")).toBe(false);
+    expect(isCandidateTerm("-ism")).toBe(false);
+    expect(isCandidateTerm("acantho-")).toBe(false);
+    expect(isCandidateTerm("well-made")).toBe(true);
+    expect(isCandidateTerm("go")).toBe(true);
+    expect(isCandidateTerm("a-")).toBe(false);
     expect(chains.has("bulk, term")).toBe(false);
   });
 

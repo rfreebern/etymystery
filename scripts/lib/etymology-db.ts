@@ -14,12 +14,26 @@ export interface EtymEdge {
   relatedTerm: string | null;
 }
 
-/** Streaming RFC 4180 row parser (handles quoted commas, escaped quotes, newlines). */
-export function forEachCsvRow(text: string, onRow: (row: string[]) => void): void {
-  const s = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+/**
+ * Streaming RFC 4180 row parser (handles quoted commas, escaped quotes and
+ * newlines). Chunk-safe: feed arbitrary UTF-8 chunk boundaries through
+ * `push()` and finish with `flush()`, so a 400 MB dataset can be filtered
+ * without ever materializing the whole file as one string.
+ */
+export interface CsvRowParser {
+  push(chunk: string): void;
+  flush(): void;
+}
+
+export function createCsvRowParser(onRow: (row: string[]) => void): CsvRowParser {
   let row: string[] = [];
   let field = "";
   let inQuotes = false;
+  // Deferred decisions: an escaped quote and a CR both need the NEXT character
+  // to resolve, and that character may live in the next chunk.
+  let pendingQuote = false;
+  let pendingCr = false;
+  let pendingCrInQuotes = false;
   const pushField = (): void => {
     row.push(field);
     field = "";
@@ -29,30 +43,66 @@ export function forEachCsvRow(text: string, onRow: (row: string[]) => void): voi
     if (row.length > 1 || (row[0] ?? "") !== "") onRow(row);
     row = [];
   };
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i]!;
-    if (inQuotes) {
-      if (ch === '"') {
-        if (s[i + 1] === '"') {
-          field += '"';
-          i++;
-        } else {
-          inQuotes = false;
+  return {
+    push(chunk: string): void {
+      for (let i = 0; i < chunk.length; i++) {
+        const ch = chunk[i]!;
+        if (pendingCr) {
+          pendingCr = false;
+          if (pendingCrInQuotes) {
+            pendingCrInQuotes = false;
+            if (ch === "\n") {
+              field += "\n"; // normalise CRLF inside a field, like the line endings
+              continue;
+            }
+            field += "\r";
+            // fall through: a lone CR inside a quoted field is literal
+          } else if (ch === "\n") {
+            continue; // CRLF row terminator split across a chunk boundary
+          }
         }
-      } else {
-        field += ch;
+        if (pendingQuote) {
+          pendingQuote = false;
+          if (ch === '"') {
+            field += '"'; // "" inside a quoted field: an escaped quote
+            continue;
+          }
+          inQuotes = false; // the quote closed the field; handle ch outside quotes
+        }
+        if (inQuotes) {
+          if (ch === '"') pendingQuote = true;
+          else if (ch === "\r") {
+            pendingCr = true;
+            pendingCrInQuotes = true;
+          } else field += ch;
+        } else if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ",") {
+          pushField();
+        } else if (ch === "\n") {
+          pushRow();
+        } else if (ch === "\r") {
+          pushRow();
+          pendingCr = true;
+        } else {
+          field += ch;
+        }
       }
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ",") {
-      pushField();
-    } else if (ch === "\n") {
-      pushRow();
-    } else {
-      field += ch;
-    }
-  }
-  if (field !== "" || row.length > 0) pushRow();
+    },
+    flush(): void {
+      if (pendingQuote) {
+        pendingQuote = false;
+        inQuotes = false;
+      }
+      if (field !== "" || row.length > 0) pushRow();
+    },
+  };
+}
+
+export function forEachCsvRow(text: string, onRow: (row: string[]) => void): void {
+  const parser = createCsvRowParser(onRow);
+  parser.push(text);
+  parser.flush();
 }
 
 /** Convenience wrapper returning the header row plus data rows. */
@@ -64,7 +114,9 @@ export function parseCsv(text: string): { headers: string[]; rows: string[][] } 
   return { headers: headers!.map((h) => h.trim()), rows: data };
 }
 
-function resolveColumn(headers: string[], aliases: string[], label: string, required: boolean): number {
+export type ColumnMap = { lang: number; term: number; reltype: number; relatedLang: number; relatedTerm: number };
+
+export function resolveColumn(headers: string[], aliases: string[], label: string, required: boolean): number {
   const lower = headers.map((h) => h.toLowerCase());
   for (const alias of aliases) {
     const idx = lower.indexOf(alias);
@@ -84,7 +136,7 @@ function resolveColumn(headers: string[], aliases: string[], label: string, requ
  * Header names are matched case-insensitively with fallback aliases.
  */
 export function extractEdges(text: string, reltypeFilter?: ReadonlySet<string>): EtymEdge[] {
-  let cols: { lang: number; term: number; reltype: number; relatedLang: number; relatedTerm: number } | null = null;
+  let cols: ColumnMap | null = null;
   const edges: EtymEdge[] = [];
   forEachCsvRow(text, (row) => {
     if (!cols) {
@@ -132,9 +184,13 @@ export const DONOR_RELATION_PRIORITY: Record<string, number> = {
   derived_from: 2,
 };
 
-/** Terms that make good puzzle words: lowercase single words of 3+ letters. */
+/**
+ * Terms that make good puzzle words: lowercase words of 3+ letters, possibly
+ * hyphenated internally. Both ends must be letters, which rejects the
+ * prefix/suffix stubs Wiktionary also stores ("ab-", "-ism", "acantho-").
+ */
 export function isCandidateTerm(term: string): boolean {
-  return /^[a-z][a-z'-]{2,}$/.test(term);
+  return /^[a-z][a-z'-]*[a-z]$/.test(term);
 }
 
 export interface OriginChain {

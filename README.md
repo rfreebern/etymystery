@@ -68,12 +68,17 @@ file host serves the whole game.
       --codes data/wiktionary_codes.csv \
       --overlay curated/language-geo.json \
       --out data/languages.tsv [--include-proto]
-    npm run build:bank -- \
+    npm run filter:edges -- \
       --edges data/etymology-db.csv.gz \
+      --languages data/languages.tsv \
+      --out data/edges-filtered.csv.gz [--all-reltypes]
+    npm run build:bank -- \
+      --edges data/edges-filtered.csv.gz \
       --languages data/languages.tsv \
       --curation data/curation.json \
       --out data/word-bank.json \
-      --version 1 [--epoch-start 2026-01-01] [--english-code en] [--max-depth 3]
+      --version 2 [--epoch-start 2026-09-21] [--english-code en] [--max-depth 3] \
+      [--deepest-attested] [--worklist data/curation-worklist.tsv]
 
 ## Playing it
 
@@ -95,11 +100,16 @@ playable end to end; grow it by curating more words and re-running
 Inputs:
 
 1. **etymology-db** (https://github.com/droher/etymology-db) — 4.2M
-   Wiktionary-derived etymology edges (CC BY-SA 3.0). Downloads are
-   OneDrive links in the repo README (Gzipped CSV recommended; generated
-   2023-12-05). The pipeline filters to donor relations
-   (borrowed_from, learned_borrowing_from, inherited_from, ...) and walks
-   origin chains up to `--max-depth` hops.
+   Wiktionary-derived etymology edges (CC BY-SA 3.0). Download the CSV from the
+   repo's **GitHub release assets** (the OneDrive links in its README are
+   view-only and reject scripted downloads):
+
+       curl -L -o data/etymology-db.csv.gz \
+         https://github.com/droher/etymology-db/releases/download/2023-12/etymology.csv.gz
+
+   That is 143 MB gzipped, 456 MB / 4,222,599 rows uncompressed. The pipeline
+   filters to donor relations (borrowed_from, learned_borrowing_from,
+   inherited_from, ...) and walks origin chains up to `--max-depth` hops.
 2. **languages.tsv** — Wiktionary language code -> modern geography (columns:
    code, name, countries, region, continent, lat, lng). Generate it from
    `wiktionary_codes.csv` (which ships with etymology-db) with:
@@ -117,10 +127,27 @@ Inputs:
    excluded by default — anchoring a reconstruction to a modern country would
    be indefensible — and can be opted into with `--include-proto`. The build
    report's `missingLanguage` list is the work list for growing the overlay.
+   Note etymology-db stores language NAMES ("Ancient Greek") while this file is
+   keyed by CODE ("grc"); the bank builder normalizes between them.
+   Running the generator against the real code list yields 312 languages.
 3. **curation.json** — hand-curated attestation years (facts, checked by
    hand against OED/Etymonline/your reference of choice), optional tier
    overrides and reveal blurbs. Words without a year are excluded and
    counted in the build report — this is the curation worklist.
+
+The full dataset never fits in memory comfortably, so filter it once to the
+edges a bank build can use:
+
+    npm run filter:edges -- \
+      --edges data/etymology-db.csv.gz \
+      --languages data/languages.tsv \
+      --out data/edges-filtered.csv.gz
+
+This streams the gzip (never holding the file as one string), keeps rows whose
+source language we can place on the map plus donor relations only, and prints
+the languages that block the most English words. On the 2023-12 release it
+reduces **4,222,599 rows to 771,573** (143 MB -> 9.1 MB) in ~20 s, and reports
+that 96.9% of English donor rows are covered by the generated language table.
 
 The repo also ships a tiny stand-in for input 1 so the client can be built
 without the 4.2M-edge download: `curated/seed-edges.csv` (32 edges, in
@@ -128,7 +155,7 @@ etymology-db's exact column schema). Together with the 22-language
 `curated/languages.tsv` and the 30-word `curated/curation.json`,
 `npm run build:seed` regenerates the seed bank committed at
 `web/public/word-bank.json`. Running the generator above against the real code
-list currently yields 237 languages (188 from the overlay, 49 derived).
+list currently yields 312 languages (263 from the overlay, 49 derived).
 
 ## Scoring
 
