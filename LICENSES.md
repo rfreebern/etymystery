@@ -52,6 +52,11 @@ open.
   while writing `curation.json`.
 - **WordWeb / Wordnik**: proprietary/licensed content, not redistributable
   into this project.
+- **Scraping or proxying the reference sites** (e.g. fetching Etymonline
+  server-side to render it): the curation admin app embeds reference pages in
+  iframes and links out where a site forbids framing, so the browser loads them
+  exactly as a human would. Nothing is fetched, stored or re-published by this
+  project's own server.
 - **Google Books / Google Trillion Word Corpus lists** (`google-10000-english`
   and similar): no explicit license, so not used. The SUBTLEX lists that
   `wordfreq` redistributes with permission are also avoided here; the chosen

@@ -181,10 +181,35 @@ England" words are excluded.
 - tests: 148 total (+10) for work-list parsing, batch selection, the audit rules
   (including agreement with scoreTemporal on out-of-range years) and merging.
 
+**Session 3 (cont. 4) — local curation admin app** (this batch)
+
+- admin/ — a zero-dependency local app (`npm run admin`, http://127.0.0.1:8765):
+  word + proposed chain + answer + the three fields on the left, every reference
+  source for that word on the right, so dating a word is one screen instead of
+  five tabs.
+- admin/sources.ts: ten reference sources with URL builders. Framing support was
+  MEASURED with curl, not assumed: Etymonline, Wiktionary (article and raw
+  wikitext), Google Ngrams, The Free Dictionary, archive.org and Bing send no
+  framing restriction; Merriam-Webster, HathiTrust and OED send
+  `X-Frame-Options: SAMEORIGIN` and render as one-click link cards instead.
+- admin/store.ts: state + persistence over the same files as the CLI
+  (data/curation-batch.json, data/skip-words.txt, curated/curation.json), so the
+  app and `npm run curate` are interchangeable. Merge keeps a `.bak` copy.
+- admin/server.ts: node:http only, bound to 127.0.0.1, static assets + six JSON
+  routes, 64 KB body cap, no directory traversal. Exported as createAdminServer()
+  so tests bind port 0 and no process is spawned.
+- Keyboard-first flow: Enter saves and advances, arrows navigate (an entered year
+  is saved on the way so research is never lost), digits jump between sources.
+- It never fetches a reference site server-side: iframes are the browser loading
+  pages a human could open, which keeps Etymonline's ToS intact (LICENSES.md).
+- tests: 161 total (+13) covering URL building, the measured framing flags, queue
+  building, batch pulls, save/skip/merge semantics and a real HTTP round trip
+  (page, assets, path traversal, state, sources, save, validation error, merge).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 148 passed (12 files)
+    npx vitest run            # 161 passed (13 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -326,3 +351,14 @@ England" words are excluded.
 - The curation file's order is normalised to alphabetical by `--mode merge`
   (it was hand-grouped by tier). Content is unchanged; the writer is otherwise
   byte-stable, so merging a finished file is a no-op diff.
+- Do not `pkill -f 'tsx admin/server.ts'` from a shell whose own command line
+  contains that string: pkill matches itself and kills the shell mid-command
+  (the server does stop, but the rest of the command line never runs). Use a PID
+  file or `pkill -f 'admin/server'` after the shell exits.
+- The admin server is single-instance by design: createAdminServer() injects its
+  paths into module-level state rather than closing over them, which keeps the
+  request handler a plain function. One server per process; tests get their own
+  temp data dir via the factory.
+- Reference sites' framing headers must be re-measured if the source list grows:
+  embedding is only legal/possible where the site allows it, and the app's
+  framable flags are the record of what was measured.

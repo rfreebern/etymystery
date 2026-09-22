@@ -20,7 +20,8 @@
     "gen:countries": "tsx scripts/gen-countries.ts",
     "bootstrap:languages": "tsx scripts/bootstrap-languages.ts",
     "filter:edges": "tsx scripts/filter-edges.ts",
-    "curate": "tsx scripts/curate.ts"
+    "curate": "tsx scripts/curate.ts",
+    "admin": "tsx admin/server.ts"
   },
   "devDependencies": {
     "@types/d3-geo": "^3.1.1",

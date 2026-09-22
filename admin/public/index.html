@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Etymystery — curation</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Etymystery curation</strong>
+      <span id="progress" class="muted"></span>
+      <span class="grow"></span>
+      <span id="status" class="status"></span>
+      <label class="toggle"><input type="checkbox" id="stacked" checked /> stack sources</label>
+      <button id="merge" class="secondary">Merge batch → curation.json</button>
+      <button id="next-batch" class="secondary">Pull next batch</button>
+    </header>
+
+    <main>
+      <section id="left" class="pane"></section>
+      <section id="right" class="pane sources"></section>
+    </main>
+
+    <footer id="keys" class="muted">
+      <kbd>Enter</kbd> save &amp; next · <kbd>←</kbd>/<kbd>→</kbd> move · <kbd>1</kbd>–<kbd>9</kbd> focus source ·
+      <kbd>r</kbd> reload source · <kbd>s</kbd> skip word · <kbd>m</kbd> merge
+    </footer>
+    <script src="/app.js"></script>
+  </body>
+</html>

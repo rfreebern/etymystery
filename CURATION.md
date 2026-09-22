@@ -44,6 +44,31 @@ and answer, and writes a skeleton to `data/curation-batch.json` (`"year": 0`
 means "not researched yet"). Already-curated words and anything listed in
 `data/skip-words.txt` (passed with `--skip`) are skipped.
 
+## 1b. Or use the admin app (recommended)
+
+```bash
+npm run admin          # http://127.0.0.1:8765
+```
+
+A local, dependency-free page for the same loop: the word, its chain, the answer
+and the three fields on the left; every reference source for that word on the
+right. Seven of them embed directly in iframes — Etymonline, Wiktionary (article
+and raw wikitext), Google Ngrams, The Free Dictionary, archive.org and a Bing
+search — and three cannot be embedded (Merriam-Webster, HathiTrust, OED send
+`X-Frame-Options: SAMEORIGIN`), so they render as prominent one-click links.
+Framing support in `admin/sources.ts` was measured with curl, not assumed.
+
+The app writes the same `data/curation-batch.json`, `data/skip-words.txt` and
+`curated/curation.json` as the CLI, so the two can be interleaved: curate in the
+app, `npm run curate -- --mode check` from the terminal, whatever suits.
+
+Keyboard: `Enter` saves and advances, `←`/`→` move (an entered year is saved on
+the way, so nothing is lost), `1`–`9` jump to a source, `r` reloads it,
+`s` skips the word, `m` merges the batch. Merge keeps a `.bak` copy of
+`curated/curation.json`. The server binds to `127.0.0.1` only, and it never
+fetches the reference sites itself — the iframes are just your browser loading
+pages you could open by hand.
+
 ## 2. Research each word
 
 For every word in the batch:
