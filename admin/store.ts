@@ -7,6 +7,7 @@
  */
 
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN } from "../src/timeline";
 import {
   auditCuration,
   mergeCuration,
@@ -55,6 +56,9 @@ export interface AdminState {
   skipWords: string[];
   issues: Array<{ word: string; problem: string }>;
   audit: CurationAudit;
+  /** The timeline window the game can score, from src/timeline.ts. */
+  yearFloor: number;
+  yearCeiling: number;
   paths: AdminPaths;
 }
 
@@ -146,8 +150,8 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const audit = auditCuration(curation, {
     knownWords: new Set(worklist.map((candidate) => candidate.word)),
     bankWords: readBankWords(paths.bank),
-    yearFloor: 1500,
-    yearCeiling: 2025,
+    yearFloor: ANSWER_YEAR_MIN,
+    yearCeiling: ANSWER_YEAR_MAX,
   });
 
   return {
@@ -158,6 +162,8 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
     skipWords,
     issues: audit.issues,
     audit,
+    yearFloor: ANSWER_YEAR_MIN,
+    yearCeiling: ANSWER_YEAR_MAX,
     paths,
   };
 }

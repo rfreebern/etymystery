@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   auditCuration,
-  bestPossibleTemporal,
   mergeCuration,
   parseWorklist,
   selectNextBatch,
   type Curation,
 } from "../scripts/lib/curation";
+import { bestPossibleTemporal } from "../src/timeline";
 import { scoreTemporal } from "../src/scoring";
 
 const WORKLIST = [

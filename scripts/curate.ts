@@ -14,6 +14,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN } from "../src/timeline";
 import {
   auditCuration,
   mergeCuration,
@@ -36,8 +37,8 @@ const { values } = parseArgs({
     bank: { type: "string", default: "data/word-bank.json" },
     skip: { type: "string" },
     limit: { type: "string", default: "25" },
-    floor: { type: "string", default: "1500" },
-    ceiling: { type: "string", default: "2025" },
+    floor: { type: "string", default: String(ANSWER_YEAR_MIN) },
+    ceiling: { type: "string", default: String(ANSWER_YEAR_MAX) },
   },
 });
 

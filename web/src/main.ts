@@ -5,6 +5,7 @@
 
 import { ROUNDS_PER_DAY, validateBank } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
+import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, ERAS, eraOf } from "../../src/timeline";
 import { feature } from "topojson-client";
 import type { BankEntry, WordBank } from "../../src/types";
 import { createGeocodeContext, toCountryFeatures } from "./geo-context";
@@ -20,10 +21,12 @@ import {
   type StoredGuess,
 } from "./game";
 
-const YEAR_MIN = 1500;
-const YEAR_MAX = 2025;
-
 const app = document.getElementById("app")!;
+
+/** e.g. "1400 · Middle English" — the widened window needs the period too. */
+function yearLabelText(year: number): string {
+  return `${year} · ${eraOf(year).label}`;
+}
 
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
@@ -120,15 +123,23 @@ async function boot(): Promise<void> {
     const timeline = el("div", "panel timeline");
     const slider = document.createElement("input");
     slider.type = "range";
-    slider.min = String(YEAR_MIN);
-    slider.max = String(YEAR_MAX);
+    slider.min = String(ANSWER_YEAR_MIN);
+    slider.max = String(ANSWER_YEAR_MAX);
+    slider.step = "1";
     slider.value = String(guess.year);
-    const yearLabel = el("span", "year", String(guess.year));
+    const yearLabel = el("span", "year", yearLabelText(guess.year));
     slider.addEventListener("input", () => {
       guess = { ...guess, year: Number(slider.value) };
-      yearLabel.textContent = slider.value;
+      yearLabel.textContent = yearLabelText(guess.year);
     });
-    timeline.append(el("label", undefined, "First used in"), slider, yearLabel);
+    const scale = el("div", "timeline-scale");
+    for (const era of ERAS) {
+      const segment = el("span", "era", era.label);
+      segment.title = `${era.label}: ${era.from}–${era.to}`;
+      segment.style.flexGrow = String(era.to - era.from + 1);
+      scale.append(segment);
+    }
+    timeline.append(el("label", undefined, "First used in"), slider, yearLabel, scale);
 
     const actions = el("div", "actions");
     const submitButton = el("button", undefined, "Lock it in") as HTMLButtonElement;

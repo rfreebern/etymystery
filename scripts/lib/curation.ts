@@ -11,6 +11,8 @@
  * the whole project (see CURATION.md).
  */
 
+import { bestPossibleTemporal } from "../../src/timeline";
+
 export interface CurationEntryInput {
   year?: number;
   tier?: number;
@@ -80,14 +82,12 @@ export interface CurationAudit {
   unplayableOnSlider: string[];
 }
 
-/** Mirror of scoreTemporal's envelope, so the audit can quantify the damage. */
-export function bestPossibleTemporal(year: number, floor: number, ceiling: number): number {
-  const window = 50;
-  const decay = 100;
-  const nearest = year < floor ? floor : year > ceiling ? ceiling : year;
-  const over = Math.max(0, Math.abs(year - nearest) - window);
-  return Math.round(100 * Math.exp(-over / decay));
-}
+/**
+ * Audit a curation file. `knownWords` is every word the pipeline can currently
+ * bank (the work list); `yearFloor/yearCeiling` is the range the timeline
+ * slider can express — src/timeline.ts holds that window for the client, this
+ * CLI and the admin app alike, so the tooling cannot drift from the game.
+ */
 
 /**
  * Audit a curation file. `knownWords` is every word the pipeline can currently

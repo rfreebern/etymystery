@@ -71,10 +71,15 @@ main {
 .pin-guess { fill: var(--pin); stroke: white; stroke-width: 1.2; }
 .pin-answer { fill: var(--accent); stroke: white; stroke-width: 1.2; }
 
-.timeline { display: flex; align-items: center; gap: 14px; }
+.timeline { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .timeline input[type="range"] { flex: 1; accent-color: var(--accent); }
-.timeline .year { min-width: 64px; text-align: center; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.timeline .year { min-width: 190px; text-align: center; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .timeline label { color: var(--muted); font-size: 13px; }
+.timeline-scale {
+  flex-basis: 100%; display: flex; gap: 2px; margin-top: 2px;
+  font-size: 11px; color: var(--muted); text-align: center;
+}
+.timeline-scale .era { background: rgba(255, 255, 255, 0.05); border-radius: 3px; padding: 1px 4px; }
 
 .actions { display: flex; gap: 12px; justify-content: center; }
 

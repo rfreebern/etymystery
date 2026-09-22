@@ -7,8 +7,10 @@
  */
 
 const el = (id) => document.getElementById(id);
-const YEAR_FLOOR = 1500;
-const YEAR_CEIL = 2025;
+// The timeline window is whatever the server reports (src/timeline.ts), so the
+// app can never disagree with what the game can score.
+let yearFloor = 0;
+let yearCeiling = 0;
 
 let state = null;
 let sources = [];
@@ -39,7 +41,7 @@ function status(message, isError = false) {
 
 /** Same decay envelope as scoreTemporal, for instant feedback on a year. */
 function bestPossibleTemporal(year) {
-  const nearest = year < YEAR_FLOOR ? YEAR_FLOOR : year > YEAR_CEIL ? YEAR_CEIL : year;
+  const nearest = year < yearFloor ? yearFloor : year > yearCeiling ? yearCeiling : year;
   const over = Math.max(0, Math.abs(year - nearest) - 50);
   return Math.round(100 * Math.exp(-over / 100));
 }
@@ -54,6 +56,8 @@ function issuesFor(word) {
 
 async function load(index = 0) {
   state = await api(`/api/state?index=${index}`);
+  yearFloor = state.yearFloor;
+  yearCeiling = state.yearCeiling;
   render();
   await loadSources();
 }
@@ -158,10 +162,10 @@ function render() {
     dirty = true;
     const value = Number(el("year").value);
     const warn = el("year-warn");
-    if (Number.isFinite(value) && value > 0 && (value < YEAR_FLOOR || value > YEAR_CEIL)) {
+    if (Number.isFinite(value) && value > 0 && (value < yearFloor || value > yearCeiling)) {
       warn.hidden = false;
       warn.textContent =
-        `⚠ outside the slider window (${YEAR_FLOOR}–${YEAR_CEIL}): ` +
+        `⚠ outside the slider window (${yearFloor}–${yearCeiling}): ` +
         `best possible temporal score ~${bestPossibleTemporal(value)}/100`;
     } else {
       warn.hidden = true;

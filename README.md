@@ -88,11 +88,14 @@ file host serves the whole game.
 
 `npm run dev` serves the game. Ten rounds a day, one per difficulty tier.
 Each round: drop a pin where the word came from, drag the year slider, lock it
-in. The reveal shows the two score components separately plus the full origin
-route, and progress is kept in `localStorage` under
-`etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day resumes and a
-finished day is never re-scored. `npm run build:web` emits a fully static
-`web/dist/` — any file host serves it.
+in. The timeline spans **700–2025** with era markers (Old English · Middle
+English · Early Modern · Modern), so medieval loanwords are playable; that window
+lives in `src/timeline.ts` and is shared with the curation tooling, so the tools
+can never disagree with what the game scores. The reveal shows the two score
+components separately plus the full origin route, and progress is kept in
+`localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
+resumes and a finished day is never re-scored. `npm run build:web` emits a fully
+static `web/dist/` — any file host serves it.
 
 The committed `web/public/word-bank.json` is a **30-word seed bank** (3 days
 of puzzles, 22 languages) generated from `curated/`. It exists so the client is

@@ -7,14 +7,16 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 ## Status (as of 2026-09-21, session 3)
 
 Engine + data pipeline + web client COMPLETE and playable end to end against a
-30-word seed bank: 138/138 tests passing, typecheck clean, static build green.
+30-word seed bank: 166/166 tests passing, typecheck clean, static build green.
 Language geography is generated (312 languages from the real Wiktionary code
 list, 96.9% of English donor rows covered) and the **real 4.2M-row etymology
 dataset has been ingested**: 41,985 candidate words whose origin can be mapped,
 17 bankable today because only the 30 seed words have curated years. Curation is
-the bottleneck, and it is now **ordered**: frequency ranking shows 2,380 of the
-top 5,000 English words are usable (238 days of puzzles) once the "came from
-England" words are excluded.
+the bottleneck, and it is now **ordered** (frequency rank: 2,380 of the top 5,000
+English words usable once English-origin words are excluded) and **tooled**
+(`npm run curate` for the loop, `npm run admin` for the word-plus-references UI).
+The timeline window was widened to **700–2025** in `src/timeline.ts`, which
+retroactively fixed three unwinnable rounds in the shipped bank.
 
 ## Done
 
@@ -206,10 +208,36 @@ England" words are excluded.
   building, batch pulls, save/skip/merge semantics and a real HTTP round trip
   (page, assets, path traversal, state, sources, save, validation error, merge).
 
+**Session 3 (cont. 5) — timeline window widened to 700–2025** (this batch)
+
+- src/timeline.ts — the window is now defined ONCE: `ANSWER_YEAR_MIN = 700`,
+  `ANSWER_YEAR_MAX = 2025`, the `ERAS` labels the slider shows, `isPlayableYear()`
+  and `bestPossibleTemporal()`, which delegates to the real `scoreTemporal`. A
+  mirrored copy of a scoring formula is exactly how the tooling drifted before.
+- web/src/main.ts: slider min/max and the year label come from that module, so the
+  label reads "1400 · Middle English", with an era scale under the slider — a
+  1,300-year range is unreadable without periods.
+- Propagated to every other copy, removing four more hardcoded values:
+  scripts/curate.ts (`--floor`/`--ceiling` defaults), admin/store.ts (audit window,
+  now also returned in the API state), admin/public/app.js (reads the window from
+  the server instead of literals) and scripts/lib/curation.ts (imports the shared
+  helper).
+- Effect: the three previously unwinnable shipped rounds are fixed with no bank
+  rebuild (`they` 1200, `window` 1225, `orange` 1300 can now reach 100/100); the
+  CLI audit drops from 16 issues to 13 with ZERO "outside the slider" flags; the
+  admin API reports yearFloor 700 / yearCeiling 2025.
+- Rationale for 700: the start of the English written record. It makes the Old
+  English loanword layer (`cheese`, `butter`, `mile`, `church`, `pepper` — Latin
+  and Greek before 1150) curatable instead of unusable. The wider window does make
+  the temporal axis harder, which is what the tier ladder is for.
+- tests: 166 total (+5) for the window constants, era boundaries (no gaps or
+  overlaps), playability, and agreement between bestPossibleTemporal and the real
+  scorer at both ends of the window.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 161 passed (13 files)
+    npx vitest run            # 166 passed (14 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -231,9 +259,8 @@ England" words are excluded.
 
 ## Remaining (next session)
 
-1. Curate — the process is in CURATION.md. First decide the timeline window
-   (slider 1500..2025 vs Middle English words; see CURATION.md "Decision
-   required"), then:
+1. Curate — the process is in CURATION.md, the window is settled (700–2025), and
+   the tools are ready (`npm run admin` is the fastest path). Then:
    a. `npm run curate -- --mode next --limit 25`, research each word (verify the
       CHAIN as well as the year — the chain is a claim from an unvalidated
       parse), `--mode merge`, `--mode check` for capacity.
@@ -362,3 +389,12 @@ England" words are excluded.
 - Reference sites' framing headers must be re-measured if the source list grows:
   embedding is only legal/possible where the site allows it, and the app's
   framable flags are the record of what was measured.
+- The answer window was hardcoded in FIVE places (web slider, curate CLI, admin
+  store, admin client, docs) and they had already drifted: the slider said 1500
+  while the shipped bank contained 1200/1225/1300 answers. Anything the game
+  scores and the tools validate must live in one module (`src/timeline.ts`), and
+  the client must read it from the API rather than keep a copy.
+- Never mirror a scoring formula in tooling: `bestPossibleTemporal` used to
+  re-implement the decay envelope and could silently disagree with
+  `scoreTemporal`. It now calls the real scorer with the clamped year, and a test
+  asserts they agree at both ends of the window.

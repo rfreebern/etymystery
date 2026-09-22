@@ -30,8 +30,10 @@ npm run build:bank -- --edges data/edges-filtered.csv.gz --languages data/langua
   --epoch-start 2026-09-21 --frequency data/en-frequency.txt --exclude-origin en,ang,enm
 ```
 
-Settle the timeline-window decision below **before** curating: it decides which
-words are playable at all.
+Settle the timeline window before curating? It is **already settled and shared**:
+`src/timeline.ts` defines the window (currently **700–2025**) and the web client,
+the CLI and the admin app all read it, so the tools cannot disagree with the game.
+See "The timeline window" below.
 
 ## 1. Pull the next batch
 
@@ -91,8 +93,8 @@ For every word in the batch:
 5. **Write the blurb** (optional but expected): one factual line naming the donor
    term, e.g. `"From Arabic qahwah, likely via Turkish kahve and Dutch koffie."`
    Never add colour you cannot source.
-6. **If the year falls outside the slider window, do not enter it yet** (see the
-   decision below).
+6. **Any attested year from 700 onward is playable.** `check` flags years outside
+   the window with the exact score they could reach.
 
 ## 3. Validate and merge
 
@@ -134,24 +136,32 @@ and grow the shipped bank with `appendToBank` so already-shipped tier positions
 never change (see PROGRESS.md). Rebuilding from scratch is only acceptable while
 the bank has no players.
 
-## Decision required: the timeline window
+## The timeline window (700–2025)
 
-The slider is `1500..2025` (`web/src/main.ts`), yet the shipped bank already
-contains `they` (1200), `window` (1225) and `orange` (1300). Those rounds cannot
-be won: the best achievable temporal score is 8, 11 and 22 out of 100 no matter
-what the player does — `npm run curate -- --mode check` prints exactly this.
+The slider spans `ANSWER_YEAR_MIN`–`ANSWER_YEAR_MAX` from `src/timeline.ts`, which
+is the single source of truth: the web client, `npm run curate` and the admin app
+all read that one module, so the curation tooling can never drift from what the
+game can actually score. It also exposes the era labels the slider shows
+(Old English · Middle English · Early Modern · Modern) and `bestPossibleTemporal()`,
+which delegates to the real `scoreTemporal` so "this answer cannot score above
+N/100" is computed, never guessed.
 
-It matters because a large share of the most common interesting words are Middle
-English loanwords attested before 1500 (`just`, `money`, `please`, `sure`,
-`take` …). Two options:
+Why 700: that is the start of the English written record (Cædmon's Hymn, c. 730).
+It makes the Old English loanword layer curatable — `cheese`, `butter`, `mile`,
+`church`, `pepper` came from Latin and Greek before 1150 — instead of unusable.
+Previously the floor was 1500, which silently made three shipped words
+(`they` 1200, `window` 1225, `orange` 1300) unwinnable: the best possible
+temporal score was 8, 11 and 22 out of 100 with no way for a player to do better.
+Widening the window fixed those rounds retroactively; no bank rebuild was needed.
 
-- **Widen the window** to, say, 1100–2025 (one constant, then re-check the
-  slider's label granularity) and keep those words, or
-- **Exclude pre-1500 words** from curation, which removes a large part of the
-  vocabulary because they can never score.
+The wider window does make the temporal axis harder (the player searches ~1300
+years instead of ~525), which is intended: the difficulty ladder is what keeps
+round 1 easy, and the tier heuristic already pushes early-attested words toward
+high tiers.
 
-Until that is decided: curate only words whose year falls inside the window, and
-let `check` flag the rest.
+Rule of thumb for curation: any attested year from 700 onward is playable, and
+`npm run curate -- --mode check` flags anything outside the window with its exact
+score ceiling.
 
 ## Cadence and budget
 
