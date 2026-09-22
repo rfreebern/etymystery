@@ -64,6 +64,7 @@ file host serves the whole game.
     npm run preview        # serve the built site
     npm run build:seed     # rebuild web/public/word-bank.json from curated/
     npm run gen:countries  # regenerate web/src/countries.json
+    npm run curate -- --mode next|check|merge   # see CURATION.md for the process
     npm run bootstrap:languages -- \
       --codes data/wiktionary_codes.csv \
       --overlay curated/language-geo.json \
@@ -172,6 +173,7 @@ candidates starting with genuinely interesting answers (`just` ← Old French,
 Curation must check the *chain*, not only the year: etymology-db is a faithful
 parse of Wiktionary, not a validated dataset, so it contains dubious relations
 (`name` ← Wolof, `so` ← Japanese). The supplied chain is a claim to verify.
+The step-by-step loop lives in [CURATION.md](CURATION.md).
 
 The repo also ships a tiny stand-in for input 1 so the client can be built
 without the 4.2M-edge download: `curated/seed-edges.csv` (32 edges, in

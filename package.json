@@ -19,7 +19,8 @@
     "build:seed": "tsx scripts/build-bank.ts --edges curated/seed-edges.csv --languages curated/languages.tsv --curation curated/curation.json --out web/public/word-bank.json --version 1 --epoch-start 2026-09-21",
     "gen:countries": "tsx scripts/gen-countries.ts",
     "bootstrap:languages": "tsx scripts/bootstrap-languages.ts",
-    "filter:edges": "tsx scripts/filter-edges.ts"
+    "filter:edges": "tsx scripts/filter-edges.ts",
+    "curate": "tsx scripts/curate.ts"
   },
   "devDependencies": {
     "@types/d3-geo": "^3.1.1",

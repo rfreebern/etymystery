@@ -155,10 +155,36 @@ England" words are excluded.
 - tests: 138 total (+9) for parsing/ranking, origin exclusion, and the
   unranked-candidate count.
 
+**Session 3 (cont. 3) — curation loop tooling** (this batch)
+
+- CURATION.md: the end-to-end process (setup, batch, per-word research rules,
+  merge, check, ship, plus the timeline-window decision and the budget).
+- scripts/lib/curation.ts + scripts/curate.ts (`npm run curate`): `--mode next`
+  picks the next uncurated words (skipping curated + a skip list) and writes a
+  skeleton batch with the proposed chain; `--mode merge` refuses entries without
+  a year, folds them into curated/curation.json in the hand-written one-line
+  style (verified byte-stable: merging a finished file is a no-op diff), and
+  reports what needs attention; `--mode check` reports curated count, per-tier
+  histogram, days-of-play capacity and all issues.
+- The audit quantifies unplayable years using the same decay envelope as
+  scoreTemporal, so "this round can never score above N/100" is printed rather
+  than guessed.
+- Finding: the shipped slider (1500..2025) cannot express `they` (1200, max
+  score 8/100), `window` (1225, 11) or `orange` (1300, 22). Since a large share
+  of the most common interesting words are Middle English loanwords attested
+  before 1500, this must be decided (widen the window vs exclude pre-1500 words)
+  before curating in volume.
+- Finding: `curated/curation.json` is DEMO data — its 30 words were curated
+  against the hand-written seed fixture, so only 17 of them have a chain in the
+  real 4.2M-row dataset. Starting real curation means treating it as the seed of
+  a new file, not as already-done work.
+- tests: 148 total (+10) for work-list parsing, batch selection, the audit rules
+  (including agreement with scoreTemporal on out-of-range years) and merging.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 138 passed (11 files)
+    npx vitest run            # 148 passed (12 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -180,14 +206,17 @@ England" words are excluded.
 
 ## Remaining (next session)
 
-1. Curation is now THE bottleneck, and the order is ready:
-   a. Curate years for the ranked work list, starting at
-      data/curation-worklist-interesting.tsv (26,590 words, most common first,
-      `--exclude-origin en,ang,enm`). Verify the CHAIN as well as the year: it
-      comes from an unvalidated parse.
-   b. Build the real bank as `appendToBank(v1, curatedWords)` with the SAME
+1. Curate — the process is in CURATION.md. First decide the timeline window
+   (slider 1500..2025 vs Middle English words; see CURATION.md "Decision
+   required"), then:
+   a. `npm run curate -- --mode next --limit 25`, research each word (verify the
+      CHAIN as well as the year — the chain is a claim from an unvalidated
+      parse), `--mode merge`, `--mode check` for capacity.
+   b. Treat the 30 existing entries as demo data: only 17 have a chain in the
+      real dataset, so most of the file is fixture-based history.
+   c. Build the real bank as `appendToBank(v1, curatedWords)` with the SAME
       epoch (20717) and version bump, so shipped tier positions never move.
-   c. Ship it: copy to web/public/word-bank.json, rebuild the web app.
+   d. Ship it: copy to web/public/word-bank.json, rebuild the web app.
 2. Decide the proto-language policy with the numbers now available:
    default (respect "deepest origin") = 17 bankable / 4,141 words lost;
    `--deepest-attested` = 21 bankable / 4,137 recovered. The lost words' answers
@@ -287,3 +316,13 @@ England" words are excluded.
   corpus lists have no explicit license and SUBTLEX redistribution needs
   permission, so both are deliberately unused. Update LICENSES.md whenever a new
   data source enters the pipeline.
+- The work list contains only UNCURATED candidates, so `auditCuration` needs the
+  bank as well to tell a legitimately-curated word from a typo: a typo never gets
+  a chain, so it never reaches the bank and is still flagged. `--bank
+  data/word-bank.json` must be built with the SAME flags as the work list.
+- `curated/curation.json` is demo data curated against the hand-written seed
+  fixture: only 17 of its 30 words have a chain in the real dataset, so `--mode
+  check` reports the rest as "no mappable chain". That is correct, not a bug.
+- The curation file's order is normalised to alphabetical by `--mode merge`
+  (it was hand-grouped by tier). Content is unchanged; the writer is otherwise
+  byte-stable, so merging a finished file is a no-op diff.
