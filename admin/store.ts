@@ -42,10 +42,16 @@ export interface QueueItem {
   chainDepth: number;
   deepestLanguage: string;
   chain: string[];
+  /** Every origin the recorded chains support; more than one = homograph. */
+  origins: string[];
   inWorklist: boolean;
   year: number;
   tier: number;
   blurb: string;
+  /** Part of speech this entry is about (required for homographs). */
+  pos: string;
+  /** The origin the curator verified, when the chains disagree. */
+  origin: string;
 }
 
 export interface AdminState {
@@ -139,10 +145,13 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       chainDepth: candidate?.chainDepth ?? 0,
       deepestLanguage: candidate?.deepestLanguage ?? "",
       chain: candidate?.chain ?? [],
+      origins: candidate?.origins ?? [],
       inWorklist: Boolean(candidate),
       year: entry.year ?? 0,
       tier: entry.tier ?? candidate?.tier ?? 5,
       blurb: entry.blurb ?? "",
+      pos: entry.pos ?? "",
+      origin: entry.origin ?? "",
     };
   });
 
@@ -150,6 +159,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const audit = auditCuration(curation, {
     knownWords: new Set(worklist.map((candidate) => candidate.word)),
     bankWords: readBankWords(paths.bank),
+    originsByWord: new Map(worklist.map((candidate) => [candidate.word, candidate.origins])),
     yearFloor: ANSWER_YEAR_MIN,
     yearCeiling: ANSWER_YEAR_MAX,
   });
@@ -193,7 +203,7 @@ export function pullNextBatch(paths: AdminPaths, limit: number): AdminState {
 /** Save one researched word into the batch file. Returns the updated state. */
 export function saveEntry(
   paths: AdminPaths,
-  entry: { word: string; year: number; tier: number; blurb: string },
+  entry: { word: string; year: number; tier: number; blurb: string; pos?: string; origin?: string },
   index: number,
 ): AdminState {
   const batch = readBatch(paths.batch);
@@ -202,8 +212,14 @@ export function saveEntry(
   if (!Number.isFinite(year) || year < 0 || year > 2200) throw new Error(`year ${entry.year} is out of range`);
   const tier = Math.round(entry.tier);
   if (!Number.isInteger(tier) || tier < 1 || tier > 10) throw new Error(`tier ${entry.tier} must be 1..10`);
+  const pos = (entry.pos ?? "").trim().toLowerCase();
+  if (pos && !/^[a-z][a-z -]{1,19}$/.test(pos)) {
+    throw new Error(`pos "${entry.pos}" should be a lowercase label like "noun"`);
+  }
   const saved: Curation[string] = { year, tier };
   if (entry.blurb.trim()) saved.blurb = entry.blurb.trim();
+  if (pos) saved.pos = pos;
+  if (entry.origin?.trim()) saved.origin = entry.origin.trim();
   batch[entry.word] = saved;
   writeBatch(paths.batch, batch);
   return buildQueue(paths, index);

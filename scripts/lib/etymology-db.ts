@@ -201,6 +201,25 @@ export interface OriginChain {
   firstPriority: number;
 }
 
+/** One distinct path through the donor graph for a word. */
+export interface ChainVariant {
+  /** Hops from the immediate donor outward: language plus the donor term. */
+  hops: Array<{ lang: string; term: string }>;
+  firstPriority: number;
+}
+
+export interface ChainWalk {
+  /** Best chain per word, as the bank uses it. */
+  chains: Map<string, OriginChain>;
+  /**
+   * Every distinct chain per word. A word with more than one is a homograph:
+   * different senses genuinely come from different places (`back` is inherited
+   * from Old English in one sense and borrowed from French in another), so the
+   * pipeline must not pretend its pick is the only answer.
+   */
+  variants: Map<string, ChainVariant[]>;
+}
+
 export interface BuildChainsOptions {
   /** Source-language code, default "en". */
   englishLangCode?: string;
@@ -212,8 +231,16 @@ export interface BuildChainsOptions {
  * Build English-word origin chains by walking the edge graph outward from
  * each English entry, preferring the clearest borrowing relations. Cycles
  * are pruned; the best chain per word (most geographic, then deepest) wins.
+ *
+ * `buildChainsWithVariants` additionally returns every distinct chain, which is
+ * how homographs (`back` the native word vs `back` borrowed from French) are
+ * detected instead of silently collapsed into one arbitrary answer.
  */
 export function buildChains(edges: EtymEdge[], options: BuildChainsOptions = {}): Map<string, OriginChain> {
+  return buildChainsWithVariants(edges, options).chains;
+}
+
+export function buildChainsWithVariants(edges: EtymEdge[], options: BuildChainsOptions = {}): ChainWalk {
   const english = options.englishLangCode ?? "en";
   const maxDepth = Math.max(1, options.maxDepth ?? 3);
 
@@ -237,6 +264,8 @@ export function buildChains(edges: EtymEdge[], options: BuildChainsOptions = {})
   }
 
   const chains = new Map<string, OriginChain>();
+  const variants = new Map<string, ChainVariant[]>();
+  const seen = new Map<string, Set<string>>();
   for (const edge of edges) {
     if (edge.lang !== english) continue;
     if (!(edge.reltype in DONOR_RELATION_PRIORITY)) continue;
@@ -244,7 +273,9 @@ export function buildChains(edges: EtymEdge[], options: BuildChainsOptions = {})
     if (edge.relatedLang === english) continue;
     if (!isCandidateTerm(edge.term)) continue;
 
-    const chainLangs = [edge.relatedLang];
+    const hops: Array<{ lang: string; term: string }> = [
+      { lang: edge.relatedLang, term: edge.relatedTerm },
+    ];
     let currentKey = `${edge.relatedLang}\u0000${edge.relatedTerm.toLowerCase()}`;
     const visited = new Set<string>([`${english}\u0000${edge.term.toLowerCase()}`]);
     for (let depth = 1; depth < maxDepth; depth++) {
@@ -253,20 +284,31 @@ export function buildChains(edges: EtymEdge[], options: BuildChainsOptions = {})
       const next = byLangTerm.get(currentKey)?.[0];
       if (!next?.relatedLang || !next.relatedTerm) break;
       if (next.relatedLang === english) break;
-      chainLangs.push(next.relatedLang);
+      hops.push({ lang: next.relatedLang, term: next.relatedTerm });
       currentKey = `${next.relatedLang}\u0000${next.relatedTerm.toLowerCase()}`;
+    }
+
+    const termKey = edge.term.toLowerCase();
+    const hopSignature = hops.map((hop) => `${hop.lang}\u0000${hop.term.toLowerCase()}`).join(">");
+    const seenForTerm = seen.get(termKey) ?? new Set<string>();
+    if (!seenForTerm.has(hopSignature)) {
+      seenForTerm.add(hopSignature);
+      seen.set(termKey, seenForTerm);
+      const list = variants.get(termKey);
+      const variant: ChainVariant = { hops, firstPriority: DONOR_RELATION_PRIORITY[edge.reltype]! };
+      if (list) list.push(variant);
+      else variants.set(termKey, [variant]);
     }
 
     const candidate: OriginChain = {
       term: edge.term,
-      chainLangs,
+      chainLangs: hops.map((hop) => hop.lang),
       firstPriority: DONOR_RELATION_PRIORITY[edge.reltype]!,
     };
-    const key = edge.term.toLowerCase();
-    const existing = chains.get(key);
-    if (!existing || isBetterChain(candidate, existing)) chains.set(key, candidate);
+    const existing = chains.get(termKey);
+    if (!existing || isBetterChain(candidate, existing)) chains.set(termKey, candidate);
   }
-  return chains;
+  return { chains, variants };
 }
 
 function isBetterChain(a: OriginChain, b: OriginChain): boolean {

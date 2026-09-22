@@ -106,10 +106,17 @@ async function boot(): Promise<void> {
     );
 
     const wordPanel = el("div", "panel");
+    // A homograph's senses have different origins, so the sense has to be on
+    // screen: the answer is about this part of speech, not the word in general.
+    const wordLabel = entry.pos ? `${entry.word.toUpperCase()} (${entry.pos})` : entry.word.toUpperCase();
     wordPanel.append(
       meta,
-      el("div", "word", entry.word.toUpperCase()),
-      el("p", "prompt", "Where did this word originally come from — and when did English first use it?"),
+      el("div", "word", wordLabel),
+      el(
+        "p",
+        "prompt",
+        `Where did this ${entry.pos ?? "word"} originally come from — and when did English first use it?`,
+      ),
     );
 
     const mapPanel = el("div", "panel");
@@ -157,7 +164,7 @@ async function boot(): Promise<void> {
     worldMap.revealAnswer(entry, stored.guess.point);
 
     const panel = el("div", "panel");
-    panel.append(el("div", "word", entry.word.toUpperCase()));
+    panel.append(el("div", "word", entry.pos ? `${entry.word.toUpperCase()} (${entry.pos})` : entry.word.toUpperCase()));
 
     const scores = el("div", "scores");
     const chips: Array<[string, number]> = [["Year", stored.temporal], ["Map", stored.geographic], ["Round", stored.total]];

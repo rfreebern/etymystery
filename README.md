@@ -140,7 +140,10 @@ Inputs:
 3. **curation.json** — hand-curated attestation years (facts, checked by
    hand against OED/Etymonline/your reference of choice), optional tier
    overrides and reveal blurbs. Words without a year are excluded and
-   counted in the build report — this is the curation worklist.
+   counted in the build report — this is the curation worklist. Two more fields
+   matter for homographs: `pos` (the part of speech the puzzle is about) and
+   `origin` (the sense's origin when the recorded chains disagree — `back` is
+   Old English as a noun but came via French in another sense; see CURATION.md).
 
 The full dataset never fits in memory comfortably, so filter it once to the
 edges a bank build can use:

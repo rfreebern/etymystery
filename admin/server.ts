@@ -111,6 +111,8 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
               year: Number(body.year),
               tier: Number(body.tier),
               blurb: String(body.blurb ?? ""),
+              pos: String(body.pos ?? ""),
+              origin: String(body.origin ?? ""),
             },
             Number(body.index ?? 0),
           );

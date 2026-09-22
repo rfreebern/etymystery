@@ -120,6 +120,9 @@ export function validateEntry(entry: BankEntry): void {
   const problems: string[] = [];
   if (!entry.id || /\s/.test(entry.id)) problems.push("id must be a non-empty slug without whitespace");
   if (!entry.word.trim()) problems.push("word must be non-empty");
+  if (entry.pos !== undefined && !/^[a-z][a-z -]{1,19}$/.test(entry.pos)) {
+    problems.push(`pos must be a lowercase label like "noun" or "verb", got "${entry.pos}"`);
+  }
   if (!Number.isFinite(entry.year) || entry.year < -4000 || entry.year > 2200) {
     problems.push("year must be a finite year between -4000 and 2200");
   }

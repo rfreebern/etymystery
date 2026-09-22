@@ -144,6 +144,40 @@ and grow the shipped bank with `appendToBank` so already-shipped tier positions
 never change (see PROGRESS.md). Rebuilding from scratch is only acceptable while
 the bank has no players.
 
+## Parts of speech and multiple origins
+
+Different senses of the same word often have different origins *and* different
+dates, so an entry has to say which sense it is about. `back` is the canonical
+case: the familiar word is inherited from Old English (`bæc`), while another
+sense came via French (`bac`) — and the pipeline's tie-break prefers borrowings,
+so on its own it would have graded "French" as the right answer for a native word.
+
+So every candidate row carries an **`origins`** column listing each place its
+recorded chains support, and a word with more than one is flagged as ambiguous
+(about a third of candidates are). When you curate one:
+
+- **`pos`** — always set it, e.g. `"noun"`, `"verb"`, `"adjective"`, `"adverb"`.
+  It appears in the puzzle ("Where did this noun originally come from…?") and in
+  the reveal, so the player knows which sense is being asked about.
+- **`origin`** — set it whenever the row lists more than one origin, naming the
+  one you verified for that sense (spelled exactly as in the `origins` column).
+  This overrides the pipeline's pick and is the difference between a correct
+  answer and a plausible-but-wrong one. The builder refuses an `origin` the data
+  does not support, and `--mode check` flags any homograph missing either field.
+
+Two details worth knowing:
+
+- A chosen branch may end in a reconstruction (Old English under Proto-West
+  Germanic, as with `back`). Picking it anchors the answer to the deepest hop
+  that has a home on a modern map — the curator's choice is authoritative, so it
+  is never dropped for being "buried". The full chain still shows on the reveal.
+- The work list's `origins` column is a list of *answerable* places: a variant
+  whose deepest hop is a reconstruction still contributes the deepest real place
+  inside it.
+
+`npm run curate -- --mode next` prints each ambiguous word's origins, and the
+admin app shows them as a warning with a POS field and an origin picker.
+
 ## The timeline window (700–2025)
 
 The slider spans `ANSWER_YEAR_MIN`–`ANSWER_YEAR_MAX` from `src/timeline.ts`, which

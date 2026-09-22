@@ -83,6 +83,8 @@ function readForm() {
     year: Number(el("year").value),
     tier: Number(document.querySelector(".tiers button.active")?.dataset.tier || item.tier),
     blurb: el("blurb").value,
+    pos: el("pos")?.value ?? "",
+    origin: el("origin")?.value ?? "",
     index: state.index,
   };
 }
@@ -137,6 +139,12 @@ function render() {
       item.frequencyRank ? ` · frequency rank ${item.frequencyRank}` : " · unranked (rare)"
     }${item.chainDepth ? ` · ${item.chainDepth} hop${item.chainDepth === 1 ? "" : "s"}` : ""}</div>
     ${problems.length ? `<div class="issue">⚠ ${problems.join("; ")}</div>` : ""}
+    ${
+      item.origins.length > 1
+        ? `<div class="issue">⚠ ${item.origins.length} recorded origins: ${item.origins.join(", ")} — these are
+           different senses of the word, so say which one this entry is about.</div>`
+        : ""
+    }
     <div class="field">
       <label for="year">Year English first used it</label>
       <div class="row">
@@ -146,6 +154,30 @@ function render() {
       </div>
       <div id="year-warn" class="warn" hidden></div>
     </div>
+    <div class="field">
+      <label for="pos">Part of speech</label>
+      <div class="row">
+        <input id="pos" list="pos-options" value="${item.pos}" placeholder="noun · verb · adjective · adverb" />
+        <datalist id="pos-options">
+          ${["noun", "verb", "adjective", "adverb", "pronoun", "preposition", "conjunction", "interjection", "numeral", "determiner", "phrase", "idiom"]
+            .map((option) => `<option value="${option}"></option>`)
+            .join("")}
+        </datalist>
+      </div>
+    </div>
+    ${
+      item.origins.length > 1
+        ? `<div class="field">
+            <label for="origin">Origin this entry is about</label>
+            <select id="origin">
+              <option value="">(leave to the pipeline: ${item.deepestLanguage})</option>
+              ${item.origins
+                .map((origin) => `<option value="${origin}" ${item.origin === origin ? "selected" : ""}>${origin}</option>`)
+                .join("")}
+            </select>
+          </div>`
+        : ""
+    }
     <div class="field">
       <label>Tier (difficulty)</label>
       <div class="tiers">${tierButtons}</div>
@@ -185,6 +217,8 @@ function render() {
     }
   });
   el("blurb").addEventListener("input", () => (dirty = true));
+  el("pos").addEventListener("input", () => (dirty = true));
+  el("origin")?.addEventListener("change", () => (dirty = true));
   document.querySelectorAll(".tiers button").forEach((button) => {
     button.addEventListener("click", () => {
       document.querySelectorAll(".tiers button").forEach((b) => b.classList.remove("active"));

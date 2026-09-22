@@ -199,3 +199,80 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     expect(report.withoutFrequencyRank).toBe(10);
   });
 });
+
+describe("homographs (the `back` case)", () => {
+  // Real data: `back` is inherited from Old English in one sense and borrowed
+  // from French in another, and the tie-break prefers borrowings — so without a
+  // curated origin the game would grade "French" correct for a native word.
+  const EDGES = [
+    "term_id,lang,term,reltype,related_term_id,related_lang,related_term,position,group_tag,parent_tag,parent_position",
+    ...Array.from(
+      { length: 10 },
+      (_, i) => `${i + 1},English,filler${String.fromCharCode(97 + i)},borrowed_from,${100 + i},French,f${i},0,,,`,
+    ),
+    "21,English,back,inherited_from,22,Middle English,bak,0,,,",
+    "22,Middle English,bak,inherited_from,23,Old English,bæc,0,,,",
+    "23,Old English,bæc,inherited_from,25,Proto-West Germanic,bak,0,,,",
+    "24,English,back,borrowed_from,26,French,bac,0,,,",
+  ].join("\n");
+  const LANGUAGES = [
+    "code\tname\tcountries\tregion\tcontinent\tlat\tlng",
+    "en\tEnglish\tGB\tNorthern Europe\tEurope\t54\t-2",
+    "enm\tMiddle English\tGB\tNorthern Europe\tEurope\t52\t-1",
+    "ang\tOld English\tGB\tNorthern Europe\tEurope\t52\t-1",
+    "fr\tFrench\tFR\tWestern Europe\tEurope\t47\t2",
+  ].join("\n");
+  const FILLERS = Object.fromEntries(
+    Array.from({ length: 10 }, (_, i) => [
+      `filler${String.fromCharCode(97 + i)}`,
+      { year: 1800, tier: i + 1, blurb: "From French." },
+    ]),
+  );
+
+  function build(
+    extraCuration: Record<string, { year: number; tier?: number; blurb?: string; pos?: string; origin?: string }> = {},
+  ) {
+    const uncurated: UncuratedCandidate[] = [];
+    const result = buildBankFromInputs({
+      edgesText: EDGES,
+      languagesText: LANGUAGES,
+      curation: { ...FILLERS, ...extraCuration },
+      version: 2,
+      epochStartDay: 20717,
+      onUncurated: (candidate) => uncurated.push(candidate),
+    });
+    return { ...result, uncurated };
+  }
+
+  it("reports every recorded origin instead of silently picking one", () => {
+    const { report, uncurated } = build();
+    expect(report.ambiguousWords).toBe(1);
+    expect(report.missingYear).toBe(1);
+    const back = uncurated.find((candidate) => candidate.term === "back")!;
+    expect(back.origins).toEqual(["French", "Old English"]);
+    expect(back.deepestLanguage).toBe("French"); // the pipeline's tie-break pick
+  });
+
+  it("uses the curator's origin when the entry names one, even under a proto hop", () => {
+    const { bank, report } = build({
+      back: { year: 1000, tier: 5, blurb: "Native, from Old English bæc.", pos: "noun", origin: "Old English" },
+    });
+    const back = bank!.tiers.flat().find((entry) => entry.word === "back")!;
+    // The chosen branch ends in a reconstruction, which has no home on a modern
+    // map, so the answer anchors to the deepest hop that does: Old English.
+    expect(back.originChain).toEqual(["Middle English", "Old English", "Proto-West Germanic"]);
+    expect(back.originLanguage).toBe("Old English");
+    expect(back.countries).toEqual(["GB"]);
+    expect(back.pos).toBe("noun");
+    expect(report.skippedEntries).toBe(0);
+  });
+
+  it("refuses an origin the data does not support", () => {
+    const { report, bank } = build({
+      back: { year: 1000, tier: 5, blurb: "bogus", origin: "Old Norse" },
+    });
+    expect(report.skippedEntries).toBe(1);
+    expect(report.warnings.some((warning) => warning.includes("not among the recorded origins"))).toBe(true);
+    expect(bank!.tiers.flat().some((entry) => entry.word === "back")).toBe(false);
+  });
+});

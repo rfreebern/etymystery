@@ -115,6 +115,12 @@ if (mode === "next") {
     const rank = candidate.frequencyRank ?? "unranked";
     console.log(`${String(index + 1).padStart(3)}. ${candidate.word}  [freq ${rank}, tier ${candidate.tier}]`);
     console.log(`     chain: ${candidate.chain.join(" <- ")}  (answer: ${candidate.deepestLanguage})`);
+    if (candidate.origins.length > 1) {
+      console.log(
+        `     homes: ${candidate.origins.length} origins recorded — ${candidate.origins.join(", ")} ` +
+          `→ set "pos" and "origin" for the sense you are curating`,
+      );
+    }
   }
   console.log(
     `\nNow, for each word: check the chain against your reference, put the year English` +
@@ -123,12 +129,12 @@ if (mode === "next") {
 } else if (mode === "merge") {
   const batch = readJson<Curation>(values.batch!);
   const { merged, added, skipped } = mergeCuration(curation, batch);
-  const knownWords = new Set(
-    parseWorklist(readFileSync(values.worklist!, "utf8")).map((candidate) => candidate.word),
-  );
+  const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
+  const knownWords = new Set(candidates.map((candidate) => candidate.word));
   const audit = auditCuration(merged, {
     knownWords,
     bankWords: readBankWords(values.bank!),
+    originsByWord: new Map(candidates.map((candidate) => [candidate.word, candidate.origins])),
     yearFloor,
     yearCeiling,
   });
@@ -147,6 +153,7 @@ if (mode === "next") {
   const audit = auditCuration(curation, {
     knownWords: new Set(candidates.map((candidate) => candidate.word)),
     bankWords: readBankWords(values.bank!),
+    originsByWord: new Map(candidates.map((candidate) => [candidate.word, candidate.origins])),
     yearFloor,
     yearCeiling,
   });
@@ -161,6 +168,10 @@ if (mode === "next") {
   console.log(`${audit.curated} of ${candidates.length} ranked candidates have a year`);
   console.log(`tier counts: ${tierCounts.join(", ")}`);
   console.log(`capacity: ${Math.min(...tierCounts)} days of puzzles (the scarcest tier sets it)`);
+  const ambiguous = candidates.filter((candidate) => candidate.origins.length > 1).length;
+  if (ambiguous) {
+    console.log(`${ambiguous} of those candidates are homographs (more than one recorded origin)`);
+  }
   if (audit.issues.length) {
     console.log(`\n${audit.issues.length} issues:`);
     for (const issue of audit.issues) console.log(`  ${issue.word}: ${issue.problem}`);

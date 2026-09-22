@@ -262,10 +262,38 @@ retroactively fixed three unwinnable rounds in the shipped bank.
 - tests: 170 total (+4) for the M-W anchor, the removed source, client-JS
   parsability/wiring, and the zoom/help markup.
 
+**Session 3 (cont. 7) — part of speech and multiple origins** (this batch)
+
+- Found while the curator examined `back`: the real data has six donor edges for
+  it, covering two different senses — inherited from Old English (`bæc`) in one,
+  borrowed from French (`bac`) in another. The pipeline's tie-break prefers
+  borrowings, so it silently anchored `back` to Middle French: the game would
+  have graded "French" as correct for a native English word. No automatic rule
+  can fix that, because the branches are different senses.
+- buildChainsWithVariants (new; buildChains delegates to it): returns every
+  distinct chain per word alongside the chosen one, so a homograph is visible
+  instead of collapsed. 14,127 of 41,985 candidates (~34%) have more than one
+  recorded origin.
+- The work list gained an `origins` column, and the report/`check` count
+  ambiguous candidates. An origin is a variant's deepest *placeable* hop, so a
+  branch buried under a reconstruction (Old English under Proto-West Germanic,
+  as with `back`) still offers Old English as an answer — my first attempt
+  mirrored the "deepest hop" rule here and hid exactly that sense.
+- curation.json gained `pos` and `origin`. `origin` overrides the tie-break: the
+  builder picks the matching variant and anchors to the deepest placeable hop,
+  warns and skips an origin the data does not support, and the audit insists on
+  both fields for homographs. BankEntry carries `pos` (validated as a lowercase
+  label) and the web client now asks "Where did this noun originally come from…?"
+- Curation surfaces: the app shows a warning with "N recorded origins", a POS
+  field (with suggestions) and an origin picker; `--mode next` prints them.
+- tests: 176 total (+6): variant detection, the origin override under a proto hop,
+  refusal of an unsupported origin, the audit's pos/origin rules, and the
+  extended work-list column.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 170 passed (14 files)
+    npx vitest run            # 176 passed (14 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -435,3 +463,16 @@ retroactively fixed three unwinnable rounds in the shipped bank.
   document: size the frame to 1/zoom of the wrapper and `transform: scale(zoom)`
   from the top-left. The site also lays out at the larger viewport, so more content
   fits on screen.
+- Homographs are the pipeline's worst silent failure mode: `back` has edges from
+  both Old English (inherited) and French (borrowed), and the "prefer borrowing"
+  tie-break picked French. A word is not a puzzle entry — a *sense* is, so `pos`
+  and an optional `origin` are part of the curated contract, and the work list now
+  lists every recorded origin instead of hiding the alternatives.
+- When offering candidate origins, do not mirror the pipeline's "deepest hop"
+  rule: offering must use the deepest *placeable* hop, otherwise a sense buried
+  under a reconstruction (`back`'s Old English under Proto-West Germanic) is
+  invisible to the curator — which is exactly the sense that was wrong.
+- Two different notions of "the answer" now coexist deliberately:
+  `--deepest-attested` changes the pipeline's default anchoring, while a curated
+  `origin` is authoritative for that one entry (it anchors to the deepest
+  placeable hop of the chosen branch).

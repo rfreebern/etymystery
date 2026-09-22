@@ -32,6 +32,12 @@ export interface BankEntry {
   id: string;
   /** The puzzle word itself, e.g. "elapse". */
   word: string;
+  /**
+   * Part of speech the puzzle is about, when the word is a homograph whose senses
+   * differ (`back` the native word is Old English; the borrowed sense came via
+   * French). Set by curation; absent for unambiguous words.
+   */
+  pos?: string;
   /** Year the word entered English (negative = BCE). Fact data, curated by hand. */
   year: number;
   /** Difficulty tier 1 (easiest) .. 10 (hardest). */

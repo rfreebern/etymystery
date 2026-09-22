@@ -17,6 +17,17 @@ export interface CurationEntryInput {
   year?: number;
   tier?: number;
   blurb?: string;
+  /**
+   * Part of speech the puzzle is about. Required in practice for homographs —
+   * a word whose recorded origins disagree (see `origin`).
+   */
+  pos?: string;
+  /**
+   * The origin the curator verified, as a language name from the work list's
+   * `origins` column. Overrides the pipeline's tie-break pick, which cannot know
+   * which sense a puzzle is about.
+   */
+  origin?: string;
 }
 
 export type Curation = Record<string, CurationEntryInput>;
@@ -29,6 +40,11 @@ export interface WorklistCandidate {
   chainDepth: number;
   deepestLanguage: string;
   chain: string[];
+  /**
+   * The origins the recorded chains support (more than one = homograph). Absent
+   * from work lists generated before the column existed, hence the default.
+   */
+  origins: string[];
 }
 
 export function parseWorklist(text: string): WorklistCandidate[] {
@@ -36,7 +52,7 @@ export function parseWorklist(text: string): WorklistCandidate[] {
   for (const raw of text.split("\n").slice(1)) {
     const line = raw.replace(/\r$/, "");
     if (!line.trim()) continue;
-    const [word, freqRank, tier, chainDepth, deepestLanguage, chain] = line.split("\t");
+    const [word, freqRank, tier, chainDepth, deepestLanguage, chain, origins] = line.split("\t");
     if (!word || !deepestLanguage) continue;
     const rank = Number.parseInt(freqRank ?? "", 10);
     out.push({
@@ -46,6 +62,7 @@ export function parseWorklist(text: string): WorklistCandidate[] {
       chainDepth: Number.parseInt(chainDepth ?? "", 10) || 1,
       deepestLanguage,
       chain: (chain ?? "").split(" <- ").filter(Boolean),
+      origins: (origins ?? "").split("|").filter(Boolean).sort(),
     });
   }
   return out;
@@ -102,6 +119,8 @@ export function auditCuration(
     knownWords: ReadonlySet<string>;
     /** Words already accepted into a bank (curated ones with a chain). */
     bankWords?: ReadonlySet<string>;
+    /** word -> every origin its recorded chains support (homograph detection). */
+    originsByWord?: ReadonlyMap<string, string[]>;
     yearFloor: number;
     yearCeiling: number;
   },
@@ -141,6 +160,29 @@ export function auditCuration(
     if (entry.tier !== undefined && (!Number.isInteger(entry.tier) || entry.tier < 1 || entry.tier > 10)) {
       issues.push({ word, problem: `tier ${entry.tier} must be an integer 1..10` });
     }
+    if (entry.pos !== undefined && !/^[a-z][a-z -]{1,19}$/.test(entry.pos)) {
+      issues.push({ word, problem: `pos "${entry.pos}" should be a lowercase label like "noun"` });
+    }
+    const origins = options.originsByWord?.get(word) ?? [];
+    if (origins.length > 1) {
+      // Different senses of a homograph really do come from different places
+      // (`back`: Old English vs French), so the entry must say which one it is.
+      if (!entry.pos) {
+        issues.push({
+          word,
+          problem: `has ${origins.length} recorded origins (${origins.join(", ")}); add "pos" and "origin" for the sense this puzzle is about`,
+        });
+      } else if (!entry.origin) {
+        issues.push({
+          word,
+          problem: `pos is set but no "origin"; the recorded origins are ${origins.join(", ")} (otherwise the builder uses its own tie-break pick)`,
+        });
+      } else if (!origins.includes(entry.origin)) {
+        issues.push({ word, problem: `origin "${entry.origin}" is not one of ${origins.join(", ")}` });
+      }
+    } else if (entry.origin && origins.length === 1 && entry.origin !== origins[0]) {
+      issues.push({ word, problem: `origin "${entry.origin}" does not match the recorded origin ${origins[0]}` });
+    }
     if (entry.blurb !== undefined && entry.blurb.trim() === "") {
       issues.push({ word, problem: "blurb is present but empty (omit the field instead)" });
     }
@@ -175,6 +217,8 @@ export function mergeCuration(
     const cleaned: CurationEntryInput = { year: Math.round(entry.year) };
     if (entry.tier !== undefined) cleaned.tier = entry.tier;
     if (entry.blurb?.trim()) cleaned.blurb = entry.blurb.trim();
+    if (entry.pos?.trim()) cleaned.pos = entry.pos.trim();
+    if (entry.origin?.trim()) cleaned.origin = entry.origin.trim();
     merged[word] = cleaned;
     added.push(word);
   }

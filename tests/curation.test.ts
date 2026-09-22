@@ -10,17 +10,18 @@ import { bestPossibleTemporal } from "../src/timeline";
 import { scoreTemporal } from "../src/scoring";
 
 const WORKLIST = [
-  "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain",
-  "just\t39\t2\t2\tOld French\tMiddle English <- Old French",
-  "money\t186\t2\t2\tOld French\tMiddle English <- Old French",
-  "must\t156\t2\t2\tMiddle Persian\tPersian <- Middle Persian",
-  "tea\t\t7\t3\tMin Nan\tDutch <- Malay <- Min Nan",
+  "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
+  "just\t39\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+  "money\t186\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+  "must\t156\t2\t2\tMiddle Persian\tPersian <- Middle Persian\tMiddle Persian",
+  "tea\t\t7\t3\tMin Nan\tDutch <- Malay <- Min Nan\tMin Nan",
+  "back\t83\t2\t2\tMiddle French\tFrench <- Middle French\tMiddle French|Old English",
 ].join("\n");
 
 describe("parseWorklist", () => {
   it("parses the ranked work list, tolerating a missing frequency rank", () => {
     const parsed = parseWorklist(WORKLIST);
-    expect(parsed).toHaveLength(4);
+    expect(parsed).toHaveLength(5);
     expect(parsed[0]).toEqual({
       word: "just",
       frequencyRank: 39,
@@ -28,26 +29,32 @@ describe("parseWorklist", () => {
       chainDepth: 2,
       deepestLanguage: "Old French",
       chain: ["Middle English", "Old French"],
+      origins: ["Old French"],
     });
     expect(parsed[3]!.frequencyRank).toBeUndefined();
     expect(parsed[3]!.chain).toEqual(["Dutch", "Malay", "Min Nan"]);
   });
 
+  it("parses a homograph's several origins (sorted)", () => {
+    const back = parseWorklist(WORKLIST).find((candidate) => candidate.word === "back")!;
+    expect(back.origins).toEqual(["Middle French", "Old English"]);
+  });
+
   it("ignores blank lines and the header", () => {
-    expect(parseWorklist(`word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\n\n`)).toEqual([]);
+    expect(parseWorklist(`word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins\n\n`)).toEqual([]);
   });
 });
 
 describe("selectNextBatch", () => {
   const candidates = parseWorklist(WORKLIST);
 
-  it("skips curated and skipped words, keeping work-list order", () => {
-    const batch = selectNextBatch(candidates, {
+  it("selectNextBatch skips curated and skipped words, keeping work-list order", () => {
+    const batch = selectNextBatch(parseWorklist(WORKLIST), {
       curated: new Set(["just"]),
       skip: new Set(["money"]),
       limit: 10,
     });
-    expect(batch.map((candidate) => candidate.word)).toEqual(["must", "tea"]);
+    expect(batch.map((candidate) => candidate.word)).toEqual(["must", "tea", "back"]);
   });
 
   it("respects the limit", () => {
@@ -90,8 +97,33 @@ describe("auditCuration", () => {
   });
 
   it("flags capitalised keys, which would never match a word", () => {
-    const audit = auditCuration({ Tea: { year: 1650 } }, { knownWords, yearFloor: 1500, yearCeiling: 2025 });
+    const audit = auditCuration({ Tea: { year: 1650 } }, { knownWords, yearFloor: 1100, yearCeiling: 2025 });
     expect(audit.issues.some((issue) => issue.problem.includes("lowercase"))).toBe(true);
+  });
+
+  it("insists on a part of speech and an origin for homographs", () => {
+    const originsByWord = new Map([["back", ["Middle French", "Old English"]]]);
+    const base = { knownWords: new Set(["back"]), originsByWord, yearFloor: 700, yearCeiling: 2025 };
+
+    const noPos = auditCuration({ back: { year: 1000 } }, base);
+    expect(noPos.issues[0]!.problem).toContain('add "pos" and "origin"');
+
+    const posOnly = auditCuration({ back: { year: 1000, pos: "noun" } }, base);
+    expect(posOnly.issues[0]!.problem).toContain('no "origin"');
+
+    const wrongOrigin = auditCuration({ back: { year: 1000, pos: "noun", origin: "Old Norse" } }, base);
+    expect(wrongOrigin.issues[0]!.problem).toContain("not one of");
+
+    const good = auditCuration({ back: { year: 1000, pos: "noun", origin: "Old English" } }, base);
+    expect(good.issues).toEqual([]);
+  });
+
+  it("rejects a part of speech that is not a plain lowercase label", () => {
+    const audit = auditCuration(
+      { just: { year: 1400, pos: "Noun!" } },
+      { knownWords: new Set(["just"]), yearFloor: 700, yearCeiling: 2025 },
+    );
+    expect(audit.issues.some((issue) => issue.problem.includes("lowercase label"))).toBe(true);
   });
 
   it("agrees with the real scorer about how bad an out-of-range year is", () => {

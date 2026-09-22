@@ -96,7 +96,8 @@ try {
         rank: candidate.frequencyRank ?? Number.POSITIVE_INFINITY,
         line:
           `${candidate.term}\t${candidate.frequencyRank ?? ""}\t${candidate.tier}\t` +
-          `${candidate.chainDepth}\t${candidate.deepestLanguage}\t${candidate.chain.join(" <- ")}`,
+          `${candidate.chainDepth}\t${candidate.deepestLanguage}\t${candidate.chain.join(" <- ")}\t` +
+          `${candidate.origins.join("|")}`,
       });
     },
   });
@@ -119,6 +120,12 @@ try {
       `(recoverable with --deepest-attested)`,
   );
   console.log(`tier counts: ${report.tierCounts.join(", ")}`);
+  if (report.ambiguousWords) {
+    console.log(
+      `        ${report.ambiguousWords} candidates have more than one recorded origin (homographs: ` +
+        `part of speech and origin must be curated for those)`,
+    );
+  }
   if (report.excludedByOrigin) {
     console.log(
       `excluded by origin (${[...(excludeOriginCodes ?? [])].join(", ")}): ${report.excludedByOrigin} words`,
@@ -138,7 +145,7 @@ try {
     // Curation order: most common first, unranked rarities last, alphabetical
     // within a rank so the file is reproducible.
     worklist.sort((a, b) => a.rank - b.rank || a.line.localeCompare(b.line));
-    const header = "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain";
+    const header = "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins";
     writeFileSync(values.worklist, `${[header, ...worklist.map((row) => row.line)].join("\n")}\n`);
     console.log(`wrote curation work list: ${values.worklist} (${worklist.length} words)`);
     if (frequency) {
