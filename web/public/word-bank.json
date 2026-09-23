@@ -1325,6 +1325,8 @@
         "year": 1580,
         "tier": 7,
         "originChain": [
+          "Middle French",
+          "Italian",
           "Arabic"
         ],
         "originLanguage": "Arabic",
@@ -1337,7 +1339,7 @@
           "lat": 24,
           "lng": 46
         },
-        "blurb": "From Arabic makhzan 'storehouse', via Italian and French."
+        "blurb": "From Arabic makhzan 'storehouse', via Italian and Middle French."
       },
       {
         "id": "orange:noun",
@@ -1358,7 +1360,7 @@
           "lat": 24,
           "lng": 84
         },
-        "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+        "blurb": "From Sanskrit naranga, 'orange tree'."
       },
       {
         "id": "robot:noun",
@@ -1457,7 +1459,7 @@
           "lat": 24,
           "lng": 46
         },
-        "blurb": "Reached English via Old French and Arabic, ultimately Sanskrit."
+        "blurb": "From Arabic sukkar."
       }
     ],
     [
@@ -1489,6 +1491,8 @@
         "year": 1300,
         "tier": 8,
         "originChain": [
+          "Old French",
+          "Old Italian",
           "Arabic"
         ],
         "originLanguage": "Arabic",
@@ -1910,15 +1914,18 @@
         "year": 1551,
         "tier": 10,
         "originChain": [
-          "Medieval Latin"
+          "Medieval Latin",
+          "Arabic"
         ],
-        "originLanguage": "Medieval Latin",
+        "originLanguage": "Arabic",
         "countries": [
-          "IT"
+          "SA",
+          "EG",
+          "DZ"
         ],
         "point": {
-          "lat": 42,
-          "lng": 12
+          "lat": 24,
+          "lng": 46
         },
         "blurb": "Coined in medieval Latin from Arabic al-jabr."
       },
@@ -1929,17 +1936,19 @@
         "year": 1625,
         "tier": 10,
         "originChain": [
-          "Persian"
+          "French",
+          "Italian",
+          "Ottoman Turkish"
         ],
-        "originLanguage": "Persian",
+        "originLanguage": "Ottoman Turkish",
         "countries": [
-          "IR"
+          "TR"
         ],
         "point": {
-          "lat": 32,
-          "lng": 54
+          "lat": 41,
+          "lng": 29
         },
-        "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
+        "blurb": "From Ottoman Turkish köşk, 'pavilion', which reached English through Italian and French."
       },
       {
         "id": "mammoth",
@@ -2026,15 +2035,18 @@
         "tier": 10,
         "originChain": [
           "Middle English",
-          "Old French"
+          "Old French",
+          "Arabic"
         ],
-        "originLanguage": "Old French",
+        "originLanguage": "Arabic",
         "countries": [
-          "FR"
+          "SA",
+          "EG",
+          "DZ"
         ],
         "point": {
-          "lat": 47,
-          "lng": 2
+          "lat": 24,
+          "lng": 46
         },
         "blurb": "From Old French cifre, from Arabic sifr, 'zero'."
       },
@@ -2065,6 +2077,7 @@
         "year": 1690,
         "tier": 10,
         "originChain": [
+          "Spanish",
           "Classical Nahuatl"
         ],
         "originLanguage": "Classical Nahuatl",
@@ -6419,6 +6432,8 @@
       "year": 1300,
       "tier": 8,
       "originChain": [
+        "Old French",
+        "Old Italian",
         "Arabic"
       ],
       "originLanguage": "Arabic",
@@ -6459,15 +6474,18 @@
       "year": 1551,
       "tier": 10,
       "originChain": [
-        "Medieval Latin"
+        "Medieval Latin",
+        "Arabic"
       ],
-      "originLanguage": "Medieval Latin",
+      "originLanguage": "Arabic",
       "countries": [
-        "IT"
+        "SA",
+        "EG",
+        "DZ"
       ],
       "point": {
-        "lat": 42,
-        "lng": 12
+        "lat": 24,
+        "lng": 46
       },
       "blurb": "Coined in medieval Latin from Arabic al-jabr."
     },
@@ -6661,17 +6679,19 @@
       "year": 1625,
       "tier": 10,
       "originChain": [
-        "Persian"
+        "French",
+        "Italian",
+        "Ottoman Turkish"
       ],
-      "originLanguage": "Persian",
+      "originLanguage": "Ottoman Turkish",
       "countries": [
-        "IR"
+        "TR"
       ],
       "point": {
-        "lat": 32,
-        "lng": 54
+        "lat": 41,
+        "lng": 29
       },
-      "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
+      "blurb": "From Ottoman Turkish köşk, 'pavilion', which reached English through Italian and French."
     },
     {
       "id": "course:noun",
@@ -6796,6 +6816,8 @@
       "year": 1580,
       "tier": 7,
       "originChain": [
+        "Middle French",
+        "Italian",
         "Arabic"
       ],
       "originLanguage": "Arabic",
@@ -6808,7 +6830,7 @@
         "lat": 24,
         "lng": 46
       },
-      "blurb": "From Arabic makhzan 'storehouse', via Italian and French."
+      "blurb": "From Arabic makhzan 'storehouse', via Italian and Middle French."
     },
     {
       "id": "tattoo:noun",
@@ -7017,7 +7039,7 @@
         "lat": 24,
         "lng": 84
       },
-      "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+      "blurb": "From Sanskrit naranga, 'orange tree'."
     },
     {
       "id": "lemon:noun",
@@ -7697,15 +7719,18 @@
       "tier": 10,
       "originChain": [
         "Middle English",
-        "Old French"
+        "Old French",
+        "Arabic"
       ],
-      "originLanguage": "Old French",
+      "originLanguage": "Arabic",
       "countries": [
-        "FR"
+        "SA",
+        "EG",
+        "DZ"
       ],
       "point": {
-        "lat": 47,
-        "lng": 2
+        "lat": 24,
+        "lng": 46
       },
       "blurb": "From Old French cifre, from Arabic sifr, 'zero'."
     },
@@ -8058,7 +8083,7 @@
         "lat": 24,
         "lng": 46
       },
-      "blurb": "Reached English via Old French and Arabic, ultimately Sanskrit."
+      "blurb": "From Arabic sukkar."
     },
     {
       "id": "barbecue:noun",
@@ -8109,6 +8134,7 @@
       "year": 1690,
       "tier": 10,
       "originChain": [
+        "Spanish",
         "Classical Nahuatl"
       ],
       "originLanguage": "Classical Nahuatl",

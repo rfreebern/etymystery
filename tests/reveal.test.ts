@@ -77,6 +77,44 @@ describe("routeLine", () => {
   });
 });
 
+describe("blurbs never name a language the puzzle cannot credit", () => {
+  // The report that prompted this: `kiosk`'s blurb said "From Turkish koshk" while
+  // the answer was Persian, so a player who followed the prose pinned Turkey and was
+  // told they were wrong. A blurb may name a language that is IN the route, or one
+  // whose country set overlaps the answer's (a pin there still scores), but never one
+  // that is neither — that is prose pointing at a country the game refuses.
+  const bank = JSON.parse(readFileSync("web/public/word-bank.json", "utf8")) as WordBank;
+
+  it("names only languages the route shows, or ones that share the answer's country", () => {
+    const names = Object.keys(bank.languages).sort((a, b) => b.length - a.length);
+    const offenders: string[] = [];
+    for (const entry of bank.masterSequence) {
+      const inChain = new Set([...entry.originChain, "English"]);
+      const countries = new Set(entry.countries);
+      // Remove every language the route already shows, so "French" inside "Old
+      // French" is not mistaken for a missing language. Case-insensitive, because
+      // prose says "medieval Latin" where the chain says "Medieval Latin".
+      let rest = entry.blurb;
+      for (const lang of inChain) {
+        const esc = lang.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        rest = rest.replace(new RegExp(esc, "gi"), " ");
+      }
+      for (const name of names) {
+        if (inChain.has(name)) continue;
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        if (!new RegExp(`\\b${escaped}\\b`, "i").test(rest)) continue;
+        const info = bank.languages[name];
+        if ((info?.countries ?? []).some((code) => countries.has(code))) continue;
+        offenders.push(
+          `${entry.word}: blurb names ${name} (${(info?.countries ?? []).join(",")}) ` +
+            `but the answer is ${entry.originLanguage} (${entry.countries.join(",")})`,
+        );
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe("the shipped bank's chains", () => {
   const bank = JSON.parse(readFileSync("web/public/word-bank.json", "utf8")) as WordBank;
 

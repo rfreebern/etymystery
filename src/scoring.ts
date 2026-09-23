@@ -47,6 +47,16 @@ const CREDIT_RANK: Record<RoundScore["credit"], number> = {
 export const INTERMEDIATE_WEIGHT = 0.7;
 /** Pins farther than this from every hop score nothing. */
 export const MAX_RELEVANCE_KM = 5000;
+/**
+ * How far outside a country a pin may land and still count as inside it. Pins come
+ * from a click on a 960x500 SVG and country outlines are the generalized 110m
+ * Natural Earth ones, so a click on a coastal city can fall a few km "at sea":
+ * Istanbul, the obvious pin for an Ottoman Turkish answer, reads 10.8 km outside
+ * Turkey as drawn. The tolerance keeps those clicks from being told they are in the
+ * wrong country. It is tiny next to the 1500 km wrong-country decay, so it cannot
+ * rescue a genuine miss.
+ */
+export const COASTAL_TOLERANCE_KM = 25;
 /** Weight of the temporal component in the round total. */
 export const TEMPORAL_WEIGHT = 0.5;
 /** Weight of the geographic component in the round total. */
@@ -117,9 +127,10 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
   // 1. Direct hit on the deep origin's country: full marks, wherever in the
   //    country the pin lands. Distance inside a country is not evidence of a wrong
   //    answer (see GEO_DECAY_KM) — a pin in northern Italy is as correct for Latin
-  //    as one on Rome.
+  //    as one on Rome. A pin just off the drawn coastline still counts (see
+  //    COASTAL_TOLERANCE_KM).
   for (const country of deep.countries) {
-    if (ctx.contains(country, guess)) {
+    if (ctx.contains(country, guess) || ctx.distanceToCountryKm(country, guess) <= COASTAL_TOLERANCE_KM) {
       return {
         score: 100,
         credit: "country",
@@ -133,7 +144,10 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
   //    border falloff; you must land inside the actual hop country).
   for (const hop of intermediates) {
     for (const country of hop.countries) {
-      if (ctx.contains(country, guess)) {
+      if (
+        ctx.contains(country, guess) ||
+        ctx.distanceToCountryKm(country, guess) <= COASTAL_TOLERANCE_KM
+      ) {
         return {
           score: Math.round(100 * INTERMEDIATE_WEIGHT),
           credit: "intermediate",

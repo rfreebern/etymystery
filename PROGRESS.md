@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 252/252 tests passing, typecheck clean, static build green. The bank is
+`main`): 255/255 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -606,6 +606,60 @@ so the period labels change exactly where the handle crosses them.
   marks at Vladivostok for Russian (was 90) and the flat intermediate credit (was
   65-70, now exactly 70).
 
+**Session 8 — `kiosk` asked Persia while its blurb said Turkish** (this batch)
+
+- Reported from play: pinning Turkey was "wrong" although the reveal said the word
+  comes from Turkish. Cause was **my curation, not the data**: the entry named
+  `origin: "Persian"`, which selected a bare one-hop route (`English <- Persian`)
+  from Wiktionary's *group* of sibling edges, so the chain was `["Persian"]`, the
+  answer was Iran, and Turkish appeared nowhere. A Turkey pin could only earn border
+  proximity, labelled "not the origin".
+- The data actually held the documented borrowed chain — `French <- Italian <-
+  Ottoman Turkish` at priority `borrowed_from` — which the tie-break prefers on its
+  own. Re-curated `kiosk:noun` to `origin: "Ottoman Turkish"`, so the route now reads
+  `Ottoman Turkish → Italian → French → English` and the blurb matches the answer.
+- **Then swept for the class.** Writing a blurb that names a language the route
+  cannot credit is the same failure the `coyote` report exposed, so the bank was
+  scanned for it: 21 of 100 entries named a language outside their chain. About half
+  were artifacts of partial names ("Greek" for Ancient Greek, "Turkish" for Ottoman
+  Turkish, "French" for Old French) or harmless (same country, so the pin still
+  scores). Six were real:
+  - `kiosk` → re-curated to Ottoman Turkish (above).
+  - `cipher`, `cotton`, `magazine`, `avocado`, `algebra` → the documented hop was
+    missing between recorded ones, so it went into `curated/edge-overrides.csv`:
+    `Old French cyfre ← Arabic صِفْر`, `Old French coton ← Old Italian cotone ← Arabic
+    قُطُن`, `Middle French magasin ← Italian magazzino ← Arabic مَخَازِن`, `Spanish
+    avocado ← Classical Nahuatl āhuacatl`, `Medieval Latin algebrāica ← Arabic الجبر`.
+    Their answers follow the deepest hop: `cipher` and `algebra` now ask Arabic
+    (both blurbs already said so), and `cotton`/`magazine`/`avocado` keep their answer
+    while gaining the intermediate countries for partial credit.
+  - `sugar`, `orange` → their routes need English-internal hops that the source does
+    not record, so the blurbs were cut back to what the route shows.
+- **Fixed a second, unrelated way the same pin could be refused.** The Istanbul test
+  point that prompted the report reads 10.8 km *outside* Turkey as drawn: clicks come
+  from a 960x500 SVG over the generalized 110m outlines. Nine other coastal cities
+  (Lisbon, New York, Sydney, Mumbai, Tokyo, Cairo, Athens, Rome, Oslo) all test
+  inside, so this is rare but it lands exactly on the city a player would click for an
+  Ottoman answer. Added `COASTAL_TOLERANCE_KM = 25`: a pin up to 25 km outside the
+  answer's country still counts as inside. Measured that it cannot rescue a real miss
+  (1 degree of latitude is ~111 km, still refused).
+- Verified end to end: `kiosk` now answers Ottoman Turkish (TR); Istanbul and Ankara
+  score **100 / credit country**, Paris 70 ("on the route"), Tehran 66. The six
+  re-curated entries' routes:
+  `Arabic → Old Italian → Old French → English` (cotton),
+  `Arabic → Medieval Latin → English` (algebra),
+  `Ottoman Turkish → Italian → French → English` (kiosk),
+  `Arabic → Italian → Middle French → English` (magazine),
+  `Arabic → Old French → Middle English → English` (cipher),
+  `Classical Nahuatl → Spanish → English` (avocado).
+  `masterSequence` order is unchanged, so day mapping is untouched.
+- New guard: `tests/reveal.test.ts` asserts over the shipped bank that every language
+  a blurb names is either in the route or shares a country with the answer. It caught
+  two leftovers while being written (`algebra`, `magazine`), and its own removal step
+  had to be case-insensitive ("medieval Latin" vs "Medieval Latin").
+  `curated/edge-overrides.csv` now carries 8 edges.
+- tests: 255 total (+3).
+
 ## Verification (re-run before trusting anything)
 
 
@@ -614,8 +668,10 @@ so the period labels change exactly where the handle crosses them.
 
 
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 252 passed (18 files)
+    npx vitest run            # 255 passed (18 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -669,6 +725,11 @@ so the period labels change exactly where the handle crosses them.
   the blurb naming a placeable language the chain lacks is the tell.
 - `buildWordBank` refuses a bank with an empty tier, so a test whose fixture drops a
   word by design must pass `assembleBank: false` and assert on the report instead.
+- A word can have several routes recorded as separate one-hop edges from English
+  (Wiktionary lists a group of related etymons, not a chain). Naming the most exotic
+  one picks a bare 1-hop route and can contradict the blurb: `kiosk` asked Persia
+  while its blurb said Turkish. Check the variants and prefer the route whose chain
+  matches the documented history.
 - Distance inside a country is not evidence of a wrong answer: the curated country
   sets are generous and overlapping (99 of 100 entries share their country with
   another mapped language; 20 languages claim Italy), so distance-to-centroid mostly

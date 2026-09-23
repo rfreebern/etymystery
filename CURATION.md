@@ -293,6 +293,29 @@ Rules of thumb:
 - Prefer an override over a different answer: the alternative is picking a
   shallower origin, which puts the puzzle somewhere the word never came from.
 
+### Two traps in choosing the origin
+
+**Do not pick a thin sibling route.** A word often has several routes recorded as
+separate one-hop edges from English, because Wiktionary lists a group of related
+etymons rather than a chain. `kiosk` had all of these, each a direct edge from
+English: French, Italian, Ottoman Turkish, Persian, Middle Persian. Choosing
+"Persian" (the most exotic) selected a bare one-hop route, so the puzzle asked about
+Iran, the route showed nothing else, and the curated blurb — "From Turkish koshk" —
+described a different word than the one being asked. Meanwhile the data *did* hold
+the full borrowed chain (`English <- French <- Italian <- Ottoman Turkish`, priority
+`borrowed_from`), which the tie-break would have picked by itself. Check the
+variants before naming an origin, and prefer the route whose chain matches the
+word's documented history.
+
+**A blurb may only name languages the route can credit.** If the blurb says "via
+Old French" and the chain has no Old French, a player who follows the prose pins
+France and is told they are in the wrong country. Either record the hop as an
+override (preferred, since it also earns partial credit) or drop the mention.
+`tests/reveal.test.ts` enforces this over the shipped bank: every language a blurb
+names must be in the route, or share a country with the answer (so the pin would
+still score). It is not about tidiness — a mismatch between the prose and the route
+is a player being told their correct answer is wrong.
+
 Known shape to watch for (a blurb that names a language the chain does not
 contain). Most such mentions are benign prose — the other recorded branch, or the
 parent language — but a mention of a *placeable* language that is the true donor

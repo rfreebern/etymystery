@@ -235,6 +235,12 @@ candidates starting with genuinely interesting answers (`just` ← Old French,
 Curation must check the *chain*, not only the year: etymology-db is a faithful
 parse of Wiktionary, not a validated dataset, so it contains dubious relations
 (`name` ← Wolof, `so` ← Japanese). The supplied chain is a claim to verify.
+Two traps cost real puzzles before they were closed: choosing a *thin* sibling
+route when the same word has a fuller recorded chain beneath it (that is how
+`kiosk` came to ask about Persia while its blurb said Turkish), and writing a blurb
+that names a language the route cannot credit — a player follows the prose, pins
+that country, and is told they are wrong. `tests/reveal.test.ts` now enforces the
+blurb rule over the shipped bank.
 The step-by-step loop lives in [CURATION.md](CURATION.md), and `npm run admin`
 opens a local page that puts the word and its reference pages side by side for
 exactly this step.
@@ -267,6 +273,10 @@ etymology-db's exact column schema). Together with the 22-language
     meaning "right route, right stop";
   - pin in the wrong country: proximity to the deep origin's *border* (not
     centroid), 1500 km decay scale;
+  - a pin up to 25 km outside the answer's country still counts as inside
+    (`COASTAL_TOLERANCE_KM`): clicks come from a 960x500 SVG over generalized 110m
+    outlines, and Istanbul — the obvious pin for an Ottoman Turkish answer — reads
+    10.8 km *outside* Turkey as drawn. It is far too small to rescue a real miss;
   - region/continent matches (UN M49 subregion / continent, anchored to
     the deep origin) are shown as reveal-time labels only; they never
     add points beyond border proximity;

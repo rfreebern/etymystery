@@ -200,6 +200,24 @@ describe("scoreGeographic - country-aware leniency", () => {
     expect(sicily.score).toBe(100);
   });
 
+  it("counts a pin just off the drawn coastline as inside", () => {
+    // A click on a coastal city can land a few km outside a generalized 110m
+    // outline (Istanbul reads 10.8 km outside Turkey as drawn), and being told you
+    // are in the wrong country for that is worse than the tolerance is generous.
+    const justOffshore = { lat: 57.9, lng: 9 }; // ~11 km south of the NO rect (latMin 58)
+    const detail = scoreGeographic(norwegianWord, justOffshore, ctx);
+    expect(ctx.contains("NO", justOffshore)).toBe(false);
+    expect(detail.credit).toBe("country");
+    expect(detail.score).toBe(100);
+  });
+
+  it("does not let the tolerance rescue a real miss", () => {
+    // 1 degree of latitude is ~111 km: well past the tolerance, so no country credit.
+    const offshore = { lat: 57, lng: 9 };
+    expect(ctx.contains("NO", offshore)).toBe(false);
+    expect(scoreGeographic(norwegianWord, offshore, ctx).credit).not.toBe("country");
+  });
+
   it("gives a perfect score at the answer point", () => {
     expect(scoreGeographic(russianWord, russianWord.point, ctx).score).toBe(100);
   });
