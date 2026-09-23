@@ -20,6 +20,7 @@ import {
   mergeCuration,
   parseWorklist,
   selectNextBatch,
+  settledSenseIds,
   type Curation,
   type CurationEntryInput,
 } from "./lib/curation";
@@ -98,27 +99,37 @@ const curation = readJson<Curation>(values.curation!);
 
 if (mode === "next") {
   const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
+  const candidatesByWord = new Map(candidates.map((candidate) => [candidate.word, candidate]));
+  const settled = settledSenseIds(curation, candidatesByWord);
   const batch = selectNextBatch(candidates, {
-    curated: new Set(Object.keys(curation)),
+    settled,
     skip: readSkip(values.skip),
     limit,
   });
   const skeleton: Curation = {};
   for (const candidate of batch) {
-    skeleton[candidate.word] = { year: 0, tier: candidate.tier, blurb: "" };
+    // Keyed by work-list sense id (`back|Old English`); `origin` is the sense's
+    // answer and `pos` — which composes the sense key — is the curator's to fill.
+    skeleton[candidate.sense] = { year: 0, tier: candidate.tier, origin: candidate.origin, blurb: "" };
   }
   writeFileSync(values.batch!, formatCuration(skeleton));
 
-  console.log(`${batch.length} words to curate (wrote skeleton to ${values.batch!})`);
-  console.log(`researched so far: ${Object.keys(curation).length} of ${candidates.length} ranked candidates\n`);
+  const words = new Set(candidates.map((candidate) => candidate.word));
+  console.log(`${batch.length} senses to curate (wrote skeleton to ${values.batch!})`);
+  console.log(
+    `researched so far: ${Object.keys(curation).length} entries settling ${settled.size} of ` +
+      `${candidates.length} candidate senses (${words.size} words)\n`,
+  );
   for (const [index, candidate] of batch.entries()) {
     const rank = candidate.frequencyRank ?? "unranked";
-    console.log(`${String(index + 1).padStart(3)}. ${candidate.word}  [freq ${rank}, tier ${candidate.tier}]`);
-    console.log(`     chain: ${candidate.chain.join(" <- ")}  (answer: ${candidate.deepestLanguage})`);
+    console.log(
+      `${String(index + 1).padStart(3)}. ${candidate.word} → ${candidate.origin}  [freq ${rank}, tier ${candidate.tier}]`,
+    );
+    console.log(`     chain: ${candidate.chain.join(" <- ")}`);
     if (candidate.origins.length > 1) {
       console.log(
-        `     homes: ${candidate.origins.length} origins recorded — ${candidate.origins.join(", ")} ` +
-          `→ set "pos" and "origin" for the sense you are curating`,
+        `     this word has ${candidate.origins.length} recorded origins (${candidate.origins.join(", ")}): ` +
+          `give it a "pos" and it files as ${candidate.word}:<pos>`,
       );
     }
   }
@@ -165,12 +176,16 @@ if (mode === "next") {
     if (tier >= 1 && tier <= 10) tierCounts[tier - 1]! += 1;
   }
 
-  console.log(`${audit.curated} of ${candidates.length} ranked candidates have a year`);
+  console.log(`${audit.curated} of ${candidates.length} candidate senses have a year`);
   console.log(`tier counts: ${tierCounts.join(", ")}`);
   console.log(`capacity: ${Math.min(...tierCounts)} days of puzzles (the scarcest tier sets it)`);
-  const ambiguous = candidates.filter((candidate) => candidate.origins.length > 1).length;
-  if (ambiguous) {
-    console.log(`${ambiguous} of those candidates are homographs (more than one recorded origin)`);
+  const ambiguousWords = new Set(
+    candidates.filter((candidate) => candidate.origins.length > 1).map((candidate) => candidate.word),
+  ).size;
+  if (ambiguousWords) {
+    console.log(
+      `${ambiguousWords} words have more than one recorded origin: each sense is dated and filed separately`,
+    );
   }
   if (audit.issues.length) {
     console.log(`\n${audit.issues.length} issues:`);

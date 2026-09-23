@@ -2,6 +2,7 @@
   "name": "etymystery",
   "version": "0.1.0",
   "description": "Daily etymology game: trace a word's origins geographically and historically. Client-side only, powered by open data.",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "engines": {

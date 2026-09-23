@@ -29,7 +29,6 @@ const { values } = parseArgs({
     "epoch-start": { type: "string", default: "2026-01-01" },
     "english-code": { type: "string", default: "en" },
     "max-depth": { type: "string", default: "3" },
-    "deepest-attested": { type: "boolean", default: false },
     frequency: { type: "string" },
     "exclude-origin": { type: "string" },
     "worklist-only": { type: "boolean", default: false },
@@ -87,7 +86,6 @@ try {
     epochStartDay,
     englishLangCode: values["english-code"],
     maxChainDepth,
-    deepestAttested: values["deepest-attested"],
     frequency,
     excludeOriginCodes,
     assembleBank: !values["worklist-only"],
@@ -95,9 +93,9 @@ try {
       worklist.push({
         rank: candidate.frequencyRank ?? Number.POSITIVE_INFINITY,
         line:
-          `${candidate.term}\t${candidate.frequencyRank ?? ""}\t${candidate.tier}\t` +
-          `${candidate.chainDepth}\t${candidate.deepestLanguage}\t${candidate.chain.join(" <- ")}\t` +
-          `${candidate.origins.join("|")}`,
+          `${candidate.term}\t${candidate.origin}\t${candidate.sense}\t${candidate.frequencyRank ?? ""}\t` +
+          `${candidate.tier}\t${candidate.chainDepth}\t${candidate.deepestLanguage}\t` +
+          `${candidate.chain.join(" <- ")}\t${candidate.origins.join("|")}`,
       });
     },
   });
@@ -112,18 +110,21 @@ try {
     console.log(`bank not assembled (--worklist-only); nothing written to ${values.out}`);
   }
   console.log(
-    `report: ${report.candidateWords} candidate words | ${report.acceptedWords} accepted (curated) | ` +
-      `${report.missingYear} awaiting a curated year | ${report.skippedEntries} skipped as invalid`,
-  );
-  console.log(
-    `        ${report.salvageableWithAttestedAnchor} dropped only because their deepest hop is unplaceable ` +
-      `(recoverable with --deepest-attested)`,
+    `report: ${report.candidateSenses} candidate senses (${report.candidateWords} words) | ` +
+      `${report.acceptedWords} accepted (curated) | ${report.missingYear} awaiting a curated year | ` +
+      `${report.skippedEntries} skipped as invalid`,
   );
   console.log(`tier counts: ${report.tierCounts.join(", ")}`);
   if (report.ambiguousWords) {
     console.log(
       `        ${report.ambiguousWords} candidates have more than one recorded origin (homographs: ` +
         `part of speech and origin must be curated for those)`,
+    );
+  }
+  if (report.ambiguousWithoutOrigin) {
+    console.log(
+      `        ${report.ambiguousWithoutOrigin} curated entries name no "origin" despite several being recorded: ` +
+        `the tie-break picked for them`,
     );
   }
   if (report.excludedByOrigin) {
@@ -145,7 +146,7 @@ try {
     // Curation order: most common first, unranked rarities last, alphabetical
     // within a rank so the file is reproducible.
     worklist.sort((a, b) => a.rank - b.rank || a.line.localeCompare(b.line));
-    const header = "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins";
+    const header = "word\torigin\tsense\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins";
     writeFileSync(values.worklist, `${[header, ...worklist.map((row) => row.line)].join("\n")}\n`);
     console.log(`wrote curation work list: ${values.worklist} (${worklist.length} words)`);
     if (frequency) {
@@ -154,10 +155,10 @@ try {
         `work list coverage by frequency: top 1k ${within(1000)} | 5k ${within(5000)} | ` +
           `10k ${within(10_000)} | 50k ${within(50_000)}`,
       );
-      console.log("most common uncurated words (curation starts here):");
+      console.log("most common uncurated senses (curation starts here):");
       for (const row of worklist.slice(0, 15)) {
-        const [word, rank, tier, depth, deepest, chain] = row.line.split("\t");
-        console.log(`  ${word} (rank ${rank}, tier ${tier}, ${depth} hops) — ${chain} [${deepest}]`);
+        const [word, origin, , rank, tier, depth, , chain] = row.line.split("\t");
+        console.log(`  ${word} → ${origin} (rank ${rank}, tier ${tier}, ${depth} hops) — ${chain}`);
       }
     }
   }

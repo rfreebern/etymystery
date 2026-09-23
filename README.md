@@ -1,5 +1,8 @@
 # Etymystery
 
+**Play it: <https://rfreebern.github.io/etymystery/>** (the published build
+serves the 30-word seed bank, so it is a working demo rather than the full game.)
+
 A daily etymology puzzle game: given a word, trace **where** it came from
 (the map) and **when** it entered English (the timeline). Ten rounds a day,
 ramping from easy to hard, scored on temporal *and* geographic proximity.
@@ -140,10 +143,11 @@ Inputs:
 3. **curation.json** — hand-curated attestation years (facts, checked by
    hand against OED/Etymonline/your reference of choice), optional tier
    overrides and reveal blurbs. Words without a year are excluded and
-   counted in the build report — this is the curation worklist. Two more fields
-   matter for homographs: `pos` (the part of speech the puzzle is about) and
-   `origin` (the sense's origin when the recorded chains disagree — `back` is
-   Old English as a noun but came via French in another sense; see CURATION.md).
+   counted in the build report — this is the curation worklist. Entries are
+   keyed by **sense**, not by word: `back`, or `back:noun`, or `bank:noun:2` for a
+   second sense of the same part of speech (a word like `sole` has four recorded
+   origins), with `pos` and `origin` fields saying which sense it is — see
+   [CURATION.md](CURATION.md).
 
 The full dataset never fits in memory comfortably, so filter it once to the
 edges a bank build can use:
@@ -249,10 +253,10 @@ the 30-word seed bank, so it is a working demo rather than the full game (see
 
 ## Licensing
 
-See LICENSES.md. In short: code is proprietary to this project until you
-choose a license; all word/etymology data is CC BY-SA and requires
-attribution + share-alike, which this project honors by open-sourcing the
-curation artifacts.
+The code is **MIT** (see [LICENSE](LICENSE)); the word and etymology data is
+**CC BY-SA 4.0** and requires attribution + share-alike, which this project honors
+by publishing its curation artifacts rather than only the generated bank.
+LICENSES.md has the full breakdown of sources and what is deliberately unused.
 
 ## Roadmap
 

@@ -101,6 +101,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     "13,English,ab-,borrowed_from,14,Latin,ab,0,,,",
     "14,English,vacuum,borrowed_from,15,Latin,vacuum,0,,,",
     "15,English,gift,inherited_from,16,Old English,gift,0,,,",
+    "16,English,smurf,borrowed_from,17,Translingual,smurf,0,,,",
   ].join("\n");
 
   const LANGUAGES = [
@@ -122,7 +123,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     ["gift", { year: 1100, tier: 3, blurb: "From Old English." }],
   ]);
 
-  function build(deepestAttested: boolean) {
+  function build() {
     const uncurated: UncuratedCandidate[] = [];
     const result = buildBankFromInputs({
       edgesText: EDGES,
@@ -130,45 +131,50 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
       curation: CURATION,
       version: 2,
       epochStartDay: 20717,
-      deepestAttested,
       onUncurated: (candidate) => uncurated.push(candidate),
     });
     return { ...result, bank: result.bank!, uncurated };
   }
 
-  it("normalizes names to codes and anchors at the deepest placeable origin", () => {
-    const { bank, report } = build(false);
+  it("normalizes names to codes and anchors each sense at its deepest placeable hop", () => {
+    const { bank, report } = build();
     const words = bank.tiers.flat().map((entry) => entry.word);
-    expect(words).toHaveLength(11); // 10 tiered words + gift
+    expect(words).toHaveLength(12); // 10 tiered words + music + gift
     expect(words).toContain("worda");
-    expect(words).not.toContain("music"); // deepest hop is unplaceable
+    // `music` goes English -> Ancient Greek -> Proto-Indo-European. The
+    // reconstruction has no home on a map, so the sense is answered by Greek —
+    // this used to be dropped as "unplaceable".
+    expect(words).toContain("music");
     expect(words).not.toContain("ab-"); // prefix stub, not a word
+    expect(words).not.toContain("smurf"); // only donor is a non-language
 
     const worda = bank.tiers.flat().find((entry) => entry.word === "worda")!;
     expect(worda.originChain).toEqual(["Latin"]);
     expect(worda.originLanguage).toBe("Latin");
     expect(worda.countries).toEqual(["IT"]);
 
-    expect(report.missingLanguage).toEqual({ "Proto-Indo-European": 1 });
-    expect(report.salvageableWithAttestedAnchor).toBe(1);
+    const music = bank.tiers.flat().find((entry) => entry.word === "music")!;
+    expect(music.originLanguage).toBe("Ancient Greek");
+    expect(music.originChain).toEqual(["Ancient Greek", "Proto-Indo-European"]);
+    expect(music.countries).toEqual(["GR", "TR"]);
+
+    expect(report.missingLanguage).toEqual({ Translingual: 1 });
     expect(report.missingYear).toBe(1); // vacuum has no curated year
   });
 
-  it("passes uncurated candidates (with their chain) to the work-list callback", () => {
-    const { uncurated } = build(false);
+  it("passes one uncurated candidate per sense, with the sense's own origin", () => {
+    const { uncurated } = build();
     expect(uncurated).toHaveLength(1);
-    expect(uncurated[0]).toMatchObject({ term: "vacuum", chainDepth: 1, deepestLanguage: "Latin", chain: ["Latin"] });
+    expect(uncurated[0]).toMatchObject({
+      term: "vacuum",
+      origin: "Latin",
+      sense: "vacuum",
+      chainDepth: 1,
+      deepestLanguage: "Latin",
+      chain: ["Latin"],
+    });
     expect(uncurated[0]!.tier).toBeGreaterThanOrEqual(1);
     expect(uncurated[0]!.tier).toBeLessThanOrEqual(10);
-  });
-
-  it("recovers proto-anchored words with --deepest-attested", () => {
-    const { bank, report } = build(true);
-    const music = bank.tiers.flat().find((entry) => entry.word === "music")!;
-    expect(music.originChain).toEqual(["Ancient Greek", "Proto-Indo-European"]);
-    expect(music.originLanguage).toBe("Ancient Greek");
-    expect(music.countries).toEqual(["GR", "TR"]);
-    expect(report.salvageableWithAttestedAnchor).toBe(0);
   });
 
   it("can exclude answer origins (a word that came from England is a dull puzzle)", () => {
@@ -182,7 +188,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     });
     expect(report.excludedByOrigin).toBe(1);
     expect(bank!.tiers.flat().map((entry) => entry.word)).not.toContain("gift");
-    expect(bank!.tiers.flat()).toHaveLength(10);
+    expect(bank!.tiers.flat()).toHaveLength(11);
   });
 
   it("ranks tier assignment with frequency and reports unranked candidates", () => {
@@ -194,9 +200,9 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
       epochStartDay: 20717,
       frequency: parseFrequencyList("vacuum 300\ngift 5000000\n"),
     });
-    // worda..wordj are not in the frequency list; music never gets this far
-    // because its deepest hop is unplaceable.
-    expect(report.withoutFrequencyRank).toBe(10);
+    // 13 candidate senses; only vacuum and gift have a rank in that list.
+    expect(report.candidateSenses).toBe(13);
+    expect(report.withoutFrequencyRank).toBe(11);
   });
 });
 
@@ -247,24 +253,29 @@ describe("homographs (the `back` case)", () => {
   it("reports every recorded origin instead of silently picking one", () => {
     const { report, uncurated } = build();
     expect(report.ambiguousWords).toBe(1);
-    expect(report.missingYear).toBe(1);
-    const back = uncurated.find((candidate) => candidate.term === "back")!;
-    expect(back.origins).toEqual(["French", "Old English"]);
-    expect(back.deepestLanguage).toBe("French"); // the pipeline's tie-break pick
+    expect(report.missingYear).toBe(2); // both senses need their own entry
+    const senses = uncurated.filter((candidate) => candidate.term === "back");
+    expect(senses.map((sense) => sense.origin)).toEqual(["French", "Old English"]);
+    expect(senses.map((sense) => sense.sense)).toEqual(["back|French", "back|Old English"]);
+    for (const sense of senses) expect(sense.origins).toEqual(["French", "Old English"]);
   });
 
   it("uses the curator's origin when the entry names one, even under a proto hop", () => {
-    const { bank, report } = build({
-      back: { year: 1000, tier: 5, blurb: "Native, from Old English bæc.", pos: "noun", origin: "Old English" },
+    const { bank, report, uncurated } = build({
+      "back:noun": { year: 1000, tier: 5, blurb: "Native, from Old English bæc.", origin: "Old English" },
     });
     const back = bank!.tiers.flat().find((entry) => entry.word === "back")!;
     // The chosen branch ends in a reconstruction, which has no home on a modern
     // map, so the answer anchors to the deepest hop that does: Old English.
+    expect(back.id).toBe("back:noun");
+    expect(back.pos).toBe("noun");
     expect(back.originChain).toEqual(["Middle English", "Old English", "Proto-West Germanic"]);
     expect(back.originLanguage).toBe("Old English");
     expect(back.countries).toEqual(["GB"]);
-    expect(back.pos).toBe("noun");
     expect(report.skippedEntries).toBe(0);
+    // Curating one sense does not settle the other: the French sense stays queued.
+    const remaining = uncurated.filter((candidate) => candidate.term === "back");
+    expect(remaining.map((candidate) => candidate.origin)).toEqual(["French"]);
   });
 
   it("refuses an origin the data does not support", () => {

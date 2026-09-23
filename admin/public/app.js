@@ -79,12 +79,12 @@ async function loadSources() {
 function readForm() {
   const item = current();
   return {
-    word: item.word,
+    sense: item.sense,
     year: Number(el("year").value),
     tier: Number(document.querySelector(".tiers button.active")?.dataset.tier || item.tier),
     blurb: el("blurb").value,
     pos: el("pos")?.value ?? "",
-    origin: el("origin")?.value ?? "",
+    origin: item.origin,
     index: state.index,
   };
 }
@@ -135,14 +135,14 @@ function render() {
     <div class="progress-bar"><div style="width:${pct}%"></div></div>
     <h1 class="word">${item.word}</h1>
     <div class="chain">${chainHtml}</div>
-    <div class="answer">answer: <b>${item.deepestLanguage || "?"}</b>${
+    <div class="answer">this sense: <b>${item.origin || "?"}</b>${
       item.frequencyRank ? ` · frequency rank ${item.frequencyRank}` : " · unranked (rare)"
     }${item.chainDepth ? ` · ${item.chainDepth} hop${item.chainDepth === 1 ? "" : "s"}` : ""}</div>
     ${problems.length ? `<div class="issue">⚠ ${problems.join("; ")}</div>` : ""}
     ${
       item.origins.length > 1
-        ? `<div class="issue">⚠ ${item.origins.length} recorded origins: ${item.origins.join(", ")} — these are
-           different senses of the word, so say which one this entry is about.</div>`
+        ? `<div class="issue">⚠ ${item.word} has ${item.origins.length} recorded origins (${item.origins.join(", ")});
+           this card is the one above, and the other senses stay in the queue as separate entries.</div>`
         : ""
     }
     <div class="field">
@@ -158,6 +158,7 @@ function render() {
       <label for="pos">Part of speech</label>
       <div class="row">
         <input id="pos" list="pos-options" value="${item.pos}" placeholder="noun · verb · adjective · adverb" />
+        <span class="muted">files as <code id="key-preview">${item.pos ? `${item.word}:${item.pos}` : item.word}</code></span>
         <datalist id="pos-options">
           ${["noun", "verb", "adjective", "adverb", "pronoun", "preposition", "conjunction", "interjection", "numeral", "determiner", "phrase", "idiom"]
             .map((option) => `<option value="${option}"></option>`)
@@ -165,19 +166,6 @@ function render() {
         </datalist>
       </div>
     </div>
-    ${
-      item.origins.length > 1
-        ? `<div class="field">
-            <label for="origin">Origin this entry is about</label>
-            <select id="origin">
-              <option value="">(leave to the pipeline: ${item.deepestLanguage})</option>
-              ${item.origins
-                .map((origin) => `<option value="${origin}" ${item.origin === origin ? "selected" : ""}>${origin}</option>`)
-                .join("")}
-            </select>
-          </div>`
-        : ""
-    }
     <div class="field">
       <label>Tier (difficulty)</label>
       <div class="tiers">${tierButtons}</div>
@@ -189,10 +177,10 @@ function render() {
     <div class="row">
       <button id="save-next" class="primary">Save &amp; next<span class="kbd-hint">Enter</span></button>
       <button id="save">Save<span class="kbd-hint">⇧Enter</span></button>
-      <button id="skip">Skip word<span class="kbd-hint">s</span></button>
+      <button id="skip">Skip sense<span class="kbd-hint">s</span></button>
     </div>
     <div class="meta">
-      chain source: ${item.inWorklist ? "work list" : "not in the work list (no mappable chain)"}<br />
+      sense id: <code>${item.sense}</code><br />
       files: <code>${state.paths.batch}</code> → <code>${state.paths.curation}</code><br />
       skipped so far: ${state.skipWords.length}
     </div>`;
@@ -217,8 +205,12 @@ function render() {
     }
   });
   el("blurb").addEventListener("input", () => (dirty = true));
-  el("pos").addEventListener("input", () => (dirty = true));
-  el("origin")?.addEventListener("change", () => (dirty = true));
+  el("pos").addEventListener("input", () => {
+    dirty = true;
+    // Show the sense key this will be filed under.
+    const pos = el("pos").value.trim().toLowerCase();
+    el("key-preview").textContent = pos ? `${item.word}:${pos}` : item.word;
+  });
   document.querySelectorAll(".tiers button").forEach((button) => {
     button.addEventListener("click", () => {
       document.querySelectorAll(".tiers button").forEach((b) => b.classList.remove("active"));
@@ -285,11 +277,11 @@ async function skipCurrent() {
   const item = current();
   if (!item) return;
   try {
-    state = await api("/api/skip", { word: item.word, index: state.index });
+    state = await api("/api/skip", { sense: item.sense, index: state.index });
     dirty = false;
     render();
     await loadSources();
-    status(`skipped ${item.word} (added to the skip list)`);
+    status(`skipped ${item.sense} (added to the skip list)`);
   } catch (err) {
     status(err.message, true);
   }

@@ -13,6 +13,8 @@ import {
   mergeCuration,
   parseWorklist,
   selectNextBatch,
+  settledSenseIds,
+  wordOfSenseId,
   type Curation,
   type CurationAudit,
   type WorklistCandidate,
@@ -36,6 +38,8 @@ export const DEFAULT_PATHS: AdminPaths = {
 
 /** One row of the left-hand panel. */
 export interface QueueItem {
+  /** Batch key: the work-list sense id (`back`, or `back|Old English`). */
+  sense: string;
   word: string;
   frequencyRank?: number;
   suggestedTier: number;
@@ -102,6 +106,8 @@ export function formatCuration(curation: Curation): string {
     if (entry.year !== undefined) parts.push(`"year": ${entry.year}`);
     if (entry.tier !== undefined) parts.push(`"tier": ${entry.tier}`);
     if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
+    if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
+    if (entry.origin !== undefined) parts.push(`"origin": ${JSON.stringify(entry.origin)}`);
     return `  ${JSON.stringify(word)}: { ${parts.join(", ")} }`;
   });
   return `{\n${lines.join(",\n")}\n}\n`;
@@ -112,8 +118,8 @@ export function writeBatch(path: string, batch: Curation): void {
 }
 
 export function writeSkipWords(path: string, words: readonly string[]): void {
-  const header = "# Words rejected during curation (dubious chain, no mappable origin, ...).\n";
-  const note = "# One word per line; also passed to `npm run curate -- --skip <file>`.\n";
+  const header = "# Senses rejected during curation (dubious chain, no mappable origin, ...).\n";
+  const note = "# One sense id per line (`word`, or `word|Origin`); also passed to `npm run curate -- --skip <file>`.\n";
   writeFileSync(path, `${header}${note}${[...words].sort().join("\n")}\n`);
 }
 
@@ -132,14 +138,18 @@ function readBankWords(path: string): Set<string> {
 export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const batch = readBatch(paths.batch);
   const worklist = readWorklist(paths.worklist);
+  const bySense = new Map(worklist.map((candidate) => [candidate.sense, candidate]));
   const byWord = new Map(worklist.map((candidate) => [candidate.word, candidate]));
   const skipWords = readSkipWords(paths.skip);
 
-  const queue: QueueItem[] = Object.keys(batch).map((word) => {
-    const candidate = byWord.get(word);
-    const entry = batch[word]!;
+  // The batch is keyed by work-list sense id, so `back|Old English` and
+  // `back|French` are two separate pieces of research.
+  const queue: QueueItem[] = Object.keys(batch).map((sense) => {
+    const candidate = bySense.get(sense) ?? byWord.get(wordOfSenseId(sense));
+    const entry = batch[sense]!;
     return {
-      word,
+      sense,
+      word: candidate?.word ?? wordOfSenseId(sense),
       frequencyRank: candidate?.frequencyRank,
       suggestedTier: entry.tier ?? candidate?.tier ?? 5,
       chainDepth: candidate?.chainDepth ?? 0,
@@ -151,7 +161,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       tier: entry.tier ?? candidate?.tier ?? 5,
       blurb: entry.blurb ?? "",
       pos: entry.pos ?? "",
-      origin: entry.origin ?? "",
+      origin: entry.origin ?? candidate?.origin ?? "",
     };
   });
 
@@ -178,7 +188,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   };
 }
 
-/** Replace the batch with the next `limit` uncurated, non-skipped words. */
+/** Replace the batch with the next `limit` uncurated, non-skipped senses. */
 export function pullNextBatch(paths: AdminPaths, limit: number): AdminState {
   const curation = readCuration(paths.curation);
   const batch = readBatch(paths.batch);
@@ -186,28 +196,37 @@ export function pullNextBatch(paths: AdminPaths, limit: number): AdminState {
   const skip = new Set([...readSkipWords(paths.skip), ...alreadyQueued]);
   const candidates = readWorklist(paths.worklist);
 
-  // Words already in the batch keep their place: pulling "next" should not
-  // discard in-progress research, so ask for the next ones after them.
+  // Senses already in the batch keep their place: pulling "next" should not
+  // discard in-progress research, so ask for the ones after them.
   const fresh = selectNextBatch(candidates, {
-    curated: new Set(Object.keys(curation)),
+    settled: settledSenseIds(curation, new Map(candidates.map((candidate) => [candidate.word, candidate]))),
     skip,
     limit,
   });
 
   const nextBatch: Curation = {};
-  for (const candidate of fresh) nextBatch[candidate.word] = { year: 0, tier: candidate.tier, blurb: "" };
+  for (const candidate of fresh) {
+    nextBatch[candidate.sense] = { year: 0, tier: candidate.tier, origin: candidate.origin, blurb: "" };
+  }
   writeBatch(paths.batch, nextBatch);
   return buildQueue(paths, 0);
 }
 
-/** Save one researched word into the batch file. Returns the updated state. */
+/** Save one researched sense into the batch file. Returns the updated state. */
 export function saveEntry(
   paths: AdminPaths,
-  entry: { word: string; year: number; tier: number; blurb: string; pos?: string; origin?: string },
+  entry: {
+    sense: string;
+    year: number;
+    tier: number;
+    blurb: string;
+    pos?: string;
+    origin?: string;
+  },
   index: number,
 ): AdminState {
   const batch = readBatch(paths.batch);
-  if (!(entry.word in batch)) throw new Error(`"${entry.word}" is not in the current batch`);
+  if (!(entry.sense in batch)) throw new Error(`"${entry.sense}" is not in the current batch`);
   const year = Math.round(entry.year);
   if (!Number.isFinite(year) || year < 0 || year > 2200) throw new Error(`year ${entry.year} is out of range`);
   const tier = Math.round(entry.tier);
@@ -216,22 +235,26 @@ export function saveEntry(
   if (pos && !/^[a-z][a-z -]{1,19}$/.test(pos)) {
     throw new Error(`pos "${entry.pos}" should be a lowercase label like "noun"`);
   }
+  const existing = batch[entry.sense];
   const saved: Curation[string] = { year, tier };
   if (entry.blurb.trim()) saved.blurb = entry.blurb.trim();
   if (pos) saved.pos = pos;
-  if (entry.origin?.trim()) saved.origin = entry.origin.trim();
-  batch[entry.word] = saved;
+  // The sense's origin comes from the work list and is not the caller's to lose:
+  // keep whatever is already recorded when the caller omits it.
+  const origin = entry.origin?.trim() || existing?.origin;
+  if (origin) saved.origin = origin;
+  batch[entry.sense] = saved;
   writeBatch(paths.batch, batch);
   return buildQueue(paths, index);
 }
 
-/** Move a word to the skip list and drop it from the batch. */
-export function skipWord(paths: AdminPaths, word: string, index: number): AdminState {
+/** Move a sense to the skip list and drop it from the batch. */
+export function skipSense(paths: AdminPaths, sense: string, index: number): AdminState {
   const skip = new Set(readSkipWords(paths.skip));
-  skip.add(word);
+  skip.add(sense);
   writeSkipWords(paths.skip, [...skip]);
   const batch = readBatch(paths.batch);
-  delete batch[word];
+  delete batch[sense];
   writeBatch(paths.batch, batch);
   return buildQueue(paths, index);
 }

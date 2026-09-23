@@ -1,29 +1,36 @@
 import { describe, expect, it } from "vitest";
 import {
   auditCuration,
+  composeSenseKey,
   mergeCuration,
+  parseSenseKey,
   parseWorklist,
   selectNextBatch,
+  settledSenseIds,
+  wordOfSenseId,
   type Curation,
 } from "../scripts/lib/curation";
 import { bestPossibleTemporal } from "../src/timeline";
 import { scoreTemporal } from "../src/scoring";
 
 const WORKLIST = [
-  "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
-  "just\t39\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
-  "money\t186\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
-  "must\t156\t2\t2\tMiddle Persian\tPersian <- Middle Persian\tMiddle Persian",
-  "tea\t\t7\t3\tMin Nan\tDutch <- Malay <- Min Nan\tMin Nan",
-  "back\t83\t2\t2\tMiddle French\tFrench <- Middle French\tMiddle French|Old English",
+  "word\torigin\tsense\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
+  "just\tOld French\tjust\t39\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+  "money\tOld French\tmoney\t186\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+  "must\tMiddle Persian\tmust\t156\t2\t2\tMiddle Persian\tPersian <- Middle Persian\tMiddle Persian",
+  "tea\tMin Nan\ttea\t\t7\t3\tMin Nan\tDutch <- Malay <- Min Nan\tMin Nan",
+  "back\tMiddle French\tback|Middle French\t83\t2\t2\tMiddle French\tFrench <- Middle French\tMiddle French|Old English",
+  "back\tOld English\tback|Old English\t83\t2\t3\tOld English\tMiddle English <- Old English\tMiddle French|Old English",
 ].join("\n");
 
 describe("parseWorklist", () => {
-  it("parses the ranked work list, tolerating a missing frequency rank", () => {
+  it("parses sense rows, tolerating a missing frequency rank", () => {
     const parsed = parseWorklist(WORKLIST);
-    expect(parsed).toHaveLength(5);
+    expect(parsed).toHaveLength(6);
     expect(parsed[0]).toEqual({
       word: "just",
+      origin: "Old French",
+      sense: "just",
       frequencyRank: 39,
       tier: 2,
       chainDepth: 2,
@@ -35,33 +42,100 @@ describe("parseWorklist", () => {
     expect(parsed[3]!.chain).toEqual(["Dutch", "Malay", "Min Nan"]);
   });
 
-  it("parses a homograph's several origins (sorted)", () => {
-    const back = parseWorklist(WORKLIST).find((candidate) => candidate.word === "back")!;
-    expect(back.origins).toEqual(["Middle French", "Old English"]);
+  it("gives every sense of a homograph its own row and id", () => {
+    const back = parseWorklist(WORKLIST).filter((candidate) => candidate.word === "back");
+    expect(back.map((candidate) => candidate.sense)).toEqual(["back|Middle French", "back|Old English"]);
+    expect(back.map((candidate) => candidate.origin)).toEqual(["Middle French", "Old English"]);
+    for (const sense of back) expect(sense.origins).toEqual(["Middle French", "Old English"]);
+  });
+
+  it("still reads an older one-row-per-word work list", () => {
+    const legacy = [
+      "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
+      "just\t39\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+    ].join("\n");
+    expect(parseWorklist(legacy)[0]).toMatchObject({ word: "just", origin: "Old French", sense: "just" });
   });
 
   it("ignores blank lines and the header", () => {
-    expect(parseWorklist(`word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins\n\n`)).toEqual([]);
+    expect(parseWorklist(`word\torigin\tsense\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins\n\n`)).toEqual(
+      [],
+    );
+  });
+});
+
+describe("sense keys", () => {
+  it("parses key, key:pos and key:pos:n", () => {
+    expect(parseSenseKey("back")).toEqual({ word: "back" });
+    expect(parseSenseKey("back:noun")).toEqual({ word: "back", pos: "noun" });
+    expect(parseSenseKey("bank:noun:2")).toEqual({ word: "bank", pos: "noun", ordinal: 2 });
+  });
+
+  it("rejects anything that is not a sense key", () => {
+    expect(parseSenseKey("back|Old English")).toBeNull(); // a work-list id, not a key
+    expect(parseSenseKey("back:Noun")).toBeNull();
+    expect(parseSenseKey("back:noun:1")).toBeNull(); // ordinals start at 2
+    expect(parseSenseKey("back:noun:2:3")).toBeNull();
+    expect(parseSenseKey("")).toBeNull();
+  });
+
+  it("composes keys the way the builder looks them up", () => {
+    expect(composeSenseKey("back")).toBe("back");
+    expect(composeSenseKey("back", "noun")).toBe("back:noun");
+    expect(composeSenseKey("bank", "noun", 2)).toBe("bank:noun:2");
+    expect(composeSenseKey("bank", "noun", 1)).toBe("bank:noun");
+  });
+
+  it("splits a work-list sense id back into its word", () => {
+    expect(wordOfSenseId("back|Old English")).toBe("back");
+    expect(wordOfSenseId("back")).toBe("back");
+  });
+});
+
+describe("settledSenseIds", () => {
+  const byWord = new Map(parseWorklist(WORKLIST).map((candidate) => [candidate.word, candidate]));
+
+  it("settles a single-origin word as one id", () => {
+    expect([...settledSenseIds({ just: { year: 1400 } }, byWord)]).toEqual(["just"]);
+  });
+
+  it("settles only the sense a homograph entry names", () => {
+    const settled = settledSenseIds({ "back:noun": { year: 1000, pos: "noun", origin: "Old English" } }, byWord);
+    expect([...settled]).toEqual(["back|Old English"]);
+  });
+
+  it("leaves a homograph unsettled until its origin is named", () => {
+    expect([...settledSenseIds({ "back:noun": { year: 1000, pos: "noun" } }, byWord)]).toEqual([]);
   });
 });
 
 describe("selectNextBatch", () => {
   const candidates = parseWorklist(WORKLIST);
 
-  it("selectNextBatch skips curated and skipped words, keeping work-list order", () => {
-    const batch = selectNextBatch(parseWorklist(WORKLIST), {
-      curated: new Set(["just"]),
-      skip: new Set(["money"]),
+  it("skips settled senses and skipped ones, keeping work-list order", () => {
+    const batch = selectNextBatch(candidates, {
+      settled: new Set<string>(["just"]),
+      skip: new Set<string>(["money"]),
       limit: 10,
     });
-    expect(batch.map((candidate) => candidate.word)).toEqual(["must", "tea", "back"]);
+    expect(batch.map((candidate) => candidate.sense)).toEqual([
+      "must",
+      "tea",
+      "back|Middle French",
+      "back|Old English",
+    ]);
+  });
+
+  it("leaves the other senses of a homograph queued when one is settled", () => {
+    const batch = selectNextBatch(candidates, {
+      settled: new Set<string>(["just", "money", "must", "tea", "back|Old English"]),
+      limit: 10,
+    });
+    expect(batch.map((candidate) => candidate.sense)).toEqual(["back|Middle French"]);
   });
 
   it("respects the limit", () => {
-    expect(selectNextBatch(candidates, { curated: new Set(), limit: 2 }).map((c) => c.word)).toEqual([
-      "just",
-      "money",
-    ]);
+    expect(selectNextBatch(candidates, { limit: 2 }).map((candidate) => candidate.sense)).toEqual(["just", "money"]);
   });
 });
 
@@ -106,7 +180,7 @@ describe("auditCuration", () => {
     const base = { knownWords: new Set(["back"]), originsByWord, yearFloor: 700, yearCeiling: 2025 };
 
     const noPos = auditCuration({ back: { year: 1000 } }, base);
-    expect(noPos.issues[0]!.problem).toContain('add "pos" and "origin"');
+    expect(noPos.issues[0]!.problem).toContain("give the entry a part of speech");
 
     const posOnly = auditCuration({ back: { year: 1000, pos: "noun" } }, base);
     expect(posOnly.issues[0]!.problem).toContain('no "origin"');
@@ -153,5 +227,27 @@ describe("mergeCuration", () => {
   it("rounds years and drops an empty blurb", () => {
     const merged = mergeCuration({}, { tea: { year: 1650.6, blurb: "   " } });
     expect(merged.merged.tea).toEqual({ year: 1651 });
+  });
+
+  it("files a sense under the key its part of speech composes", () => {
+    const merged = mergeCuration({}, { "back|Old English": { year: 1000, pos: "noun", origin: "Old English" } });
+    expect(merged.added).toEqual(["back:noun"]);
+    expect(merged.merged["back:noun"]).toEqual({ year: 1000, pos: "noun", origin: "Old English" });
+  });
+
+  it("files a second sense of the same part of speech as :2", () => {
+    const first = mergeCuration({}, { "back|Old English": { year: 1000, pos: "noun", origin: "Old English" } }).merged;
+    const second = mergeCuration(first, {
+      "back|Middle French": { year: 1400, pos: "noun", origin: "Middle French" },
+    });
+    expect(second.added).toEqual(["back:noun:2"]);
+    expect(second.merged["back:noun:2"]).toMatchObject({ pos: "noun", origin: "Middle French" });
+  });
+
+  it("skips a sense that is already filed", () => {
+    const existing = { "back:noun": { year: 1000, pos: "noun", origin: "Old English" } };
+    const result = mergeCuration(existing, { "back|Old English": { year: 1000, pos: "noun", origin: "Old English" } });
+    expect(result.added).toEqual([]);
+    expect(result.skipped).toEqual(["back|Old English"]);
   });
 });

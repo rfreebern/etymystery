@@ -11,7 +11,7 @@ import {
   mergeBatch,
   pullNextBatch,
   saveEntry,
-  skipWord,
+  skipSense,
   type AdminPaths,
 } from "../admin/store";
 import { createAdminServer } from "../admin/server";
@@ -27,11 +27,13 @@ function makeWorkspace(): AdminPaths {
     bank: path.join(dir, "bank.json"),
   };
   const rows = [
-    "word\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain",
-    "just\t39\t2\t2\tOld French\tMiddle English <- Old French",
-    "money\t186\t2\t2\tOld French\tMiddle English <- Old French",
-    "must\t156\t2\t2\tMiddle Persian\tPersian <- Middle Persian",
-    "tea\t\t7\t3\tMin Nan\tDutch <- Malay <- Min Nan",
+    "word\torigin\tsense\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
+    "just\tOld French\tjust\t39\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+    "money\tOld French\tmoney\t186\t2\t2\tOld French\tMiddle English <- Old French\tOld French",
+    "must\tMiddle Persian\tmust\t156\t2\t2\tMiddle Persian\tPersian <- Middle Persian\tMiddle Persian",
+    "tea\tMin Nan\ttea\t\t7\t3\tMin Nan\tDutch <- Malay <- Min Nan\tMin Nan",
+    "back\tMiddle French\tback|Middle French\t83\t2\t2\tMiddle French\tFrench <- Middle French\tMiddle French|Old English",
+    "back\tOld English\tback|Old English\t83\t2\t3\tOld English\tMiddle English <- Old English\tMiddle French|Old English",
   ];
   writeFileSync(paths.worklist, `${rows.join("\n")}\n`);
   writeFileSync(paths.curation, formatCuration({ coffee: { year: 1590, tier: 1, blurb: "From Arabic." } }));
@@ -95,48 +97,79 @@ describe("store", () => {
     expect(state.curatedCount).toBe(1);
   });
 
-  it("pulls the next uncurated words, skipping already-curated and skipped ones", () => {
+  it("pulls the next uncurated senses, skipping settled and skipped ones", () => {
     const paths = makeWorkspace();
     writeFileSync(paths.skip, "just\n");
     const state = pullNextBatch(paths, 2);
     // coffee is curated and just is skipped, so the next two are money and must
-    expect(state.queue.map((item) => item.word)).toEqual(["money", "must"]);
-    expect(JSON.parse(readFileSync(paths.batch, "utf8"))).toMatchObject({ money: { year: 0 } });
+    expect(state.queue.map((item) => item.sense)).toEqual(["money", "must"]);
+    expect(JSON.parse(readFileSync(paths.batch, "utf8"))).toMatchObject({
+      money: { year: 0, origin: "Old French" },
+    });
+  });
+
+  it("treats each sense of a homograph as its own queue item", () => {
+    const paths = makeWorkspace();
+    const state = pullNextBatch(paths, 10);
+    const back = state.queue.filter((item) => item.word === "back");
+    expect(back.map((item) => item.sense)).toEqual(["back|Middle French", "back|Old English"]);
+    expect(back.map((item) => item.origin)).toEqual(["Middle French", "Old English"]);
+    expect(back[0]!.origins).toEqual(["Middle French", "Old English"]);
   });
 
   it("saves an entry into the batch and refuses nonsense", () => {
     const paths = makeWorkspace();
     pullNextBatch(paths, 3);
-    const state = saveEntry(paths, { word: "money", year: 1300, tier: 2, blurb: "  From Old French. " }, 1);
-    expect(state.queue.find((item) => item.word === "money")).toMatchObject({
+    const state = saveEntry(paths, { sense: "money", year: 1300, tier: 2, blurb: "  From Old French. ", pos: "Noun" }, 1);
+    expect(state.queue.find((item) => item.sense === "money")).toMatchObject({
       year: 1300,
       blurb: "From Old French.",
+      pos: "noun", // normalised to lowercase
     });
-    expect(() => saveEntry(paths, { word: "nope", year: 1500, tier: 2, blurb: "" }, 0)).toThrow(/not in the current batch/);
-    expect(() => saveEntry(paths, { word: "money", year: 1500, tier: 11, blurb: "" }, 0)).toThrow(/tier/);
-    expect(() => saveEntry(paths, { word: "money", year: 99_999, tier: 2, blurb: "" }, 0)).toThrow(/out of range/);
+    expect(() => saveEntry(paths, { sense: "nope", year: 1500, tier: 2, blurb: "" }, 0)).toThrow(
+      /not in the current batch/,
+    );
+    expect(() => saveEntry(paths, { sense: "money", year: 1500, tier: 11, blurb: "" }, 0)).toThrow(/tier/);
+    expect(() => saveEntry(paths, { sense: "money", year: 99_999, tier: 2, blurb: "" }, 0)).toThrow(/out of range/);
   });
 
-  it("skips a word: it leaves the batch and lands on the skip list", () => {
+  it("skips a sense: it leaves the batch and lands on the skip list", () => {
     const paths = makeWorkspace();
     pullNextBatch(paths, 3);
-    const state = skipWord(paths, "must", 0);
-    expect(state.queue.map((item) => item.word)).not.toContain("must");
+    const state = skipSense(paths, "must", 0);
+    expect(state.queue.map((item) => item.sense)).not.toContain("must");
     expect(readFileSync(paths.skip, "utf8")).toContain("must");
   });
 
-  it("merges researched entries, keeps a backup, and leaves year-0 words alone", () => {
+  it("merges researched entries, keeps a backup, and leaves year-0 senses alone", () => {
     const paths = makeWorkspace();
     pullNextBatch(paths, 3);
-    saveEntry(paths, { word: "money", year: 1300, tier: 2, blurb: "From Old French." }, 0);
+    saveEntry(paths, { sense: "money", year: 1300, tier: 2, blurb: "From Old French." }, 0);
     const result = mergeBatch(paths);
     expect(result.added).toEqual(["money"]);
     expect(result.skipped).toContain("just"); // still year 0
     expect(result.backup).toBe(`${paths.curation}.bak`);
     const curation = JSON.parse(readFileSync(paths.curation, "utf8"));
-    expect(curation.money).toEqual({ year: 1300, tier: 2, blurb: "From Old French." });
+    expect(curation.money).toEqual({
+      year: 1300,
+      tier: 2,
+      blurb: "From Old French.",
+      origin: "Old French", // the sense's origin travels with it
+    });
     expect(curation.coffee).toBeDefined(); // existing entries survive
     expect(curation.just).toBeUndefined();
+  });
+
+  it("files a sense under the key its part of speech composes", () => {
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 10);
+    saveEntry(paths, { sense: "back|Old English", year: 1000, tier: 5, blurb: "Native.", pos: "noun" }, 0);
+    saveEntry(paths, { sense: "back|Middle French", year: 1400, tier: 6, blurb: "Later sense.", pos: "verb" }, 1);
+    const { added } = mergeBatch(paths);
+    expect(added).toEqual(["back:noun", "back:verb"]);
+    const curation = JSON.parse(readFileSync(paths.curation, "utf8"));
+    expect(curation["back:noun"]).toMatchObject({ year: 1000, pos: "noun", origin: "Old English" });
+    expect(curation["back:verb"]).toMatchObject({ year: 1400, pos: "verb", origin: "Middle French" });
   });
 
   it("ships defaults that match the CLI's paths", () => {
@@ -217,21 +250,21 @@ describe("http api", () => {
 
   it("saves an entry over HTTP and reports bad input as 400", async () => {
     const state = await (await fetch(`${base}/api/state`)).json();
-    const word: string = state.queue[0].word;
+    const sense: string = state.queue[0].sense;
     const saved = await (
       await fetch(`${base}/api/entry`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ word, year: 1650, tier: 4, blurb: "tested" }),
+        body: JSON.stringify({ sense, year: 1650, tier: 4, blurb: "tested" }),
       })
     ).json();
-    expect(saved.queue.find((item: { word: string }) => item.word === word)).toMatchObject({ year: 1650, tier: 4 });
-    expect(JSON.parse(readFileSync(paths.batch, "utf8"))[word].year).toBe(1650);
+    expect(saved.queue.find((item: { sense: string }) => item.sense === sense)).toMatchObject({ year: 1650, tier: 4 });
+    expect(JSON.parse(readFileSync(paths.batch, "utf8"))[sense].year).toBe(1650);
 
     const bad = await fetch(`${base}/api/entry`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ word, year: 1650, tier: 44 }),
+      body: JSON.stringify({ sense, year: 1650, tier: 44 }),
     });
     expect(bad.status).toBe(400);
     expect((await bad.json()).error).toMatch(/tier/);

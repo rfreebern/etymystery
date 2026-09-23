@@ -2,8 +2,16 @@
 
 ## Code
 
-All original code in this repository. A license has not yet been chosen by
-the project owner (MIT is a reasonable default for this kind of project).
+**MIT** — see [LICENSE](LICENSE). It covers the code in this repository:
+`src/`, `scripts/`, `admin/`, `web/`, `tests/` and the CI workflow.
+
+## Data (a different licence: CC BY-SA)
+
+The **data** is not MIT: everything derived from Wiktionary inherits its
+share-alike terms, so `curated/`, `web/public/word-bank.json` and the generated
+language/country tables are distributed under **CC BY-SA 4.0**. That is the whole
+reason this repository publishes its curation artifacts rather than only the
+generated bank: it keeps the share-alike obligation satisfied.
 
 ## Data provenance (all open)
 

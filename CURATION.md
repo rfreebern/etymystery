@@ -146,37 +146,52 @@ the bank has no players.
 
 ## Parts of speech and multiple origins
 
-Different senses of the same word often have different origins *and* different
-dates, so an entry has to say which sense it is about. `back` is the canonical
-case: the familiar word is inherited from Old English (`bæc`), while another
-sense came via French (`bac`) — and the pipeline's tie-break prefers borrowings,
-so on its own it would have graded "French" as the right answer for a native word.
+A puzzle entry is a **sense**, not a word. Different senses of the same word have
+different origins *and* different dates: `back` is inherited from Old English
+(`bæc`) in one sense and came via French (`bac`) in another, `sole` has four
+recorded origins, `mail` has three. So the work list has **one row per sense**,
+and each row becomes its own entry.
 
-So every candidate row carries an **`origins`** column listing each place its
-recorded chains support, and a word with more than one is flagged as ambiguous
-(about a third of candidates are). When you curate one:
+The curation key — which is also the bank's entry id — says which sense it is:
 
-- **`pos`** — always set it, e.g. `"noun"`, `"verb"`, `"adjective"`, `"adverb"`.
-  It appears in the puzzle ("Where did this noun originally come from…?") and in
-  the reveal, so the player knows which sense is being asked about.
-- **`origin`** — set it whenever the row lists more than one origin, naming the
-  one you verified for that sense (spelled exactly as in the `origins` column).
-  This overrides the pipeline's pick and is the difference between a correct
-  answer and a plausible-but-wrong one. The builder refuses an `origin` the data
-  does not support, and `--mode check` flags any homograph missing either field.
+    word            the word has one recorded origin, no part of speech recorded
+    word:pos        this sense's part of speech, e.g. back:noun
+    word:pos:2      a second sense of the same part of speech, e.g. bank:noun:2
+                    (bank the river vs bank the money are both nouns)
+
+The tools compose that key for you: give a sense a `pos` and it files as
+`word:pos`, and if that key is already taken by a *different* origin it becomes
+`word:pos:2`. You rarely type a key by hand.
+
+When you curate a sense:
+
+- **`pos`** — always set it. It appears in the puzzle ("Where did this noun
+  originally come from…?") and in the reveal, so the player knows which sense is
+  being asked about.
+- **`origin`** — required whenever the row's `origins` column lists more than one
+  place, naming the one you verified for that sense (spelled exactly as in that
+  column). This is the difference between a correct answer and a
+  plausible-but-wrong one: without it the builder falls back to its tie-break
+  (which prefers borrowings, hence the `back` → French mistake) and the build
+  report counts how many entries rest on that guess.
+
+Whether a word is a homograph is not a judgement call: the `origins` column lists
+every place its recorded chains support, and each of those is a separate row in
+the queue. Finishing the noun of `back` leaves the verb (or the other noun) in the
+queue — `curate --mode check` reports progress in senses, and the audit insists on
+`pos` + `origin` for anything with more than one recorded origin.
 
 Two details worth knowing:
 
 - A chosen branch may end in a reconstruction (Old English under Proto-West
   Germanic, as with `back`). Picking it anchors the answer to the deepest hop
   that has a home on a modern map — the curator's choice is authoritative, so it
-  is never dropped for being "buried". The full chain still shows on the reveal.
-- The work list's `origins` column is a list of *answerable* places: a variant
-  whose deepest hop is a reconstruction still contributes the deepest real place
-  inside it.
+  is never dropped as "buried". The full chain still shows on the reveal.
+- The `origins` column lists *answerable* places: a branch whose deepest hop is a
+  reconstruction still contributes the deepest real place inside it.
 
-`npm run curate -- --mode next` prints each ambiguous word's origins, and the
-admin app shows them as a warning with a POS field and an origin picker.
+`npm run curate -- --mode next` prints each sense with its origin, and the admin
+app gives each sense its own card (with a live "files as" key preview).
 
 ## The timeline window (700–2025)
 

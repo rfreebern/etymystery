@@ -313,10 +313,39 @@ retroactively fixed three unwinnable rounds in the shipped bank.
   (commit 5caf295) so `main` stayed shippable; it does not typecheck yet and is the
   next piece of work.
 
+**Session 3 (cont. 9) — one entry per sense** (this batch)
+
+- A puzzle entry is a SENSE, not a word: different senses have different origins
+  and dates (`back` is inherited from Old English in one sense, borrowed from
+  French in another; `sole` has four recorded origins), so the work list is one
+  row per sense and each row is its own entry.
+- Sense keys are the bank's ids: `word`, `word:pos`, or `word:pos:2` for a second
+  sense of the same part of speech (`bank:noun` the river vs `bank:noun:2` the
+  money). parseSenseKey / composeSenseKey / senseId / wordOfSenseId live in
+  scripts/lib/curation.ts; `mergeCuration` composes the key from the curator's
+  `pos` and bumps to `:2` when that key is already taken by another origin.
+- Work list: 62,469 candidate senses from 41,985 words (an `origin` and `sense`
+  column per row). Coverage of the top 1k words rose from 163 to 661 senses,
+  because a word is no longer dropped when one of its senses is excluded.
+- bank-builder emits one entry per curated sense, anchors each to the deepest
+  placeable hop of its own branch, and marks a filtered-out sense as settled so it
+  cannot reappear as an uncurated candidate. A homograph with no curated `origin`
+  still falls back to the tie-break (so the demo bank keeps building) but the
+  report counts it — 11 entries today. `--deepest-attested` is gone: anchoring per
+  sense to the deepest placeable hop is the only sensible behaviour now.
+- admin app: the queue is senses, each card shows that sense's origin and chain
+  with a live "files as" key preview, the origin picker is gone (the card *is* the
+  sense) and Skip skips one sense. `saveEntry` keeps the sense's origin when a
+  caller omits it.
+- The code is MIT (LICENSE, package.json, LICENSES.md splitting code from the
+  CC BY-SA data), and README gained play/hosting/licensing sections.
+- tests: 189 total (+13) for sense keys, per-sense queueing, settled-sense logic,
+  key composition, ordinal collisions, and one-row-per-sense parsing.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 176 passed (14 files)
+    npx vitest run            # 189 passed (14 files)
     npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

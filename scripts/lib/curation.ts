@@ -24,10 +24,85 @@ export interface CurationEntryInput {
   pos?: string;
   /**
    * The origin the curator verified, as a language name from the work list's
-   * `origins` column. Overrides the pipeline's tie-break pick, which cannot know
-   * which sense a puzzle is about.
+   * `origins` column. Required for a word with several recorded origins: it
+   * selects which sense this entry is.
    */
   origin?: string;
+  /**
+   * The curation key this entry should be filed under, when the batch key was a
+   * work-list sense id (`word|origin`). Set by the tools; ignored on read.
+   */
+  key?: string;
+}
+
+/**
+ * A puzzle entry is a *sense*, not a word: `back` the noun is inherited from Old
+ * English while another sense came via French, and `sole` has four recorded
+ * origins. So the curation key and the bank id are sense keys:
+ *
+ *   word            one recorded origin, no part of speech recorded yet
+ *   word:pos        this sense's part of speech, e.g. `back:noun`
+ *   word:pos:2      a further sense of the same part of speech (`bank:noun:2`)
+ */
+export interface SenseKey {
+  word: string;
+  pos?: string;
+  ordinal?: number;
+}
+
+export function parseSenseKey(key: string): SenseKey | null {
+  const parts = key.split(":");
+  if (parts.length > 3) return null;
+  const [word, pos, ordinal] = parts;
+  if (!word || !/^[a-z][a-z' -]{1,40}$/.test(word)) return null;
+  if (pos !== undefined && !/^[a-z][a-z -]{1,19}$/.test(pos)) return null;
+  if (ordinal !== undefined && !/^[2-9][0-9]?$/.test(ordinal)) return null;
+  return {
+    word,
+    ...(pos ? { pos } : {}),
+    ...(ordinal ? { ordinal: Number(ordinal) } : {}),
+  };
+}
+
+export function composeSenseKey(word: string, pos?: string, ordinal?: number): string {
+  if (!pos) return word;
+  return ordinal && ordinal > 1 ? `${word}:${pos}:${ordinal}` : `${word}:${pos}`;
+}
+
+/** The candidate id of a sense in the work list: `word`, or `word|origin`. */
+export function senseId(word: string, origin: string | undefined, originCount: number): string {
+  return originCount > 1 && origin ? `${word}|${origin}` : word;
+}
+
+/** The word part of a work-list sense id (`back|Old English` -> `back`). */
+export function wordOfSenseId(id: string): string {
+  return id.split("|")[0] ?? id;
+}
+
+/**
+ * Which work-list senses a curation file has already settled. Callers pass the
+ * work list's candidates by word, because whether a word needs one candidate or
+ * one per origin depends on how many origins it has.
+ */
+export function settledSenseIds(
+  curation: Curation,
+  candidatesByWord: ReadonlyMap<string, { origins: string[]; deepestLanguage: string }>,
+): Set<string> {
+  const settled = new Set<string>();
+  for (const [key, entry] of Object.entries(curation)) {
+    const parsed = parseSenseKey(key);
+    if (!parsed) continue;
+    const candidate = candidatesByWord.get(parsed.word);
+    const origins = candidate?.origins ?? [];
+    if (origins.length <= 1) {
+      settled.add(parsed.word);
+      continue;
+    }
+    // A homograph settles nothing until its own sense is named: a bare `pos`
+    // entry, or one relying on the tie-break pick, leaves every sense queued.
+    if (entry.origin) settled.add(`${parsed.word}|${entry.origin}`);
+  }
+  return settled;
 }
 
 export type Curation = Record<string, CurationEntryInput>;
@@ -35,52 +110,86 @@ export type Curation = Record<string, CurationEntryInput>;
 /** One row of the ranked work list produced by build-bank --worklist. */
 export interface WorklistCandidate {
   word: string;
+  /** This row's answer origin (each row is one sense of the word). */
+  origin: string;
+  /** Work-list sense id: `word`, or `word|origin` when the word has several. */
+  sense: string;
   frequencyRank?: number;
   tier: number;
   chainDepth: number;
   deepestLanguage: string;
   chain: string[];
   /**
-   * The origins the recorded chains support (more than one = homograph). Absent
-   * from work lists generated before the column existed, hence the default.
+   * Every origin this word's recorded chains support; more than one means the
+   * word is a homograph and each origin is its own puzzle entry.
    */
   origins: string[];
 }
 
+/**
+ * Parse a work list. Header-driven so it reads both the sense-scoped rows
+ * written today and the older one-row-per-word files.
+ */
 export function parseWorklist(text: string): WorklistCandidate[] {
+  const lines = text.split("\n");
+  const header = (lines[0] ?? "").replace(/\r$/, "").split("\t").map((name) => name.trim());
+  const at = (name: string): number => header.indexOf(name);
+  const wordIdx = at("word");
+  if (wordIdx < 0) return [];
+  const idx = {
+    origin: at("origin"),
+    sense: at("sense"),
+    freq: at("freq_rank"),
+    tier: at("tier"),
+    depth: at("chain_depth"),
+    deepest: at("deepest_language"),
+    chain: at("chain"),
+    origins: at("origins"),
+  };
+
   const out: WorklistCandidate[] = [];
-  for (const raw of text.split("\n").slice(1)) {
+  for (const raw of lines.slice(1)) {
     const line = raw.replace(/\r$/, "");
     if (!line.trim()) continue;
-    const [word, freqRank, tier, chainDepth, deepestLanguage, chain, origins] = line.split("\t");
-    if (!word || !deepestLanguage) continue;
-    const rank = Number.parseInt(freqRank ?? "", 10);
+    const cols = line.split("\t");
+    const get = (i: number): string => (i >= 0 ? (cols[i] ?? "").trim() : "");
+    const word = get(wordIdx);
+    if (!word) continue;
+    const deepestLanguage = get(idx.deepest) || get(idx.origin);
+    if (!deepestLanguage) continue;
+    const origins = get(idx.origins).split("|").filter(Boolean).sort();
+    const origin = get(idx.origin) || deepestLanguage;
+    const rank = Number.parseInt(get(idx.freq), 10);
     out.push({
       word,
+      origin,
+      sense: get(idx.sense) || senseId(word, origin, origins.length || 1),
       frequencyRank: Number.isFinite(rank) ? rank : undefined,
-      tier: Number.parseInt(tier ?? "", 10) || 1,
-      chainDepth: Number.parseInt(chainDepth ?? "", 10) || 1,
+      tier: Number.parseInt(get(idx.tier), 10) || 1,
+      chainDepth: Number.parseInt(get(idx.depth), 10) || 1,
       deepestLanguage,
-      chain: (chain ?? "").split(" <- ").filter(Boolean),
-      origins: (origins ?? "").split("|").filter(Boolean).sort(),
+      chain: get(idx.chain).split(" <- ").filter(Boolean),
+      origins,
     });
   }
   return out;
 }
 
 /**
- * The next words to curate, in work-list order (already most-common-first).
- * Already-curated words and anything on the skip list are excluded.
+ * The next senses to curate, in work-list order (already most-common-first).
+ * `settled` holds the sense ids the curation file already covers, so finishing
+ * the noun of a homograph leaves its verb in the queue.
  */
 export function selectNextBatch(
   candidates: readonly WorklistCandidate[],
-  options: { curated: ReadonlySet<string>; skip?: ReadonlySet<string>; limit: number },
+  options: { settled?: ReadonlySet<string>; skip?: ReadonlySet<string>; limit: number },
 ): WorklistCandidate[] {
   const skip = options.skip ?? new Set<string>();
+  const settled = options.settled ?? new Set<string>();
   const batch: WorklistCandidate[] = [];
   for (const candidate of candidates) {
     if (batch.length >= options.limit) break;
-    if (options.curated.has(candidate.word) || skip.has(candidate.word)) continue;
+    if (settled.has(candidate.sense) || skip.has(candidate.sense) || skip.has(candidate.word)) continue;
     batch.push(candidate);
   }
   return batch;
@@ -135,13 +244,25 @@ export function auditCuration(
       continue;
     }
     if (word !== word.toLowerCase()) {
-      issues.push({ word, problem: "keys are lowercase words; the builder looks words up verbatim" });
+      issues.push({ word, problem: "sense keys are lowercase; the builder looks them up verbatim" });
+    }
+    const sense = parseSenseKey(word);
+    if (!sense) {
+      issues.push({
+        word,
+        problem:
+          "key must be a sense key: `word`, `word:pos`, or `word:pos:2` for a second sense of that part of speech",
+      });
+      continue;
     }
     // The work list holds UNCURATED candidates, so already-curated words are
     // only "known" through the bank they were accepted into. A word in neither
     // has no mappable chain at all (or is a typo).
-    if (!options.knownWords.has(word) && !options.bankWords?.has(word)) {
-      issues.push({ word, problem: "no mappable chain in the current data (typo, or the word is not a candidate)" });
+    if (!options.knownWords.has(sense.word) && !options.bankWords?.has(sense.word)) {
+      issues.push({
+        word,
+        problem: "no mappable chain in the current data (typo, or the word is not a candidate)",
+      });
     }
     if (entry.year === undefined || !Number.isFinite(entry.year)) {
       issues.push({ word, problem: "missing year (required for the word to enter the bank)" });
@@ -163,19 +284,20 @@ export function auditCuration(
     if (entry.pos !== undefined && !/^[a-z][a-z -]{1,19}$/.test(entry.pos)) {
       issues.push({ word, problem: `pos "${entry.pos}" should be a lowercase label like "noun"` });
     }
-    const origins = options.originsByWord?.get(word) ?? [];
+    const origins = options.originsByWord?.get(sense.word) ?? [];
     if (origins.length > 1) {
       // Different senses of a homograph really do come from different places
-      // (`back`: Old English vs French), so the entry must say which one it is.
+      // (`back`: Old English vs French), so each sense is its own entry and has
+      // to name the one it is about.
       if (!entry.pos) {
         issues.push({
           word,
-          problem: `has ${origins.length} recorded origins (${origins.join(", ")}); add "pos" and "origin" for the sense this puzzle is about`,
+          problem: `has ${origins.length} recorded origins (${origins.join(", ")}); give the entry a part of speech (\`${sense.word}:pos\`) and the "origin" it is about`,
         });
       } else if (!entry.origin) {
         issues.push({
           word,
-          problem: `pos is set but no "origin"; the recorded origins are ${origins.join(", ")} (otherwise the builder uses its own tie-break pick)`,
+          problem: `pos is set but no "origin"; the recorded origins are ${origins.join(", ")}`,
         });
       } else if (!origins.includes(entry.origin)) {
         issues.push({ word, problem: `origin "${entry.origin}" is not one of ${origins.join(", ")}` });
@@ -204,23 +326,41 @@ export function mergeCuration(
   const merged: Curation = { ...curation };
   const added: string[] = [];
   const skipped: string[] = [];
-  for (const [word, entry] of Object.entries(batch)) {
+  for (const [batchKey, entry] of Object.entries(batch)) {
     // A batch skeleton ships with `year: 0` for "not researched yet".
     if (entry.year === undefined || !Number.isFinite(entry.year) || entry.year <= 0) {
-      skipped.push(word);
+      skipped.push(batchKey);
       continue;
     }
-    if (merged[word]) {
-      skipped.push(word);
-      continue;
+    // The batch is keyed by work-list sense id (`back|Old English`); the curated
+    // entry is filed under a sense key the curator composed (`back:noun`).
+    const word = wordOfSenseId(batchKey);
+    const pos = entry.pos?.trim() || undefined;
+    let key = entry.key?.trim() || composeSenseKey(word, pos);
+    if (merged[key]) {
+      // Already curated under that sense key. If this is a *different* origin it
+      // is another sense of the same part of speech, so file it as `word:pos:2`.
+      const existing = merged[key]!;
+      const differentSense = Boolean(entry.origin && existing.origin && entry.origin !== existing.origin);
+      if (!differentSense || !pos) {
+        skipped.push(batchKey);
+        continue;
+      }
+      let ordinal = 2;
+      while (ordinal <= 99 && merged[composeSenseKey(word, pos, ordinal)]) ordinal += 1;
+      if (ordinal > 99) {
+        skipped.push(batchKey);
+        continue;
+      }
+      key = composeSenseKey(word, pos, ordinal);
     }
     const cleaned: CurationEntryInput = { year: Math.round(entry.year) };
     if (entry.tier !== undefined) cleaned.tier = entry.tier;
     if (entry.blurb?.trim()) cleaned.blurb = entry.blurb.trim();
-    if (entry.pos?.trim()) cleaned.pos = entry.pos.trim();
+    if (pos) cleaned.pos = pos;
     if (entry.origin?.trim()) cleaned.origin = entry.origin.trim();
-    merged[word] = cleaned;
-    added.push(word);
+    merged[key] = cleaned;
+    added.push(key);
   }
   return { merged, added: added.sort(), skipped: skipped.sort() };
 }

@@ -18,7 +18,7 @@ import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { DEFAULT_PATHS, buildQueue, mergeBatch, pullNextBatch, saveEntry, skipWord, type AdminPaths } from "./store";
+import { DEFAULT_PATHS, buildQueue, mergeBatch, pullNextBatch, saveEntry, skipSense, type AdminPaths } from "./store";
 import { sourcesFor } from "./sources";
 
 const STATIC: Record<string, string> = {
@@ -107,7 +107,7 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
           const state = saveEntry(
             paths,
             {
-              word: String(body.word ?? ""),
+              sense: String(body.sense ?? ""),
               year: Number(body.year),
               tier: Number(body.tier),
               blurb: String(body.blurb ?? ""),
@@ -119,7 +119,7 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
           return sendJson(res, 200, state);
         }
         if (route === "/api/skip") {
-          return sendJson(res, 200, skipWord(paths, String(body.word ?? ""), Number(body.index ?? 0)));
+          return sendJson(res, 200, skipSense(paths, String(body.sense ?? ""), Number(body.index ?? 0)));
         }
         if (route === "/api/merge") {
           return sendJson(res, 200, mergeBatch(paths));
