@@ -59,8 +59,8 @@ export function routeLabel(originChain: readonly string[], answerLanguage: strin
 export function beyondNote(answerLanguage: string, beyond: readonly string[]): string | null {
   if (beyond.length === 0) return null;
   return (
-    `Older still: ${beyond.join(ROUTE_ARROW)} — no anchor on a modern map, ` +
-    `so the answer is ${answerLanguage}, the oldest stop that can be placed.`
+    `Older still: ${beyond.join(ROUTE_ARROW)}. ` +
+    `No anchor on a modern map, so the answer is ${answerLanguage}, the oldest stop that can be placed.`
   );
 }
 

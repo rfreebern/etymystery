@@ -70,8 +70,10 @@ describe("routeLine", () => {
     const note = beyondNote("Latin", ["Proto-Italic"]);
     expect(note).toContain("Proto-Italic");
     expect(note).toContain("Latin");
-    expect(note).toContain("no anchor on a modern map");
+    expect(note!.toLowerCase()).toContain("no anchor on a modern map");
     expect(note!.startsWith("Older still:")).toBe(true);
+    // The copy rule: no em dashes in user-visible text.
+    expect(note).not.toContain("—");
   });
 });
 

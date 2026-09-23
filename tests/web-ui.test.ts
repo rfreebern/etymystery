@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 
 const main = readFileSync("web/src/main.ts", "utf8");
 const map = readFileSync("web/src/map.ts", "utf8");
+const reveal = readFileSync("web/src/reveal.ts", "utf8");
 const css = readFileSync("web/src/style.css", "utf8");
 
 /** The body of a function declaration or object-method shorthand, by brace matching. */
@@ -28,6 +29,19 @@ function functionBody(source: string, name: string): string {
     }
   }
   return source.slice(open);
+}
+
+/**
+ * String literals in a source file, with comments stripped first. Lets the copy
+ * rules ("no em dashes in the game's text") be checked without tripping over prose
+ * in comments, which is where most em dashes in this repo legitimately live.
+ */
+function literals(source: string): string[] {
+  const code = source
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/^[ \t]*\/\/[^\n]*/gm, " ")
+    .replace(/[ \t]+\/\/[^\n]*$/gm, " ");
+  return [...code.matchAll(/"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g)].map((m) => m[0]);
 }
 
 describe("scored rounds are frozen", () => {
@@ -70,7 +84,7 @@ describe("scored rounds are frozen", () => {
   });
 
   it("tells the player what is still possible once frozen", () => {
-    expect(functionBody(main, "lockRound")).toMatch(/zoom and pan/);
+    expect(functionBody(main, "lockRound").toLowerCase()).toMatch(/zoom and pan/);
     expect(css).toMatch(/\.tl-slider:disabled/);
   });
 });
@@ -127,9 +141,55 @@ describe("the origin route line", () => {
 
   it("marks which hop was asked about", () => {
     // The chain can continue older than the answer, so the answer hop is picked out
-    // rather than left as whatever happens to be first.
+    // rather than left as whatever happens to be first — and the same class carries
+    // into the answer heading.
     expect(main).toContain('el("b", "hop-answer", hop)');
-    expect(css).toMatch(/\.route \.hop-answer/);
+    expect(main).toContain('el("b", "hop-answer", entry.originLanguage)');
+    expect(css).toMatch(/\.hop-answer\s*\{[^}]*var\(--accent\)/);
+  });
+});
+
+describe("the reveal heading", () => {
+  it("leads with the word, then the answer in larger type", () => {
+    expect(main).toContain('"reveal-word"');
+    expect(main).toContain('"reveal-answer"');
+    // The word comes first in the DOM, the answer second.
+    expect(main.indexOf('"reveal-word"')).toBeLessThan(main.indexOf('"reveal-answer"'));
+    const word = /\.reveal-word\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    const answer = /\.reveal-answer\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    expect(word).toMatch(/font-size: 19px/);
+    expect(answer).toMatch(/font-size: clamp\(26px/);
+    // The answer must actually be the larger of the two.
+    expect(Number(/font-size: clamp\((\d+)/.exec(answer)![1])).toBeGreaterThan(
+      Number(/font-size: (\d+)/.exec(word)![1]),
+    );
+  });
+
+  it("drops the 'Answer:' prefix", () => {
+    expect(main).not.toContain("Answer: ");
+    expect(literals(main).some((s) => s.includes("first used around"))).toBe(true);
+  });
+});
+
+describe("the game's copy", () => {
+  it("uses no em dashes in user-visible strings", () => {
+    // Requested: the reveal and round text should not lean on em dashes. Comments
+    // may (this repo's prose is full of them), string literals may not.
+    for (const [file, source] of [
+      ["web/src/main.ts", main],
+      ["web/src/reveal.ts", reveal],
+    ] as const) {
+      const offenders = literals(source).filter((literal) => literal.includes("—"));
+      expect(offenders, `${file} strings containing an em dash`).toEqual([]);
+    }
+  });
+
+  it("keeps the attributions line centred and subdued", () => {
+    const footer = /\.about\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    expect(footer).toContain("text-align: center");
+    expect(footer).toMatch(/font-size: 12px/);
+    expect(footer).toMatch(/opacity: 0\.6/);
+    expect(css).toMatch(/\.about a\s*\{[^}]*color: inherit/);
   });
 });
 

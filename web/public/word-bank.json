@@ -554,7 +554,7 @@
           "lat": 24.5,
           "lng": 118
         },
-        "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+        "blurb": "Via Dutch thee from Min Nan Chinese te, the 'te' branch of the word's world map."
       },
       {
         "id": "join:verb",
@@ -843,7 +843,7 @@
           "lat": 61,
           "lng": 9
         },
-        "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
+        "blurb": "Old Norse vindauga, 'wind-eye', replacing Old English eagduru."
       }
     ],
     [
@@ -1975,7 +1975,7 @@
           "lat": 56,
           "lng": 38
         },
-        "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
+        "blurb": "Russian samovar, 'self-boiler', the tea urn of Russian tradition."
       },
       {
         "id": "they",
@@ -1997,7 +1997,7 @@
           "lat": 61,
           "lng": 9
         },
-        "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+        "blurb": "Old Norse their, one of the pronouns borrowed wholesale from Norse."
       },
       {
         "id": "bandana:noun",
@@ -2202,7 +2202,7 @@
           "lat": 36,
           "lng": 138
         },
-        "blurb": "Japanese jinrikisha, 'man-powered vehicle' — shortened in English."
+        "blurb": "Japanese jinrikisha, 'man-powered vehicle', shortened in English."
       },
       {
         "id": "coffee",
@@ -2241,7 +2241,7 @@
           "lat": 36,
           "lng": 138
         },
-        "blurb": "Japanese taikun, 'great lord' — the shogun's title, later applied to US magnates."
+        "blurb": "Japanese taikun, 'great lord', the shogun's title, later applied to US magnates."
       },
       {
         "id": "monsoon:noun",
@@ -7081,7 +7081,7 @@
         "lat": 56,
         "lng": 38
       },
-      "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
+      "blurb": "Russian samovar, 'self-boiler', the tea urn of Russian tradition."
     },
     {
       "id": "phone:noun",
@@ -7144,7 +7144,7 @@
         "lat": 24.5,
         "lng": 118
       },
-      "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+      "blurb": "Via Dutch thee from Min Nan Chinese te, the 'te' branch of the word's world map."
     },
     {
       "id": "angry:adjective",
@@ -7293,7 +7293,7 @@
         "lat": 61,
         "lng": 9
       },
-      "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+      "blurb": "Old Norse their, one of the pronouns borrowed wholesale from Norse."
     },
     {
       "id": "trust:noun",
@@ -7994,7 +7994,7 @@
         "lat": 61,
         "lng": 9
       },
-      "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
+      "blurb": "Old Norse vindauga, 'wind-eye', replacing Old English eagduru."
     },
     {
       "id": "department:noun",

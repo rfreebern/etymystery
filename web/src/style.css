@@ -174,9 +174,21 @@ button.secondary { background: #2c3242; color: var(--ink); }
 .credit-line { text-align: center; color: var(--muted); font-style: italic; }
 
 .route { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0; }
-/* The hop the player was asked about: the chain can continue past it. */
-.route .hop-answer { color: var(--accent); }
+/* The hop the player was asked about, in the route and in the answer line. */
+.hop-answer { color: var(--accent); }
 .beyond-note { font-size: 12px; opacity: 0.85; }
+
+/* Reveal heading: the word medium, the answer larger — the answer is the point. */
+.reveal-word {
+  text-align: center; color: var(--muted);
+  font-size: 19px; font-weight: 600; letter-spacing: 1.2px;
+  margin-top: 2px;
+}
+.reveal-answer {
+  text-align: center; color: var(--ink);
+  font-size: clamp(26px, 4.6vw, 36px); font-weight: 700; letter-spacing: 0.2px;
+  margin: 2px 0 8px;
+}
 
 .rounds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
 .round-cell { background: #262c3b; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; }
@@ -186,3 +198,16 @@ button.secondary { background: #2c3242; color: var(--ink); }
 @media (max-width: 640px) {
   .rounds-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* Attributions: present for licence compliance, quiet enough to ignore. */
+.about {
+  margin-top: auto;
+  padding: 18px 20px 26px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  opacity: 0.65;
+}
+.about a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.about a:hover { color: var(--ink); }

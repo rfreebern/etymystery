@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 242/242 tests passing, typecheck clean, static build green. The bank is
+`main`): 246/246 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -498,10 +498,43 @@ so the period labels change exactly where the handle crosses them.
   and its ordering, the note wording, and the shipped `enemy` case. The `web-ui`
   guard now also asserts main.ts uses `ROUTE_ARROW` rather than its own glyph.
 
+**Session 5 (cont. 3) — reveal heading, dash-free copy, quieter attributions**
+(this batch)
+
+- The reveal now leads with the word in medium type (`19px`) and then the answer in
+  larger type (`clamp(26px, 4.6vw, 36px)`) — previously the answer was a 14px muted
+  line below the route, i.e. the least prominent thing on the panel. The `Answer:`
+  prefix is gone, so the line reads `Latin · first used around 1200`, with the
+  language in the same accent class as the highlighted route hop.
+- **Em dashes removed from every user-visible string**, as requested: the credit
+  labels, the search-prompt line, the window verdict, the "locked in" hint, the day
+  label, the summary line, the timeline marker tooltip, the beyond-note, the page
+  title — and **8 curated blurbs**, which are data: `curated/curation.json` had them
+  in `samovar`, `tea:noun`, `they`, `window:noun`, `karaoke`, `malaria`, `rickshaw`,
+  `tycoon`.
+- Because blurbs live in the bank, that prose fix meant rebuilding it. Verified the
+  edit was prose-only: same 110 entries, `masterSequence` ids in the SAME order
+  (so day mapping is untouched), and every entry identical once `blurb` is excluded.
+  Only 4 of the 8 changed blurbs are inside the 10-day window; the rest sit in the
+  tier-10 overflow.
+- The attributions footer is centred, 12px, muted at 0.65 opacity with
+  `color: inherit` links, so it stays licence-visible without competing with the
+  game (browser-default blue links on a dark panel were the loudest thing on
+  screen).
+- New guards in `tests/web-ui.test.ts`: a `literals()` helper strips comments and
+  extracts string literals, then asserts no literal anywhere in `main.ts` or
+  `reveal.ts` contains an em dash (comments may: this repo's prose is full of them);
+  plus the heading order/sizes (with the answer asserted *larger* than the word),
+  the absence of the `Answer:` prefix, and the footer's centring/subtlety. All three
+  verified to fail when the rule is broken.
+- tests: 246 total.
+
 ## Verification (re-run before trusting anything)
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 242 passed (18 files)
+    npx vitest run            # 246 passed (18 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

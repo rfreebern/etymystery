@@ -43,12 +43,12 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
 
 function creditLabel(credit: string): string {
   switch (credit) {
-    case "country": return "Direct hit — right country!";
-    case "intermediate": return "On the route — an intermediate stop!";
-    case "subregion": return "Right subregion!";
-    case "continent": return "Right continent!";
-    case "proximity": return "Warm — but not the origin.";
-    default: return "Cold — nowhere near the origin.";
+    case "country": return "Direct hit: right country!";
+    case "intermediate": return "On the route: an intermediate stop!";
+    case "subregion": return "Right subregion, but not the origin.";
+    case "continent": return "Right continent, but not the origin.";
+    case "proximity": return "Warm, but not the origin.";
+    default: return "Cold. Nowhere near the origin.";
   }
 }
 
@@ -83,7 +83,7 @@ async function boot(): Promise<void> {
   try {
     rounds = getDailyPuzzle(bank, dayIndex);
   } catch {
-    app.replaceChildren(el("div", "panel", "This word bank is exhausted — a new curation batch is needed. Come back soon!"));
+    app.replaceChildren(el("div", "panel", "This word bank is exhausted. A new curation batch is needed. Come back soon!"));
     return;
   }
 
@@ -94,7 +94,7 @@ async function boot(): Promise<void> {
 
   function renderDayLabel(): void {
     document.getElementById("day-label")!.textContent =
-      `Puzzle ${dayIndex + 1} of bank v${bank.version} — ${dateLabel(utcMs)} UTC`;
+      `Puzzle ${dayIndex + 1} of bank v${bank.version} · ${dateLabel(utcMs)} UTC`;
   }
 
   /** Timeline nodes for the round on screen, so the reveal can mark the answer. */
@@ -108,7 +108,7 @@ async function boot(): Promise<void> {
     if (!timelineNodes) return;
     const marker = el("div", "tl-answer");
     marker.style.left = `${yearPositionPct(year, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)}%`;
-    marker.title = `${year} — the year English first used it`;
+    marker.title = `${year}: the year English first used it`;
     timelineNodes.track.append(marker);
   }
 
@@ -145,7 +145,7 @@ async function boot(): Promise<void> {
       el(
         "p",
         "prompt",
-        `Where did this ${entry.pos ?? "word"} originally come from — and when did English first use it?`,
+        `Where did this ${entry.pos ?? "word"} originally come from, and when did English first use it?`,
       ),
     );
 
@@ -258,7 +258,7 @@ async function boot(): Promise<void> {
       worldMap.allowPicking(false);
       submitButton.disabled = true;
       submitButton.textContent = "Locked in";
-      hint.textContent = "Locked in — zoom and pan the map to inspect the answer.";
+      hint.textContent = "Locked in. Zoom and pan the map to inspect the answer.";
     }
 
     submitButton.addEventListener("click", () => {
@@ -277,7 +277,19 @@ async function boot(): Promise<void> {
     worldMap.revealAnswer(entry, stored.guess.point);
 
     const panel = el("div", "panel");
-    panel.append(el("div", "word", entry.pos ? `${entry.word.toUpperCase()} (${entry.pos})` : entry.word.toUpperCase()));
+    // Heading: the word in medium type, then the answer in larger type, because the
+    // answer is what the round was actually about.
+    panel.append(
+      el(
+        "div",
+        "reveal-word",
+        entry.pos ? `${entry.word.toUpperCase()} (${entry.pos})` : entry.word.toUpperCase(),
+      ),
+    );
+    const answerLine = el("div", "reveal-answer");
+    answerLine.append(el("b", "hop-answer", entry.originLanguage));
+    answerLine.append(document.createTextNode(` · first used around ${entry.year}`));
+    panel.append(answerLine);
 
     const scores = el("div", "scores");
     const chips: Array<[string, number]> = [
@@ -308,8 +320,7 @@ async function boot(): Promise<void> {
     const older = beyondNote(entry.originLanguage, line.beyond);
     if (older) panel.append(el("div", "route beyond-note", older));
 
-    panel.append(el("div", "route", `Answer: ${entry.originLanguage} · first used around ${entry.year}`));
-    // Say plainly whether the window caught the year — it is the whole temporal
+    // Say plainly whether the window caught the year: it is the whole temporal
     // mechanic, and the only feedback that teaches where to place it.
     const guessed = guessRange(stored.guess);
     const missed = outsideYears(entry.year, guessed.start, guessed.end);
@@ -317,15 +328,15 @@ async function boot(): Promise<void> {
       el(
         "div",
         "route",
-        `Your window: ${rangeLabel(guessed.start, guessed.end)} — ${
+        `Your window: ${rangeLabel(guessed.start, guessed.end)}. ${
           missed === 0
-            ? "the answer is inside it ✓"
-            : `the answer fell ${missed} year${missed === 1 ? "" : "s"} outside it`
+            ? "The answer is inside it ✓"
+            : `The answer fell ${missed} year${missed === 1 ? "" : "s"} outside it.`
         }`,
       ),
     );
     panel.append(el("p", "prompt", entry.blurb));
-    // The answer's own year, on the timeline the player just used — the clearest
+    // The answer's own year, on the timeline the player just used, is the clearest
     // possible statement of how close the window was.
     markAnswerYear(entry.year);
 
@@ -350,7 +361,7 @@ async function boot(): Promise<void> {
       chip.append(el("div", "value", String(value)), el("div", "label", label));
       scores.append(chip);
     }
-    panel.append(scores, el("p", "prompt", `${dateLabel(utcMs)} — solved ${summary.played} of ${ROUNDS_PER_DAY}.`));
+    panel.append(scores, el("p", "prompt", `${dateLabel(utcMs)} · solved ${summary.played} of ${ROUNDS_PER_DAY}.`));
 
     const grid = el("div", "rounds-grid");
     rounds.forEach((entry, i) => {
