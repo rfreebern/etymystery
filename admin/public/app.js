@@ -78,13 +78,17 @@ async function loadSources() {
 
 function readForm() {
   const item = current();
+  const chosen = document.querySelector('input[name="origin"]:checked');
   return {
     sense: item.sense,
+    word: item.word,
     year: Number(el("year").value),
     tier: Number(document.querySelector(".tiers button.active")?.dataset.tier || item.tier),
     blurb: el("blurb").value,
     pos: el("pos")?.value ?? "",
-    origin: item.origin,
+    // Several routes and no pick: send nothing and let save() insist.
+    origin: chosen ? chosen.value : item.origins.length > 1 ? "" : item.origin,
+    unverified: !el("verified").checked,
     index: state.index,
   };
 }
@@ -94,6 +98,11 @@ async function save({ advance = false } = {}) {
   if (!Number.isFinite(form.year) || form.year <= 0) {
     status("enter a year first", true);
     el("year").focus();
+    return;
+  }
+  if (current().origins.length > 1 && !form.origin) {
+    status(`pick which origin ${form.word} came from first`, true);
+    document.querySelector('input[name="origin"]')?.focus();
     return;
   }
   try {
@@ -141,8 +150,21 @@ function render() {
     ${problems.length ? `<div class="issue">⚠ ${problems.join("; ")}</div>` : ""}
     ${
       item.origins.length > 1
-        ? `<div class="issue">⚠ ${item.word} has ${item.origins.length} recorded origins (${item.origins.join(", ")});
-           this card is the one above, and the other senses stay in the queue as separate entries.</div>`
+        ? `<div class="field">
+      <label>Origin — the routes disagree, pick the one this sense came from</label>
+      <div class="origins">
+        ${item.origins
+          .map(
+            (origin) =>
+              `<label class="origin-option"><input type="radio" name="origin" value="${origin}"${
+                origin === item.origin ? " checked" : ""
+              } /> ${origin}</label>`,
+          )
+          .join("")}
+      </div>
+      <div class="muted">${item.origins.length} recorded origins for ${item.word}. Leaving this unpicked
+        makes the build fall back to a tie-break guess, so it has to be chosen.</div>
+    </div>`
         : ""
     }
     <div class="field">
@@ -169,6 +191,17 @@ function render() {
     <div class="field">
       <label>Tier (difficulty)</label>
       <div class="tiers">${tierButtons}</div>
+    </div>
+    <div class="field">
+      <label for="verified">Provenance</label>
+      <div class="row">
+        <label class="verify"><input id="verified" type="checkbox" ${
+          item.unverified ? "" : "checked"
+        } /> I checked this date against a reference</label>
+        <span class="muted">${
+          item.unverified ? "currently marked unverified: a drafted date" : "recorded as verified"
+        }</span>
+      </div>
     </div>
     <div class="field">
       <label for="blurb">Reveal blurb (optional)</label>

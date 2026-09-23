@@ -1,50 +1,1329 @@
 {
-  "version": 1,
+  "version": 2,
   "epochStartDay": 20717,
-  "seed": 3314190493,
+  "seed": 3263857636,
   "tiers": [
     [
       {
-        "id": "karaoke",
-        "word": "karaoke",
-        "year": 1975,
+        "id": "both:determiner",
+        "word": "both",
+        "pos": "determiner",
+        "year": 1200,
         "tier": 1,
         "originChain": [
-          "Japanese"
+          "Middle English",
+          "Old Norse"
         ],
-        "originLanguage": "Japanese",
+        "originLanguage": "Old Norse",
         "countries": [
-          "JP"
+          "NO",
+          "IS",
+          "DK"
         ],
         "point": {
-          "lat": 36,
-          "lng": 138
+          "lat": 61,
+          "lng": 9
         },
-        "blurb": "Japanese kara 'empty' + oke (short for okestora) 'orchestra' — an 'empty orchestra'."
+        "blurb": "From Middle English, ultimately from Old Norse."
       },
       {
-        "id": "pizza",
-        "word": "pizza",
-        "year": 1935,
+        "id": "their:determiner",
+        "word": "their",
+        "pos": "determiner",
+        "year": 1200,
         "tier": 1,
         "originChain": [
-          "Italian"
+          "Old Norse",
+          "Proto-Germanic"
         ],
-        "originLanguage": "Italian",
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Old Norse theirra, displacing Old English hira."
+      },
+      {
+        "id": "guy:noun",
+        "word": "guy",
+        "pos": "noun",
+        "year": 1806,
+        "tier": 1,
+        "originChain": [
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Guy Fawkes, whose effigy was burned on 5 November."
+      },
+      {
+        "id": "course:noun",
+        "word": "course",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 1,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
         "countries": [
           "IT"
         ],
         "point": {
-          "lat": 43,
+          "lat": 42,
           "lng": 12
         },
-        "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
+        "blurb": "From Middle English, ultimately from Latin."
       },
       {
-        "id": "coffee",
-        "word": "coffee",
-        "year": 1590,
+        "id": "idea:noun",
+        "word": "idea",
+        "pos": "noun",
+        "year": 1580,
         "tier": 1,
+        "originChain": [
+          "Latin",
+          "Ancient Greek",
+          "Proto-Hellenic"
+        ],
+        "originLanguage": "Ancient Greek",
+        "countries": [
+          "GR",
+          "TR",
+          "CY",
+          "IT"
+        ],
+        "point": {
+          "lat": 38,
+          "lng": 23
+        },
+        "blurb": "From Greek idea, 'form, pattern'."
+      },
+      {
+        "id": "phone:noun",
+        "word": "phone",
+        "pos": "noun",
+        "year": 1884,
+        "tier": 1,
+        "originChain": [
+          "Ancient Greek"
+        ],
+        "originLanguage": "Ancient Greek",
+        "countries": [
+          "GR",
+          "TR",
+          "CY",
+          "IT"
+        ],
+        "point": {
+          "lat": 38,
+          "lng": 23
+        },
+        "blurb": "Clipped from telephone: Greek tele 'far' + phone 'voice'."
+      },
+      {
+        "id": "trust:noun",
+        "word": "trust",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 1,
+        "originChain": [
+          "Middle English",
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Middle English, ultimately from Old Norse."
+      },
+      {
+        "id": "them:pronoun",
+        "word": "them",
+        "pos": "pronoun",
+        "year": 1200,
+        "tier": 1,
+        "originChain": [
+          "Middle English",
+          "Old Norse",
+          "Proto-Germanic"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Old Norse theim, replacing Old English him."
+      },
+      {
+        "id": "take:verb",
+        "word": "take",
+        "pos": "verb",
+        "year": 1100,
+        "tier": 1,
+        "originChain": [
+          "Middle English",
+          "Old English",
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Old Norse taka, which displaced the native verb."
+      },
+      {
+        "id": "kid:noun",
+        "word": "kid",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 1,
+        "originChain": [
+          "Middle English",
+          "Old Norse",
+          "Proto-Germanic"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "Originally 'a young goat'. (The 'child' sense is 1590s.)"
+      }
+    ],
+    [
+      {
+        "id": "protect:verb",
+        "word": "protect",
+        "pos": "verb",
+        "year": 1420,
+        "tier": 2,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "court:noun",
+        "word": "court",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "bag:noun",
+        "word": "bag",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Middle English, ultimately from Old Norse."
+      },
+      {
+        "id": "expect:verb",
+        "word": "expect",
+        "pos": "verb",
+        "year": 1550,
+        "tier": 2,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "country:noun",
+        "word": "country",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "company:noun",
+        "word": "company",
+        "pos": "noun",
+        "year": 1250,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Middle English, ultimately from Old French."
+      },
+      {
+        "id": "plan:noun",
+        "word": "plan",
+        "pos": "noun",
+        "year": 1670,
+        "tier": 2,
+        "originChain": [
+          "French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From French, ultimately from Latin."
+      },
+      {
+        "id": "fool:noun",
+        "word": "fool",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "couple:noun",
+        "word": "couple",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "state:noun",
+        "word": "state",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 2,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      }
+    ],
+    [
+      {
+        "id": "simple:adjective",
+        "word": "simple",
+        "pos": "adjective",
+        "year": 1200,
+        "tier": 3,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "government:noun",
+        "word": "government",
+        "pos": "noun",
+        "year": 1380,
+        "tier": 3,
+        "originChain": [
+          "Middle English",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Middle English, ultimately from Old French."
+      },
+      {
+        "id": "certain:adjective",
+        "word": "certain",
+        "pos": "adjective",
+        "year": 1300,
+        "tier": 3,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "normal:adjective",
+        "word": "normal",
+        "pos": "adjective",
+        "year": 1520,
+        "tier": 3,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "club:noun",
+        "word": "club",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 3,
+        "originChain": [
+          "Middle English",
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "Originally 'a thick stick'."
+      },
+      {
+        "id": "tea:noun",
+        "word": "tea",
+        "pos": "noun",
+        "year": 1650,
+        "tier": 3,
+        "originChain": [
+          "Dutch",
+          "Malay",
+          "Min Nan"
+        ],
+        "originLanguage": "Min Nan",
+        "countries": [
+          "CN"
+        ],
+        "point": {
+          "lat": 24.5,
+          "lng": 118
+        },
+        "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+      },
+      {
+        "id": "join:verb",
+        "word": "join",
+        "pos": "verb",
+        "year": 1300,
+        "tier": 3,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "area:noun",
+        "word": "area",
+        "pos": "noun",
+        "year": 1530,
+        "tier": 3,
+        "originChain": [
+          "Latin",
+          "Proto-Italic"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin, ultimately from Proto-Italic."
+      },
+      {
+        "id": "public:adjective",
+        "word": "public",
+        "pos": "adjective",
+        "year": 1380,
+        "tier": 3,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "prison:noun",
+        "word": "prison",
+        "pos": "noun",
+        "year": 1150,
+        "tier": 3,
+        "originChain": [
+          "Middle English",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      }
+    ],
+    [
+      {
+        "id": "apartment:noun",
+        "word": "apartment",
+        "pos": "noun",
+        "year": 1640,
+        "tier": 4,
+        "originChain": [
+          "French",
+          "Italian",
+          "Spanish"
+        ],
+        "originLanguage": "Spanish",
+        "countries": [
+          "ES"
+        ],
+        "point": {
+          "lat": 40,
+          "lng": -4
+        },
+        "blurb": "From French, ultimately from Spanish."
+      },
+      {
+        "id": "college:noun",
+        "word": "college",
+        "pos": "noun",
+        "year": 1380,
+        "tier": 4,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "private:adjective",
+        "word": "private",
+        "pos": "adjective",
+        "year": 1380,
+        "tier": 4,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "agent:noun",
+        "word": "agent",
+        "pos": "noun",
+        "year": 1470,
+        "tier": 4,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "impossible:adjective",
+        "word": "impossible",
+        "pos": "adjective",
+        "year": 1300,
+        "tier": 4,
+        "originChain": [
+          "Middle English",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Middle English, ultimately from Old French."
+      },
+      {
+        "id": "angry:adjective",
+        "word": "angry",
+        "pos": "adjective",
+        "year": 1350,
+        "tier": 4,
+        "originChain": [
+          "Middle English",
+          "Old Norse",
+          "Proto-Germanic"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Old Norse angr, 'grief'."
+      },
+      {
+        "id": "accept:verb",
+        "word": "accept",
+        "pos": "verb",
+        "year": 1380,
+        "tier": 4,
+        "originChain": [
+          "Middle English",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "scene:noun",
+        "word": "scene",
+        "pos": "noun",
+        "year": 1535,
+        "tier": 4,
+        "originChain": [
+          "Middle French",
+          "Latin",
+          "Ancient Greek"
+        ],
+        "originLanguage": "Ancient Greek",
+        "countries": [
+          "GR",
+          "TR",
+          "CY",
+          "IT"
+        ],
+        "point": {
+          "lat": 38,
+          "lng": 23
+        },
+        "blurb": "From Greek skene, 'a stage'."
+      },
+      {
+        "id": "lieutenant:noun",
+        "word": "lieutenant",
+        "pos": "noun",
+        "year": 1370,
+        "tier": 4,
+        "originChain": [
+          "Middle French"
+        ],
+        "originLanguage": "Middle French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Middle French."
+      },
+      {
+        "id": "window:noun",
+        "word": "window",
+        "pos": "noun",
+        "year": 1225,
+        "tier": 4,
+        "originChain": [
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
+      }
+    ],
+    [
+      {
+        "id": "professor:noun",
+        "word": "professor",
+        "pos": "noun",
+        "year": 1380,
+        "tier": 5,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "mission:noun",
+        "word": "mission",
+        "pos": "noun",
+        "year": 1595,
+        "tier": 5,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "enemy:noun",
+        "word": "enemy",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 5,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "contact:noun",
+        "word": "contact",
+        "pos": "noun",
+        "year": 1620,
+        "tier": 5,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "guard:noun",
+        "word": "guard",
+        "pos": "noun",
+        "year": 1450,
+        "tier": 5,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Frankish"
+        ],
+        "originLanguage": "Frankish",
+        "countries": [
+          "DE",
+          "FR",
+          "NL"
+        ],
+        "point": {
+          "lat": 50.5,
+          "lng": 6.5
+        },
+        "blurb": "From Old French garde, of Germanic (Frankish) origin."
+      },
+      {
+        "id": "joke:noun",
+        "word": "joke",
+        "pos": "noun",
+        "year": 1660,
+        "tier": 5,
+        "originChain": [
+          "Latin",
+          "Proto-Indo-European"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin iocus, 'a jest'."
+      },
+      {
+        "id": "decision:noun",
+        "word": "decision",
+        "pos": "noun",
+        "year": 1450,
+        "tier": 5,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "madam:noun",
+        "word": "madam",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 5,
+        "originChain": [
+          "Middle English",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Middle English, ultimately from Old French."
+      },
+      {
+        "id": "difference:noun",
+        "word": "difference",
+        "pos": "noun",
+        "year": 1350,
+        "tier": 5,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "department:noun",
+        "word": "department",
+        "pos": "noun",
+        "year": 1470,
+        "tier": 5,
+        "originChain": [
+          "French",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From French, ultimately from Old French."
+      }
+    ],
+    [
+      {
+        "id": "due:adjective",
+        "word": "due",
+        "pos": "adjective",
+        "year": 1300,
+        "tier": 6,
+        "originChain": [
+          "Old French",
+          "Latin",
+          "Proto-Italic"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Old French, ultimately from Proto-Italic."
+      },
+      {
+        "id": "commander:noun",
+        "word": "commander",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 6,
+        "originChain": [
+          "Middle English",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Middle English, ultimately from Old French."
+      },
+      {
+        "id": "applause:noun",
+        "word": "applause",
+        "pos": "noun",
+        "year": 1420,
+        "tier": 6,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "ridiculous:adjective",
+        "word": "ridiculous",
+        "pos": "adjective",
+        "year": 1540,
+        "tier": 6,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "grace:noun",
+        "word": "grace",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 6,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "leg:noun",
+        "word": "leg",
+        "pos": "noun",
+        "year": 1200,
+        "tier": 6,
+        "originChain": [
+          "Middle English",
+          "Old Norse",
+          "Proto-Germanic"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Old Norse leggr, replacing Old English sceanc."
+      },
+      {
+        "id": "nature:noun",
+        "word": "nature",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 6,
+        "originChain": [
+          "Middle English",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "video:noun",
+        "word": "video",
+        "pos": "noun",
+        "year": 1935,
+        "tier": 6,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin videre 'to see', coined on the model of audio."
+      },
+      {
+        "id": "pressure:noun",
+        "word": "pressure",
+        "pos": "noun",
+        "year": 1380,
+        "tier": 6,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "kick:verb",
+        "word": "kick",
+        "pos": "verb",
+        "year": 1380,
+        "tier": 6,
+        "originChain": [
+          "Middle English",
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Middle English, ultimately from Old Norse."
+      }
+    ],
+    [
+      {
+        "id": "alcohol:noun",
+        "word": "alcohol",
+        "pos": "noun",
+        "year": 1540,
+        "tier": 7,
+        "originChain": [
+          "Spanish",
+          "Arabic",
+          "Aramaic"
+        ],
+        "originLanguage": "Aramaic",
+        "countries": [
+          "SY",
+          "IQ",
+          "TR"
+        ],
+        "point": {
+          "lat": 35,
+          "lng": 39
+        },
+        "blurb": "From Arabic al-kuhl, itself from Aramaic."
+      },
+      {
+        "id": "inspector:noun",
+        "word": "inspector",
+        "pos": "noun",
+        "year": 1600,
+        "tier": 7,
+        "originChain": [
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Latin."
+      },
+      {
+        "id": "advice:noun",
+        "word": "advice",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 7,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Latin"
+        ],
+        "originLanguage": "Latin",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 42,
+          "lng": 12
+        },
+        "blurb": "From Middle English, ultimately from Latin."
+      },
+      {
+        "id": "magazine:noun",
+        "word": "magazine",
+        "pos": "noun",
+        "year": 1580,
+        "tier": 7,
         "originChain": [
           "Arabic"
         ],
@@ -58,15 +1337,35 @@
           "lat": 24,
           "lng": 46
         },
-        "blurb": "From Arabic qahwah, likely via Turkish kahve and Dutch koffie."
-      }
-    ],
-    [
+        "blurb": "From Arabic makhzan 'storehouse', via Italian and French."
+      },
       {
-        "id": "robot",
+        "id": "orange:noun",
+        "word": "orange",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 7,
+        "originChain": [
+          "Persian",
+          "Sanskrit"
+        ],
+        "originLanguage": "Sanskrit",
+        "countries": [
+          "IN",
+          "NP"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 84
+        },
+        "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+      },
+      {
+        "id": "robot:noun",
         "word": "robot",
+        "pos": "noun",
         "year": 1923,
-        "tier": 2,
+        "tier": 7,
         "originChain": [
           "Czech"
         ],
@@ -81,28 +1380,308 @@
         "blurb": "Coined in Czech (robota, 'forced labor') by Karel Capek's 1920 play R.U.R."
       },
       {
-        "id": "tsunami",
-        "word": "tsunami",
-        "year": 1880,
-        "tier": 2,
+        "id": "several:adjective",
+        "word": "several",
+        "pos": "adjective",
+        "year": 1420,
+        "tier": 7,
         "originChain": [
-          "Japanese"
+          "Latin"
         ],
-        "originLanguage": "Japanese",
+        "originLanguage": "Latin",
         "countries": [
-          "JP"
+          "IT"
         ],
         "point": {
-          "lat": 36,
-          "lng": 138
+          "lat": 42,
+          "lng": 12
         },
-        "blurb": "Japanese tsu 'harbor' + nami 'wave'."
+        "blurb": "From Latin."
       },
       {
-        "id": "jungle",
-        "word": "jungle",
-        "year": 1780,
-        "tier": 2,
+        "id": "pizza:noun",
+        "word": "pizza",
+        "pos": "noun",
+        "year": 1935,
+        "tier": 7,
+        "originChain": [
+          "Neapolitan"
+        ],
+        "originLanguage": "Neapolitan",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 40.8,
+          "lng": 14.3
+        },
+        "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
+      },
+      {
+        "id": "chocolate:noun",
+        "word": "chocolate",
+        "pos": "noun",
+        "year": 1600,
+        "tier": 7,
+        "originChain": [
+          "Spanish",
+          "Yucatec Maya"
+        ],
+        "originLanguage": "Yucatec Maya",
+        "countries": [
+          "MX"
+        ],
+        "point": {
+          "lat": 20.5,
+          "lng": -89
+        },
+        "blurb": "From Spanish, ultimately from Yucatec Maya."
+      },
+      {
+        "id": "sugar:noun",
+        "word": "sugar",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 7,
+        "originChain": [
+          "Middle English",
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "Reached English via Old French and Arabic, ultimately Sanskrit."
+      }
+    ],
+    [
+      {
+        "id": "yoga:noun",
+        "word": "yoga",
+        "pos": "noun",
+        "year": 1820,
+        "tier": 8,
+        "originChain": [
+          "Sanskrit",
+          "Proto-Indo-Aryan"
+        ],
+        "originLanguage": "Sanskrit",
+        "countries": [
+          "IN",
+          "NP"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 84
+        },
+        "blurb": "From Sanskrit, ultimately from Proto-Indo-Aryan."
+      },
+      {
+        "id": "cotton:noun",
+        "word": "cotton",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 8,
+        "originChain": [
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "From Arabic qutn, via Old French coton."
+      },
+      {
+        "id": "tomato:noun",
+        "word": "tomato",
+        "pos": "noun",
+        "year": 1590,
+        "tier": 8,
+        "originChain": [
+          "Spanish",
+          "Classical Nahuatl",
+          "Proto-Nahuan"
+        ],
+        "originLanguage": "Classical Nahuatl",
+        "countries": [
+          "MX"
+        ],
+        "point": {
+          "lat": 19.4,
+          "lng": -99.1
+        },
+        "blurb": "From Nahuatl tomatl, via Spanish."
+      },
+      {
+        "id": "tattoo:noun",
+        "word": "tattoo",
+        "pos": "noun",
+        "year": 1644,
+        "tier": 8,
+        "originChain": [
+          "Dutch"
+        ],
+        "originLanguage": "Dutch",
+        "countries": [
+          "NL"
+        ],
+        "point": {
+          "lat": 52,
+          "lng": 5
+        },
+        "blurb": "From Dutch tap-toe, 'shut the tap': the drumbeat that ordered soldiers back to their quarters."
+      },
+      {
+        "id": "lemon:noun",
+        "word": "lemon",
+        "pos": "noun",
+        "year": 1400,
+        "tier": 8,
+        "originChain": [
+          "Middle English",
+          "Old French",
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "Reached English through Old French and Arabic."
+      },
+      {
+        "id": "sofa:noun",
+        "word": "sofa",
+        "pos": "noun",
+        "year": 1625,
+        "tier": 8,
+        "originChain": [
+          "French",
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "From Arabic suffah, a bench."
+      },
+      {
+        "id": "chili:noun",
+        "word": "chili",
+        "pos": "noun",
+        "year": 1662,
+        "tier": 8,
+        "originChain": [
+          "Spanish",
+          "Classical Nahuatl"
+        ],
+        "originLanguage": "Classical Nahuatl",
+        "countries": [
+          "MX"
+        ],
+        "point": {
+          "lat": 19.4,
+          "lng": -99.1
+        },
+        "blurb": "From Spanish, ultimately from Classical Nahuatl."
+      },
+      {
+        "id": "potato:noun",
+        "word": "potato",
+        "pos": "noun",
+        "year": 1565,
+        "tier": 8,
+        "originChain": [
+          "Spanish",
+          "Taíno"
+        ],
+        "originLanguage": "Taíno",
+        "countries": [
+          "DO",
+          "HT",
+          "CU",
+          "PR"
+        ],
+        "point": {
+          "lat": 19,
+          "lng": -71
+        },
+        "blurb": "From Spanish patata, from Taíno batata."
+      },
+      {
+        "id": "ballet:noun",
+        "word": "ballet",
+        "pos": "noun",
+        "year": 1635,
+        "tier": 8,
+        "originChain": [
+          "French",
+          "Italian"
+        ],
+        "originLanguage": "Italian",
+        "countries": [
+          "IT"
+        ],
+        "point": {
+          "lat": 43,
+          "lng": 12
+        },
+        "blurb": "From French ballet, from Italian balletto, a diminutive of ballo 'dance'."
+      },
+      {
+        "id": "barbecue:noun",
+        "word": "barbecue",
+        "pos": "noun",
+        "year": 1650,
+        "tier": 8,
+        "originChain": [
+          "Spanish",
+          "Taíno"
+        ],
+        "originLanguage": "Taíno",
+        "countries": [
+          "DO",
+          "HT",
+          "CU",
+          "PR"
+        ],
+        "point": {
+          "lat": 19,
+          "lng": -71
+        },
+        "blurb": "From Taíno barbacoa, a wooden framework, via Spanish."
+      }
+    ],
+    [
+      {
+        "id": "bungalow:noun",
+        "word": "bungalow",
+        "pos": "noun",
+        "year": 1670,
+        "tier": 9,
         "originChain": [
           "Hindi"
         ],
@@ -114,246 +1693,58 @@
           "lat": 22,
           "lng": 79
         },
-        "blurb": "From Hindi jangal 'wilderness, forest', from Sanskrit jangala."
-      }
-    ],
-    [
-      {
-        "id": "ballet",
-        "word": "ballet",
-        "year": 1635,
-        "tier": 3,
-        "originChain": [
-          "French"
-        ],
-        "originLanguage": "French",
-        "countries": [
-          "FR"
-        ],
-        "point": {
-          "lat": 47,
-          "lng": 2
-        },
-        "blurb": "From French ballet, from Italian balletto, a diminutive of ballo 'dance'."
+        "blurb": "From Gujarati/Hindi bangla, 'of Bengal'."
       },
       {
-        "id": "yogurt",
-        "word": "yogurt",
-        "year": 1625,
-        "tier": 3,
+        "id": "shampoo:verb",
+        "word": "shampoo",
+        "pos": "verb",
+        "year": 1762,
+        "tier": 9,
         "originChain": [
-          "Turkish"
+          "Hindi"
         ],
-        "originLanguage": "Turkish",
+        "originLanguage": "Hindi",
         "countries": [
-          "TR"
+          "IN"
         ],
         "point": {
-          "lat": 39,
-          "lng": 35
+          "lat": 22,
+          "lng": 79
         },
-        "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
+        "blurb": "From Hindi champo, 'to press, massage'."
       },
       {
-        "id": "safari",
-        "word": "safari",
-        "year": 1860,
-        "tier": 3,
+        "id": "coyote:noun",
+        "word": "coyote",
+        "pos": "noun",
+        "year": 1759,
+        "tier": 9,
         "originChain": [
-          "Swahili"
+          "Spanish",
+          "Proto-Nahuan"
         ],
-        "originLanguage": "Swahili",
+        "originLanguage": "Spanish",
         "countries": [
-          "KE",
-          "TZ"
+          "ES"
         ],
         "point": {
-          "lat": -6,
-          "lng": 39
+          "lat": 40,
+          "lng": -4
         },
-        "blurb": "From Swahili safari 'journey', from Arabic safar 'to travel'."
-      }
-    ],
-    [
-      {
-        "id": "elapse",
-        "word": "elapse",
-        "year": 1640,
-        "tier": 4,
-        "originChain": [
-          "Middle French",
-          "Latin"
-        ],
-        "originLanguage": "Latin",
-        "countries": [
-          "IT"
-        ],
-        "point": {
-          "lat": 42,
-          "lng": 12
-        },
-        "blurb": "From Middle French, from Latin elapsus, 'to slip away' (e- + labi)."
+        "blurb": "From Mexican Spanish, from Nahuatl coyotl."
       },
       {
-        "id": "samovar",
-        "word": "samovar",
-        "year": 1830,
-        "tier": 4,
+        "id": "ketchup:noun",
+        "word": "ketchup",
+        "pos": "noun",
+        "year": 1711,
+        "tier": 9,
         "originChain": [
-          "Russian"
+          "Malay",
+          "Min Nan"
         ],
-        "originLanguage": "Russian",
-        "countries": [
-          "RU"
-        ],
-        "point": {
-          "lat": 56,
-          "lng": 38
-        },
-        "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
-      },
-      {
-        "id": "kiosk",
-        "word": "kiosk",
-        "year": 1625,
-        "tier": 4,
-        "originChain": [
-          "Turkish"
-        ],
-        "originLanguage": "Turkish",
-        "countries": [
-          "TR"
-        ],
-        "point": {
-          "lat": 39,
-          "lng": 35
-        },
-        "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
-      }
-    ],
-    [
-      {
-        "id": "geyser",
-        "word": "geyser",
-        "year": 1785,
-        "tier": 5,
-        "originChain": [
-          "Icelandic"
-        ],
-        "originLanguage": "Icelandic",
-        "countries": [
-          "IS"
-        ],
-        "point": {
-          "lat": 65,
-          "lng": -18
-        },
-        "blurb": "From Icelandic Geysir, the famous hot spring, from geysa 'to gush'."
-      },
-      {
-        "id": "tycoon",
-        "word": "tycoon",
-        "year": 1857,
-        "tier": 5,
-        "originChain": [
-          "Japanese"
-        ],
-        "originLanguage": "Japanese",
-        "countries": [
-          "JP"
-        ],
-        "point": {
-          "lat": 36,
-          "lng": 138
-        },
-        "blurb": "Japanese taikun, 'great lord' — the shogun's title, later applied to US magnates."
-      },
-      {
-        "id": "paparazzi",
-        "word": "paparazzi",
-        "year": 1968,
-        "tier": 5,
-        "originChain": [
-          "Italian"
-        ],
-        "originLanguage": "Italian",
-        "countries": [
-          "IT"
-        ],
-        "point": {
-          "lat": 43,
-          "lng": 12
-        },
-        "blurb": "Italian, from Fellini's La Dolce Vita (1960): the photographer Paparazzo."
-      }
-    ],
-    [
-      {
-        "id": "boondocks",
-        "word": "boondocks",
-        "year": 1945,
-        "tier": 6,
-        "originChain": [
-          "Tagalog"
-        ],
-        "originLanguage": "Tagalog",
-        "countries": [
-          "PH"
-        ],
-        "point": {
-          "lat": 14,
-          "lng": 121
-        },
-        "blurb": "From Tagalog bundok 'mountain', via US troops in the Philippines."
-      },
-      {
-        "id": "rickshaw",
-        "word": "rickshaw",
-        "year": 1875,
-        "tier": 6,
-        "originChain": [
-          "Japanese"
-        ],
-        "originLanguage": "Japanese",
-        "countries": [
-          "JP"
-        ],
-        "point": {
-          "lat": 36,
-          "lng": 138
-        },
-        "blurb": "Japanese jinrikisha, 'man-powered vehicle' — shortened in English."
-      },
-      {
-        "id": "typhoon",
-        "word": "typhoon",
-        "year": 1585,
-        "tier": 6,
-        "originChain": [
-          "Cantonese"
-        ],
-        "originLanguage": "Cantonese",
-        "countries": [
-          "CN"
-        ],
-        "point": {
-          "lat": 23,
-          "lng": 113
-        },
-        "blurb": "From Cantonese taai fung 'great wind', blended with earlier trade-wind forms."
-      }
-    ],
-    [
-      {
-        "id": "tea",
-        "word": "tea",
-        "year": 1650,
-        "tier": 7,
-        "originChain": [
-          "Dutch",
-          "Min Nan Chinese"
-        ],
-        "originLanguage": "Min Nan Chinese",
+        "originLanguage": "Min Nan",
         "countries": [
           "CN"
         ],
@@ -361,31 +1752,123 @@
           "lat": 24.5,
           "lng": 118
         },
-        "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+        "blurb": "From a Chinese dialect word for fish sauce, via Malay."
       },
       {
-        "id": "serendipity",
-        "word": "serendipity",
-        "year": 1754,
-        "tier": 7,
+        "id": "hazard:noun",
+        "word": "hazard",
+        "pos": "noun",
+        "year": 1300,
+        "tier": 9,
         "originChain": [
-          "Persian"
+          "Middle English",
+          "Old French",
+          "Arabic"
         ],
-        "originLanguage": "Persian",
+        "originLanguage": "Arabic",
         "countries": [
-          "IR"
+          "SA",
+          "EG",
+          "DZ"
         ],
         "point": {
-          "lat": 32,
-          "lng": 54
+          "lat": 24,
+          "lng": 46
         },
-        "blurb": "Coined by Horace Walpole from the Persian tale of the Three Princes of Serendip (Sri Lanka)."
+        "blurb": "From Arabic az-zahr, 'the die'."
       },
       {
-        "id": "caravan",
+        "id": "thug:noun",
+        "word": "thug",
+        "pos": "noun",
+        "year": 1808,
+        "tier": 9,
+        "originChain": [
+          "Hindi",
+          "Proto-Indo-Aryan"
+        ],
+        "originLanguage": "Hindi",
+        "countries": [
+          "IN"
+        ],
+        "point": {
+          "lat": 22,
+          "lng": 79
+        },
+        "blurb": "From Hindi thag, a member of a robber band."
+      },
+      {
+        "id": "soy:noun",
+        "word": "soy",
+        "pos": "noun",
+        "year": 1690,
+        "tier": 9,
+        "originChain": [
+          "Japanese",
+          "Chinese"
+        ],
+        "originLanguage": "Chinese",
+        "countries": [
+          "CN",
+          "TW",
+          "SG"
+        ],
+        "point": {
+          "lat": 39.9,
+          "lng": 116.4
+        },
+        "blurb": "From Japanese shoyu, from Chinese jiangyou."
+      },
+      {
+        "id": "hurricane:noun",
+        "word": "hurricane",
+        "pos": "noun",
+        "year": 1555,
+        "tier": 9,
+        "originChain": [
+          "Spanish",
+          "Taíno"
+        ],
+        "originLanguage": "Taíno",
+        "countries": [
+          "DO",
+          "HT",
+          "CU",
+          "PR"
+        ],
+        "point": {
+          "lat": 19,
+          "lng": -71
+        },
+        "blurb": "From Taíno, via Spanish huracan."
+      },
+      {
+        "id": "guru:noun",
+        "word": "guru",
+        "pos": "noun",
+        "year": 1690,
+        "tier": 9,
+        "originChain": [
+          "Sanskrit",
+          "Proto-Indo-Aryan"
+        ],
+        "originLanguage": "Sanskrit",
+        "countries": [
+          "IN",
+          "NP"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 84
+        },
+        "blurb": "From Hindi guru 'teacher', from Sanskrit guru 'venerable, weighty'."
+      },
+      {
+        "id": "caravan:noun",
         "word": "caravan",
+        "pos": "noun",
         "year": 1590,
-        "tier": 7,
+        "tier": 9,
         "originChain": [
           "Persian"
         ],
@@ -402,88 +1885,67 @@
     ],
     [
       {
-        "id": "they",
-        "word": "they",
-        "year": 1200,
-        "tier": 8,
+        "id": "yogurt",
+        "word": "yogurt",
+        "year": 1625,
+        "tier": 10,
         "originChain": [
-          "Old Norse"
+          "Ottoman Turkish",
+          "Proto-Turkic"
         ],
-        "originLanguage": "Old Norse",
+        "originLanguage": "Ottoman Turkish",
         "countries": [
-          "NO",
-          "IS",
-          "DK"
+          "TR"
         ],
         "point": {
-          "lat": 61,
-          "lng": 9
+          "lat": 41,
+          "lng": 29
         },
-        "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+        "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
       },
       {
-        "id": "window",
-        "word": "window",
-        "year": 1225,
-        "tier": 8,
+        "id": "algebra:noun",
+        "word": "algebra",
+        "pos": "noun",
+        "year": 1551,
+        "tier": 10,
         "originChain": [
-          "Old Norse"
+          "Medieval Latin"
         ],
-        "originLanguage": "Old Norse",
+        "originLanguage": "Medieval Latin",
         "countries": [
-          "NO",
-          "IS",
-          "DK"
+          "IT"
         ],
         "point": {
-          "lat": 61,
-          "lng": 9
+          "lat": 42,
+          "lng": 12
         },
-        "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
+        "blurb": "Coined in medieval Latin from Arabic al-jabr."
       },
       {
-        "id": "guru",
-        "word": "guru",
-        "year": 1690,
-        "tier": 8,
+        "id": "kiosk:noun",
+        "word": "kiosk",
+        "pos": "noun",
+        "year": 1625,
+        "tier": 10,
         "originChain": [
-          "Hindi"
+          "Persian"
         ],
-        "originLanguage": "Hindi",
+        "originLanguage": "Persian",
         "countries": [
-          "IN"
+          "IR"
         ],
         "point": {
-          "lat": 22,
-          "lng": 79
+          "lat": 32,
+          "lng": 54
         },
-        "blurb": "From Hindi guru 'teacher', from Sanskrit guru 'venerable, weighty'."
-      }
-    ],
-    [
-      {
-        "id": "taboo",
-        "word": "taboo",
-        "year": 1777,
-        "tier": 9,
-        "originChain": [
-          "Tongan"
-        ],
-        "originLanguage": "Tongan",
-        "countries": [
-          "TO"
-        ],
-        "point": {
-          "lat": -21.2,
-          "lng": -175.2
-        },
-        "blurb": "From Tongan tabu, 'sacred, forbidden', also via Cook's voyages."
+        "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
       },
       {
         "id": "mammoth",
         "word": "mammoth",
         "year": 1700,
-        "tier": 9,
+        "tier": 10,
         "originChain": [
           "Russian"
         ],
@@ -498,46 +1960,127 @@
         "blurb": "From Russian mammut, probably from a Siberian (Mansi) source word."
       },
       {
-        "id": "tattoo",
-        "word": "tattoo",
-        "year": 1769,
-        "tier": 9,
-        "originChain": [
-          "Tahitian"
-        ],
-        "originLanguage": "Tahitian",
-        "countries": [
-          "PF"
-        ],
-        "point": {
-          "lat": -17.6,
-          "lng": -149.4
-        },
-        "blurb": "From Tahitian tatau, recorded on Cook's voyages."
-      }
-    ],
-    [
-      {
-        "id": "malaria",
-        "word": "malaria",
-        "year": 1740,
+        "id": "samovar",
+        "word": "samovar",
+        "year": 1830,
         "tier": 10,
         "originChain": [
-          "Italian"
+          "Russian"
         ],
-        "originLanguage": "Italian",
+        "originLanguage": "Russian",
         "countries": [
-          "IT"
+          "RU"
         ],
         "point": {
-          "lat": 43,
-          "lng": 12
+          "lat": 56,
+          "lng": 38
         },
-        "blurb": "Italian mala aria, 'bad air' — from the old belief about swamp vapours."
+        "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
       },
       {
-        "id": "juggernaut",
+        "id": "they",
+        "word": "they",
+        "year": 1200,
+        "tier": 10,
+        "originChain": [
+          "Middle English",
+          "Old Norse",
+          "Proto-Germanic"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+      },
+      {
+        "id": "bandana:noun",
+        "word": "bandana",
+        "pos": "noun",
+        "year": 1752,
+        "tier": 10,
+        "originChain": [
+          "Hindi"
+        ],
+        "originLanguage": "Hindi",
+        "countries": [
+          "IN"
+        ],
+        "point": {
+          "lat": 22,
+          "lng": 79
+        },
+        "blurb": "From Hindi."
+      },
+      {
+        "id": "cipher:noun",
+        "word": "cipher",
+        "pos": "noun",
+        "year": 1400,
+        "tier": 10,
+        "originChain": [
+          "Middle English",
+          "Old French"
+        ],
+        "originLanguage": "Old French",
+        "countries": [
+          "FR"
+        ],
+        "point": {
+          "lat": 47,
+          "lng": 2
+        },
+        "blurb": "From Old French cifre, from Arabic sifr, 'zero'."
+      },
+      {
+        "id": "geyser",
+        "word": "geyser",
+        "year": 1785,
+        "tier": 10,
+        "originChain": [
+          "Old Norse"
+        ],
+        "originLanguage": "Old Norse",
+        "countries": [
+          "NO",
+          "IS",
+          "DK"
+        ],
+        "point": {
+          "lat": 61,
+          "lng": 9
+        },
+        "blurb": "From Icelandic Geysir, the famous hot spring, from geysa 'to gush'."
+      },
+      {
+        "id": "avocado:noun",
+        "word": "avocado",
+        "pos": "noun",
+        "year": 1690,
+        "tier": 10,
+        "originChain": [
+          "Classical Nahuatl"
+        ],
+        "originLanguage": "Classical Nahuatl",
+        "countries": [
+          "MX"
+        ],
+        "point": {
+          "lat": 19.4,
+          "lng": -99.1
+        },
+        "blurb": "From Nahuatl ahuacatl, via Spanish."
+      },
+      {
+        "id": "juggernaut:noun",
         "word": "juggernaut",
+        "pos": "noun",
         "year": 1638,
         "tier": 10,
         "originChain": [
@@ -555,11 +2098,12 @@
         "blurb": "From Sanskrit Jagannatha, 'lord of the world', whose festival cart was said to crush devotees."
       },
       {
-        "id": "orange",
-        "word": "orange",
-        "year": 1300,
+        "id": "jungle",
+        "word": "jungle",
+        "year": 1780,
         "tier": 10,
         "originChain": [
+          "Hindi",
           "Sanskrit"
         ],
         "originLanguage": "Sanskrit",
@@ -571,21 +2115,262 @@
           "lat": 24,
           "lng": 84
         },
-        "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+        "blurb": "From Hindi jangal 'wilderness, forest', from Sanskrit jangala."
+      },
+      {
+        "id": "hammock:noun",
+        "word": "hammock",
+        "pos": "noun",
+        "year": 1550,
+        "tier": 10,
+        "originChain": [
+          "Spanish",
+          "Taíno"
+        ],
+        "originLanguage": "Taíno",
+        "countries": [
+          "DO",
+          "HT",
+          "CU",
+          "PR"
+        ],
+        "point": {
+          "lat": 19,
+          "lng": -71
+        },
+        "blurb": "From Spanish, ultimately from Taíno."
+      },
+      {
+        "id": "canoe:noun",
+        "word": "canoe",
+        "pos": "noun",
+        "year": 1550,
+        "tier": 10,
+        "originChain": [
+          "Spanish",
+          "Taíno"
+        ],
+        "originLanguage": "Taíno",
+        "countries": [
+          "DO",
+          "HT",
+          "CU",
+          "PR"
+        ],
+        "point": {
+          "lat": 19,
+          "lng": -71
+        },
+        "blurb": "From Spanish, ultimately from Taíno."
+      },
+      {
+        "id": "maize:noun",
+        "word": "maize",
+        "pos": "noun",
+        "year": 1555,
+        "tier": 10,
+        "originChain": [
+          "Spanish",
+          "Taíno"
+        ],
+        "originLanguage": "Taíno",
+        "countries": [
+          "DO",
+          "HT",
+          "CU",
+          "PR"
+        ],
+        "point": {
+          "lat": 19,
+          "lng": -71
+        },
+        "blurb": "From Spanish, ultimately from Taíno."
+      },
+      {
+        "id": "rickshaw",
+        "word": "rickshaw",
+        "year": 1875,
+        "tier": 10,
+        "originChain": [
+          "Japanese"
+        ],
+        "originLanguage": "Japanese",
+        "countries": [
+          "JP"
+        ],
+        "point": {
+          "lat": 36,
+          "lng": 138
+        },
+        "blurb": "Japanese jinrikisha, 'man-powered vehicle' — shortened in English."
+      },
+      {
+        "id": "coffee",
+        "word": "coffee",
+        "year": 1590,
+        "tier": 10,
+        "originChain": [
+          "Dutch",
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "From Arabic qahwah, likely via Turkish kahve and Dutch koffie."
+      },
+      {
+        "id": "tycoon",
+        "word": "tycoon",
+        "year": 1857,
+        "tier": 10,
+        "originChain": [
+          "Japanese"
+        ],
+        "originLanguage": "Japanese",
+        "countries": [
+          "JP"
+        ],
+        "point": {
+          "lat": 36,
+          "lng": 138
+        },
+        "blurb": "Japanese taikun, 'great lord' — the shogun's title, later applied to US magnates."
+      },
+      {
+        "id": "monsoon:noun",
+        "word": "monsoon",
+        "pos": "noun",
+        "year": 1580,
+        "tier": 10,
+        "originChain": [
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "From Arabic mawsim 'season', via Portuguese moncao."
+      },
+      {
+        "id": "safari",
+        "word": "safari",
+        "year": 1860,
+        "tier": 10,
+        "originChain": [
+          "Swahili",
+          "Arabic"
+        ],
+        "originLanguage": "Arabic",
+        "countries": [
+          "SA",
+          "EG",
+          "DZ"
+        ],
+        "point": {
+          "lat": 24,
+          "lng": 46
+        },
+        "blurb": "From Swahili safari 'journey', from Arabic safar 'to travel'."
       }
     ]
   ],
   "languages": {
-    "English": {
-      "name": "English",
+    "Avestan": {
+      "name": "Avestan",
       "countries": [
-        "GB",
-        "US",
-        "AU"
+        "IR",
+        "AF"
       ],
       "representativePoint": {
-        "lat": 54,
-        "lng": -2
+        "lat": 34,
+        "lng": 58
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Afrikaans": {
+      "name": "Afrikaans",
+      "countries": [
+        "ZA",
+        "NA"
+      ],
+      "representativePoint": {
+        "lat": -29,
+        "lng": 24
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Akan": {
+      "name": "Akan",
+      "countries": [
+        "GH",
+        "CI"
+      ],
+      "representativePoint": {
+        "lat": 7,
+        "lng": -1
+      },
+      "subregion": "Western Africa",
+      "continent": "Africa"
+    },
+    "Akkadian": {
+      "name": "Akkadian",
+      "countries": [
+        "IQ"
+      ],
+      "representativePoint": {
+        "lat": 33,
+        "lng": 44
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Amharic": {
+      "name": "Amharic",
+      "countries": [
+        "ET"
+      ],
+      "representativePoint": {
+        "lat": 9,
+        "lng": 39
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "American English": {
+      "name": "American English",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": -98
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Old English": {
+      "name": "Old English",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 52,
+        "lng": -1
       },
       "subregion": "Northern Europe",
       "continent": "Europe"
@@ -604,29 +2389,415 @@
       "subregion": "Western Asia",
       "continent": "Asia"
     },
-    "Japanese": {
-      "name": "Japanese",
+    "Aramaic": {
+      "name": "Aramaic",
       "countries": [
-        "JP"
+        "SY",
+        "IQ",
+        "TR"
       ],
       "representativePoint": {
-        "lat": 36,
-        "lng": 138
+        "lat": 35,
+        "lng": 39
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Mapudungun": {
+      "name": "Mapudungun",
+      "countries": [
+        "CL"
+      ],
+      "representativePoint": {
+        "lat": -38,
+        "lng": -72
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Arawak": {
+      "name": "Arawak",
+      "countries": [
+        "VE",
+        "GY",
+        "SR"
+      ],
+      "representativePoint": {
+        "lat": 5,
+        "lng": -59
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Moroccan Arabic": {
+      "name": "Moroccan Arabic",
+      "countries": [
+        "MA"
+      ],
+      "representativePoint": {
+        "lat": 32,
+        "lng": -6
+      },
+      "subregion": "Northern Africa",
+      "continent": "Africa"
+    },
+    "Egyptian Arabic": {
+      "name": "Egyptian Arabic",
+      "countries": [
+        "EG"
+      ],
+      "representativePoint": {
+        "lat": 30,
+        "lng": 31
+      },
+      "subregion": "Northern Africa",
+      "continent": "Africa"
+    },
+    "Assamese": {
+      "name": "Assamese",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 26.5,
+        "lng": 93
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Asturian": {
+      "name": "Asturian",
+      "countries": [
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 43.4,
+        "lng": -5.8
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Aymara": {
+      "name": "Aymara",
+      "countries": [
+        "BO",
+        "PE"
+      ],
+      "representativePoint": {
+        "lat": -16,
+        "lng": -68
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Azerbaijani": {
+      "name": "Azerbaijani",
+      "countries": [
+        "AZ"
+      ],
+      "representativePoint": {
+        "lat": 40.5,
+        "lng": 47.5
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Belarusian": {
+      "name": "Belarusian",
+      "countries": [
+        "BY"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": 28
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Bulgarian": {
+      "name": "Bulgarian",
+      "countries": [
+        "BG"
+      ],
+      "representativePoint": {
+        "lat": 43,
+        "lng": 25
+      },
+      "subregion": "Southeast Europe",
+      "continent": "Europe"
+    },
+    "Bislama": {
+      "name": "Bislama",
+      "countries": [
+        "VU"
+      ],
+      "representativePoint": {
+        "lat": -16,
+        "lng": 167
+      },
+      "subregion": "Melanesia",
+      "continent": "Oceania"
+    },
+    "Bambara": {
+      "name": "Bambara",
+      "countries": [
+        "ML"
+      ],
+      "representativePoint": {
+        "lat": 13,
+        "lng": -7
+      },
+      "subregion": "Western Africa",
+      "continent": "Africa"
+    },
+    "Bengali": {
+      "name": "Bengali",
+      "countries": [
+        "BD",
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 24,
+        "lng": 90
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Tibetan": {
+      "name": "Tibetan",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 30,
+        "lng": 91
       },
       "subregion": "Eastern Asia",
       "continent": "Asia"
     },
-    "Italian": {
-      "name": "Italian",
+    "Breton": {
+      "name": "Breton",
       "countries": [
-        "IT"
+        "FR"
       ],
       "representativePoint": {
-        "lat": 43,
-        "lng": 12
+        "lat": 48,
+        "lng": -3
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "British English": {
+      "name": "British English",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 54,
+        "lng": -2
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Belizean Creole": {
+      "name": "Belizean Creole",
+      "countries": [
+        "BZ"
+      ],
+      "representativePoint": {
+        "lat": 17.25,
+        "lng": -88.75
+      },
+      "subregion": "Central America",
+      "continent": "Americas"
+    },
+    "Catalan": {
+      "name": "Catalan",
+      "countries": [
+        "AD",
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 41.5,
+        "lng": 1.6
       },
       "subregion": "Southern Europe",
       "continent": "Europe"
+    },
+    "Carolinian": {
+      "name": "Carolinian",
+      "countries": [
+        "MP"
+      ],
+      "representativePoint": {
+        "lat": 15.2,
+        "lng": 145.75
+      },
+      "subregion": "Micronesia",
+      "continent": "Oceania"
+    },
+    "Galibi Carib": {
+      "name": "Galibi Carib",
+      "countries": [
+        "VE",
+        "GY",
+        "SR",
+        "GF"
+      ],
+      "representativePoint": {
+        "lat": 6,
+        "lng": -60
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Cebuano": {
+      "name": "Cebuano",
+      "countries": [
+        "PH"
+      ],
+      "representativePoint": {
+        "lat": 10.3,
+        "lng": 123.9
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Gaulish": {
+      "name": "Gaulish",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 46,
+        "lng": 2.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Chamorro": {
+      "name": "Chamorro",
+      "countries": [
+        "GU",
+        "MP"
+      ],
+      "representativePoint": {
+        "lat": 14.261,
+        "lng": 145.226
+      },
+      "subregion": "Micronesia",
+      "continent": "Oceania"
+    },
+    "Chinook Jargon": {
+      "name": "Chinook Jargon",
+      "countries": [
+        "US",
+        "CA"
+      ],
+      "representativePoint": {
+        "lat": 46,
+        "lng": -123
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Choctaw": {
+      "name": "Choctaw",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 33,
+        "lng": -89
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Cherokee": {
+      "name": "Cherokee",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 35.5,
+        "lng": -94
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Central Kurdish": {
+      "name": "Central Kurdish",
+      "countries": [
+        "IQ",
+        "IR"
+      ],
+      "representativePoint": {
+        "lat": 35.5,
+        "lng": 45
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Mandarin": {
+      "name": "Mandarin",
+      "countries": [
+        "CN",
+        "TW"
+      ],
+      "representativePoint": {
+        "lat": 39.9,
+        "lng": 116.4
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Coptic": {
+      "name": "Coptic",
+      "countries": [
+        "EG"
+      ],
+      "representativePoint": {
+        "lat": 27,
+        "lng": 31
+      },
+      "subregion": "Northern Africa",
+      "continent": "Africa"
+    },
+    "Cappadocian Greek": {
+      "name": "Cappadocian Greek",
+      "countries": [
+        "TR"
+      ],
+      "representativePoint": {
+        "lat": 38.6,
+        "lng": 34.8
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Cree": {
+      "name": "Cree",
+      "countries": [
+        "CA"
+      ],
+      "representativePoint": {
+        "lat": 54,
+        "lng": -100
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Seychellois Creole": {
+      "name": "Seychellois Creole",
+      "countries": [
+        "SC"
+      ],
+      "representativePoint": {
+        "lat": -4.583,
+        "lng": 55.667
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
     },
     "Czech": {
       "name": "Czech",
@@ -640,125 +2811,230 @@
       "subregion": "Eastern Europe",
       "continent": "Europe"
     },
-    "Hindi": {
-      "name": "Hindi",
+    "Old Church Slavonic": {
+      "name": "Old Church Slavonic",
       "countries": [
-        "IN"
-      ],
-      "representativePoint": {
-        "lat": 22,
-        "lng": 79
-      },
-      "subregion": "Southern Asia",
-      "continent": "Asia"
-    },
-    "French": {
-      "name": "French",
-      "countries": [
-        "FR"
-      ],
-      "representativePoint": {
-        "lat": 47,
-        "lng": 2
-      },
-      "subregion": "Western Europe",
-      "continent": "Europe"
-    },
-    "Swahili": {
-      "name": "Swahili",
-      "countries": [
-        "KE",
-        "TZ"
-      ],
-      "representativePoint": {
-        "lat": -6,
-        "lng": 39
-      },
-      "subregion": "Eastern Africa",
-      "continent": "Africa"
-    },
-    "Turkish": {
-      "name": "Turkish",
-      "countries": [
-        "TR"
-      ],
-      "representativePoint": {
-        "lat": 39,
-        "lng": 35
-      },
-      "subregion": "Western Asia",
-      "continent": "Asia"
-    },
-    "Russian": {
-      "name": "Russian",
-      "countries": [
+        "BG",
+        "RS",
         "RU"
       ],
       "representativePoint": {
-        "lat": 56,
-        "lng": 38
+        "lat": 43,
+        "lng": 25
       },
-      "subregion": "Eastern Europe",
+      "subregion": "Southeast Europe",
       "continent": "Europe"
     },
-    "Icelandic": {
-      "name": "Icelandic",
+    "Welsh": {
+      "name": "Welsh",
       "countries": [
-        "IS"
+        "GB"
       ],
       "representativePoint": {
-        "lat": 65,
-        "lng": -18
+        "lat": 52.3,
+        "lng": -3.8
       },
       "subregion": "Northern Europe",
       "continent": "Europe"
     },
-    "Tagalog": {
-      "name": "Tagalog",
+    "Danish": {
+      "name": "Danish",
       "countries": [
-        "PH"
+        "DK"
       ],
       "representativePoint": {
-        "lat": 14,
-        "lng": 121
+        "lat": 56,
+        "lng": 10
       },
-      "subregion": "South-Eastern Asia",
-      "continent": "Asia"
+      "subregion": "Northern Europe",
+      "continent": "Europe"
     },
-    "Cantonese": {
-      "name": "Cantonese",
+    "German": {
+      "name": "German",
       "countries": [
-        "CN"
+        "DE",
+        "AT",
+        "CH"
       ],
       "representativePoint": {
-        "lat": 23,
-        "lng": 113
+        "lat": 51,
+        "lng": 10
       },
-      "subregion": "Eastern Asia",
-      "continent": "Asia"
+      "subregion": "Western Europe",
+      "continent": "Europe"
     },
-    "Min Nan Chinese": {
-      "name": "Min Nan Chinese",
+    "Middle Dutch": {
+      "name": "Middle Dutch",
       "countries": [
-        "CN"
-      ],
-      "representativePoint": {
-        "lat": 24.5,
-        "lng": 118
-      },
-      "subregion": "Eastern Asia",
-      "continent": "Asia"
-    },
-    "Dutch": {
-      "name": "Dutch",
-      "countries": [
-        "NL"
+        "NL",
+        "BE"
       ],
       "representativePoint": {
         "lat": 52,
         "lng": 5
       },
       "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Dhivehi": {
+      "name": "Dhivehi",
+      "countries": [
+        "MV"
+      ],
+      "representativePoint": {
+        "lat": 3.2,
+        "lng": 73
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Dzongkha": {
+      "name": "Dzongkha",
+      "countries": [
+        "BT"
+      ],
+      "representativePoint": {
+        "lat": 27.5,
+        "lng": 90.5
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Early Scots": {
+      "name": "Early Scots",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 56.5,
+        "lng": -4
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Ecclesiastical Latin": {
+      "name": "Ecclesiastical Latin",
+      "countries": [
+        "IT",
+        "VA"
+      ],
+      "representativePoint": {
+        "lat": 41.9,
+        "lng": 12.45
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Egyptian": {
+      "name": "Egyptian",
+      "countries": [
+        "EG"
+      ],
+      "representativePoint": {
+        "lat": 26,
+        "lng": 31
+      },
+      "subregion": "Northern Africa",
+      "continent": "Africa"
+    },
+    "Greek": {
+      "name": "Greek",
+      "countries": [
+        "GR",
+        "CY"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": 22
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "English": {
+      "name": "English",
+      "countries": [
+        "GB",
+        "US",
+        "AU"
+      ],
+      "representativePoint": {
+        "lat": 54,
+        "lng": -2
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Middle English": {
+      "name": "Middle English",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 52,
+        "lng": -1
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Spanish": {
+      "name": "Spanish",
+      "countries": [
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 40,
+        "lng": -4
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Mexican Spanish": {
+      "name": "Mexican Spanish",
+      "countries": [
+        "MX"
+      ],
+      "representativePoint": {
+        "lat": 23,
+        "lng": -102
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Estonian": {
+      "name": "Estonian",
+      "countries": [
+        "EE"
+      ],
+      "representativePoint": {
+        "lat": 59,
+        "lng": 26
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Etruscan": {
+      "name": "Etruscan",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42.5,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Basque": {
+      "name": "Basque",
+      "countries": [
+        "ES",
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 43,
+        "lng": -1.5
+      },
+      "subregion": "Southern Europe",
       "continent": "Europe"
     },
     "Persian": {
@@ -772,6 +3048,1516 @@
       },
       "subregion": "Southern Asia",
       "continent": "Asia"
+    },
+    "Classical Persian": {
+      "name": "Classical Persian",
+      "countries": [
+        "IR",
+        "AF"
+      ],
+      "representativePoint": {
+        "lat": 34,
+        "lng": 58
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Finnish": {
+      "name": "Finnish",
+      "countries": [
+        "FI"
+      ],
+      "representativePoint": {
+        "lat": 64,
+        "lng": 26
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Fijian": {
+      "name": "Fijian",
+      "countries": [
+        "FJ"
+      ],
+      "representativePoint": {
+        "lat": -18,
+        "lng": 178
+      },
+      "subregion": "Melanesia",
+      "continent": "Oceania"
+    },
+    "Faroese": {
+      "name": "Faroese",
+      "countries": [
+        "FO"
+      ],
+      "representativePoint": {
+        "lat": 62,
+        "lng": -7
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "French": {
+      "name": "French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 2
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Canadian French": {
+      "name": "Canadian French",
+      "countries": [
+        "CA"
+      ],
+      "representativePoint": {
+        "lat": 46.8,
+        "lng": -71
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Cajun French": {
+      "name": "Cajun French",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 30.5,
+        "lng": -92
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Frankish": {
+      "name": "Frankish",
+      "countries": [
+        "DE",
+        "FR",
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 50.5,
+        "lng": 6.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Middle French": {
+      "name": "Middle French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 2
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Old French": {
+      "name": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 2
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Old Northern French": {
+      "name": "Old Northern French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 49.5,
+        "lng": 0.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Picard Old French": {
+      "name": "Picard Old French",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 50,
+        "lng": 2.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Franco-Provençal": {
+      "name": "Franco-Provençal",
+      "countries": [
+        "FR",
+        "IT",
+        "CH"
+      ],
+      "representativePoint": {
+        "lat": 45.7,
+        "lng": 6.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "North Frisian": {
+      "name": "North Frisian",
+      "countries": [
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 54.7,
+        "lng": 8.9
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "West Frisian": {
+      "name": "West Frisian",
+      "countries": [
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": 5.8
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Irish": {
+      "name": "Irish",
+      "countries": [
+        "IE"
+      ],
+      "representativePoint": {
+        "lat": 53.3,
+        "lng": -8
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Scottish Gaelic": {
+      "name": "Scottish Gaelic",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 57,
+        "lng": -4.5
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Ge'ez": {
+      "name": "Ge'ez",
+      "countries": [
+        "ET",
+        "ER"
+      ],
+      "representativePoint": {
+        "lat": 13,
+        "lng": 39
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Gilbertese": {
+      "name": "Gilbertese",
+      "countries": [
+        "KI"
+      ],
+      "representativePoint": {
+        "lat": 1.417,
+        "lng": 173
+      },
+      "subregion": "Micronesia",
+      "continent": "Oceania"
+    },
+    "Byzantine Greek": {
+      "name": "Byzantine Greek",
+      "countries": [
+        "TR",
+        "GR"
+      ],
+      "representativePoint": {
+        "lat": 41,
+        "lng": 29
+      },
+      "subregion": "Southern Europe",
+      "continent": "Asia"
+    },
+    "Galician": {
+      "name": "Galician",
+      "countries": [
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 42.9,
+        "lng": -8.5
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Middle High German": {
+      "name": "Middle High German",
+      "countries": [
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 49,
+        "lng": 10
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Middle Low German": {
+      "name": "Middle Low German",
+      "countries": [
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 54,
+        "lng": 10
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Old Swedish": {
+      "name": "Old Swedish",
+      "countries": [
+        "SE"
+      ],
+      "representativePoint": {
+        "lat": 59,
+        "lng": 16
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Mycenaean Greek": {
+      "name": "Mycenaean Greek",
+      "countries": [
+        "GR"
+      ],
+      "representativePoint": {
+        "lat": 37.7,
+        "lng": 22.8
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Guaraní": {
+      "name": "Guaraní",
+      "countries": [
+        "PY"
+      ],
+      "representativePoint": {
+        "lat": -23,
+        "lng": -58
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Old High German": {
+      "name": "Old High German",
+      "countries": [
+        "DE",
+        "AT"
+      ],
+      "representativePoint": {
+        "lat": 49,
+        "lng": 10
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Gothic": {
+      "name": "Gothic",
+      "countries": [
+        "UA"
+      ],
+      "representativePoint": {
+        "lat": 49,
+        "lng": 32
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Ancient Greek": {
+      "name": "Ancient Greek",
+      "countries": [
+        "GR",
+        "TR",
+        "CY",
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 38,
+        "lng": 23
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Attic Greek": {
+      "name": "Attic Greek",
+      "countries": [
+        "GR"
+      ],
+      "representativePoint": {
+        "lat": 38,
+        "lng": 23.7
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Doric Greek": {
+      "name": "Doric Greek",
+      "countries": [
+        "GR"
+      ],
+      "representativePoint": {
+        "lat": 37,
+        "lng": 22.4
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Ionic Greek": {
+      "name": "Ionic Greek",
+      "countries": [
+        "GR",
+        "TR"
+      ],
+      "representativePoint": {
+        "lat": 38.4,
+        "lng": 27
+      },
+      "subregion": "Southern Europe",
+      "continent": "Asia"
+    },
+    "Koine Greek": {
+      "name": "Koine Greek",
+      "countries": [
+        "GR",
+        "TR",
+        "EG"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": 22
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Alemannic German": {
+      "name": "Alemannic German",
+      "countries": [
+        "CH",
+        "DE",
+        "AT"
+      ],
+      "representativePoint": {
+        "lat": 47.4,
+        "lng": 9
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Gujarati": {
+      "name": "Gujarati",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 22.3,
+        "lng": 72
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Manx": {
+      "name": "Manx",
+      "countries": [
+        "IM"
+      ],
+      "representativePoint": {
+        "lat": 54.2,
+        "lng": -4.5
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Hausa": {
+      "name": "Hausa",
+      "countries": [
+        "NG",
+        "NE",
+        "GH"
+      ],
+      "representativePoint": {
+        "lat": 12,
+        "lng": 8
+      },
+      "subregion": "Western Africa",
+      "continent": "Africa"
+    },
+    "Hakka": {
+      "name": "Hakka",
+      "countries": [
+        "CN",
+        "TW"
+      ],
+      "representativePoint": {
+        "lat": 24.3,
+        "lng": 116.1
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Hawaiian": {
+      "name": "Hawaiian",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 20.5,
+        "lng": -157
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Biblical Hebrew": {
+      "name": "Biblical Hebrew",
+      "countries": [
+        "IL"
+      ],
+      "representativePoint": {
+        "lat": 31.5,
+        "lng": 35
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Hebrew": {
+      "name": "Hebrew",
+      "countries": [
+        "IL"
+      ],
+      "representativePoint": {
+        "lat": 31.5,
+        "lng": 35
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Medieval Hebrew": {
+      "name": "Medieval Hebrew",
+      "countries": [
+        "IL"
+      ],
+      "representativePoint": {
+        "lat": 31.5,
+        "lng": 35
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Hindi": {
+      "name": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 22,
+        "lng": 79
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Fiji Hindi": {
+      "name": "Fiji Hindi",
+      "countries": [
+        "FJ"
+      ],
+      "representativePoint": {
+        "lat": -18,
+        "lng": 175
+      },
+      "subregion": "Melanesia",
+      "continent": "Oceania"
+    },
+    "Hittite": {
+      "name": "Hittite",
+      "countries": [
+        "TR"
+      ],
+      "representativePoint": {
+        "lat": 40,
+        "lng": 34.6
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Hiri Motu": {
+      "name": "Hiri Motu",
+      "countries": [
+        "PG"
+      ],
+      "representativePoint": {
+        "lat": -6,
+        "lng": 147
+      },
+      "subregion": "Melanesia",
+      "continent": "Oceania"
+    },
+    "Hopi": {
+      "name": "Hopi",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 35.8,
+        "lng": -110.5
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Haitian Creole": {
+      "name": "Haitian Creole",
+      "countries": [
+        "HT"
+      ],
+      "representativePoint": {
+        "lat": 19,
+        "lng": -72
+      },
+      "subregion": "Caribbean",
+      "continent": "Americas"
+    },
+    "Hungarian": {
+      "name": "Hungarian",
+      "countries": [
+        "HU",
+        "RO"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 19
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Armenian": {
+      "name": "Armenian",
+      "countries": [
+        "AM"
+      ],
+      "representativePoint": {
+        "lat": 40,
+        "lng": 45
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Herero": {
+      "name": "Herero",
+      "countries": [
+        "NA"
+      ],
+      "representativePoint": {
+        "lat": -22,
+        "lng": 17
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Indonesian": {
+      "name": "Indonesian",
+      "countries": [
+        "ID"
+      ],
+      "representativePoint": {
+        "lat": -2,
+        "lng": 118
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Igbo": {
+      "name": "Igbo",
+      "countries": [
+        "NG"
+      ],
+      "representativePoint": {
+        "lat": 6,
+        "lng": 7
+      },
+      "subregion": "Western Africa",
+      "continent": "Africa"
+    },
+    "Ilocano": {
+      "name": "Ilocano",
+      "countries": [
+        "PH"
+      ],
+      "representativePoint": {
+        "lat": 16.6,
+        "lng": 120.5
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Icelandic": {
+      "name": "Icelandic",
+      "countries": [
+        "IS"
+      ],
+      "representativePoint": {
+        "lat": 65,
+        "lng": -18
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Italian": {
+      "name": "Italian",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 43,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Old Latin": {
+      "name": "Old Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Inuktitut": {
+      "name": "Inuktitut",
+      "countries": [
+        "CA",
+        "GL"
+      ],
+      "representativePoint": {
+        "lat": 63,
+        "lng": -68
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Japanese": {
+      "name": "Japanese",
+      "countries": [
+        "JP"
+      ],
+      "representativePoint": {
+        "lat": 36,
+        "lng": 138
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Jamaican Creole": {
+      "name": "Jamaican Creole",
+      "countries": [
+        "JM"
+      ],
+      "representativePoint": {
+        "lat": 18,
+        "lng": -77
+      },
+      "subregion": "Caribbean",
+      "continent": "Americas"
+    },
+    "Javanese": {
+      "name": "Javanese",
+      "countries": [
+        "ID"
+      ],
+      "representativePoint": {
+        "lat": -7.5,
+        "lng": 110
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Georgian": {
+      "name": "Georgian",
+      "countries": [
+        "GE"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 44
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Old Javanese": {
+      "name": "Old Javanese",
+      "countries": [
+        "ID"
+      ],
+      "representativePoint": {
+        "lat": -7.5,
+        "lng": 110
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Kalanga": {
+      "name": "Kalanga",
+      "countries": [
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -20,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Kongo": {
+      "name": "Kongo",
+      "countries": [
+        "CD",
+        "AO",
+        "CG"
+      ],
+      "representativePoint": {
+        "lat": -6,
+        "lng": 14
+      },
+      "subregion": "Middle Africa",
+      "continent": "Africa"
+    },
+    "Kazakh": {
+      "name": "Kazakh",
+      "countries": [
+        "KZ"
+      ],
+      "representativePoint": {
+        "lat": 48,
+        "lng": 68
+      },
+      "subregion": "Central Asia",
+      "continent": "Asia"
+    },
+    "Greenlandic": {
+      "name": "Greenlandic",
+      "countries": [
+        "GL"
+      ],
+      "representativePoint": {
+        "lat": 72,
+        "lng": -40
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Khmer": {
+      "name": "Khmer",
+      "countries": [
+        "KH"
+      ],
+      "representativePoint": {
+        "lat": 12,
+        "lng": 105
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Northern Kurdish": {
+      "name": "Northern Kurdish",
+      "countries": [
+        "TR",
+        "SY",
+        "IQ",
+        "IR"
+      ],
+      "representativePoint": {
+        "lat": 38,
+        "lng": 42
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Kannada": {
+      "name": "Kannada",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 15,
+        "lng": 76
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Korean": {
+      "name": "Korean",
+      "countries": [
+        "KR",
+        "KP"
+      ],
+      "representativePoint": {
+        "lat": 37,
+        "lng": 127.5
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Cornish": {
+      "name": "Cornish",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 50.4,
+        "lng": -4.9
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Kwangali": {
+      "name": "Kwangali",
+      "countries": [
+        "NA"
+      ],
+      "representativePoint": {
+        "lat": -22,
+        "lng": 17
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Kyrgyz": {
+      "name": "Kyrgyz",
+      "countries": [
+        "KG"
+      ],
+      "representativePoint": {
+        "lat": 41.5,
+        "lng": 75
+      },
+      "subregion": "Central Asia",
+      "continent": "Asia"
+    },
+    "Latin": {
+      "name": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Late Latin": {
+      "name": "Late Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Medieval Latin": {
+      "name": "Medieval Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "New Latin": {
+      "name": "New Latin",
+      "countries": [
+        "IT",
+        "VA"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Renaissance Latin": {
+      "name": "Renaissance Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 43,
+        "lng": 11.5
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Vulgar Latin": {
+      "name": "Vulgar Latin",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": 12
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Luxembourgish": {
+      "name": "Luxembourgish",
+      "countries": [
+        "LU"
+      ],
+      "representativePoint": {
+        "lat": 49.75,
+        "lng": 6.167
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Lakota": {
+      "name": "Lakota",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 44,
+        "lng": -102
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Lombard": {
+      "name": "Lombard",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 45.8,
+        "lng": 9.5
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Lingala": {
+      "name": "Lingala",
+      "countries": [
+        "CD",
+        "CG"
+      ],
+      "representativePoint": {
+        "lat": -0.127,
+        "lng": 23.727
+      },
+      "subregion": "Middle Africa",
+      "continent": "Africa"
+    },
+    "Lombardic": {
+      "name": "Lombardic",
+      "countries": [
+        "DE",
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 45.5,
+        "lng": 9.5
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Lao": {
+      "name": "Lao",
+      "countries": [
+        "LA"
+      ],
+      "representativePoint": {
+        "lat": 18,
+        "lng": 103
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Lozi": {
+      "name": "Lozi",
+      "countries": [
+        "NA"
+      ],
+      "representativePoint": {
+        "lat": -22,
+        "lng": 17
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Lithuanian": {
+      "name": "Lithuanian",
+      "countries": [
+        "LT"
+      ],
+      "representativePoint": {
+        "lat": 56,
+        "lng": 24
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Middle Chinese": {
+      "name": "Middle Chinese",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 34.5,
+        "lng": 110
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Latvian": {
+      "name": "Latvian",
+      "countries": [
+        "LV"
+      ],
+      "representativePoint": {
+        "lat": 57,
+        "lng": 25
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Hassaniya": {
+      "name": "Hassaniya",
+      "countries": [
+        "EH"
+      ],
+      "representativePoint": {
+        "lat": 24.5,
+        "lng": -13
+      },
+      "subregion": "Northern Africa",
+      "continent": "Africa"
+    },
+    "Mauritian Creole": {
+      "name": "Mauritian Creole",
+      "countries": [
+        "MU"
+      ],
+      "representativePoint": {
+        "lat": -20.283,
+        "lng": 57.55
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Malagasy": {
+      "name": "Malagasy",
+      "countries": [
+        "MG"
+      ],
+      "representativePoint": {
+        "lat": -19,
+        "lng": 47
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Middle Irish": {
+      "name": "Middle Irish",
+      "countries": [
+        "IE"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": -8
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Marshallese": {
+      "name": "Marshallese",
+      "countries": [
+        "MH"
+      ],
+      "representativePoint": {
+        "lat": 9,
+        "lng": 168
+      },
+      "subregion": "Micronesia",
+      "continent": "Oceania"
+    },
+    "Maori": {
+      "name": "Maori",
+      "countries": [
+        "NZ"
+      ],
+      "representativePoint": {
+        "lat": -38,
+        "lng": 176
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Mi'kmaq": {
+      "name": "Mi'kmaq",
+      "countries": [
+        "CA"
+      ],
+      "representativePoint": {
+        "lat": 46,
+        "lng": -63
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Macedonian": {
+      "name": "Macedonian",
+      "countries": [
+        "MK"
+      ],
+      "representativePoint": {
+        "lat": 41.6,
+        "lng": 21.7
+      },
+      "subregion": "Southeast Europe",
+      "continent": "Europe"
+    },
+    "Malayalam": {
+      "name": "Malayalam",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 10.5,
+        "lng": 76.3
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Mongolian": {
+      "name": "Mongolian",
+      "countries": [
+        "MN"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 107
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Manchu": {
+      "name": "Manchu",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 44,
+        "lng": 126
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Marathi": {
+      "name": "Marathi",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 19,
+        "lng": 75
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Malay": {
+      "name": "Malay",
+      "countries": [
+        "MY",
+        "BN",
+        "SG"
+      ],
+      "representativePoint": {
+        "lat": 3,
+        "lng": 102
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Maltese": {
+      "name": "Maltese",
+      "countries": [
+        "MT"
+      ],
+      "representativePoint": {
+        "lat": 35.833,
+        "lng": 14.583
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Creek": {
+      "name": "Creek",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 33,
+        "lng": -85
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Burmese": {
+      "name": "Burmese",
+      "countries": [
+        "MM"
+      ],
+      "representativePoint": {
+        "lat": 20,
+        "lng": 96
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Nahuatl": {
+      "name": "Nahuatl",
+      "countries": [
+        "MX"
+      ],
+      "representativePoint": {
+        "lat": 19,
+        "lng": -99
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Min Nan": {
+      "name": "Min Nan",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 24.5,
+        "lng": 118
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Hokkien": {
+      "name": "Hokkien",
+      "countries": [
+        "CN",
+        "TW"
+      ],
+      "representativePoint": {
+        "lat": 24.5,
+        "lng": 118
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Neapolitan": {
+      "name": "Neapolitan",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 40.8,
+        "lng": 14.3
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Khoekhoe": {
+      "name": "Khoekhoe",
+      "countries": [
+        "NA"
+      ],
+      "representativePoint": {
+        "lat": -22,
+        "lng": 17
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Norwegian Bokmål": {
+      "name": "Norwegian Bokmål",
+      "countries": [
+        "NO"
+      ],
+      "representativePoint": {
+        "lat": 62,
+        "lng": 10
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Classical Nahuatl": {
+      "name": "Classical Nahuatl",
+      "countries": [
+        "MX"
+      ],
+      "representativePoint": {
+        "lat": 19.4,
+        "lng": -99.1
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Northern Ndebele": {
+      "name": "Northern Ndebele",
+      "countries": [
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -20,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Ndau": {
+      "name": "Ndau",
+      "countries": [
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -20,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Low German": {
+      "name": "Low German",
+      "countries": [
+        "DE",
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": 9
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "German Low German": {
+      "name": "German Low German",
+      "countries": [
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 53.5,
+        "lng": 10
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Nepali": {
+      "name": "Nepali",
+      "countries": [
+        "NP"
+      ],
+      "representativePoint": {
+        "lat": 28,
+        "lng": 84
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Ndonga": {
+      "name": "Ndonga",
+      "countries": [
+        "NA"
+      ],
+      "representativePoint": {
+        "lat": -22,
+        "lng": 17
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Niuean": {
+      "name": "Niuean",
+      "countries": [
+        "NU"
+      ],
+      "representativePoint": {
+        "lat": -19.033,
+        "lng": -169.867
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Dutch": {
+      "name": "Dutch",
+      "countries": [
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 52,
+        "lng": 5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Norwegian Nynorsk": {
+      "name": "Norwegian Nynorsk",
+      "countries": [
+        "NO"
+      ],
+      "representativePoint": {
+        "lat": 62,
+        "lng": 10
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Norwegian": {
+      "name": "Norwegian",
+      "countries": [
+        "NO"
+      ],
+      "representativePoint": {
+        "lat": 61,
+        "lng": 9
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
     },
     "Old Norse": {
       "name": "Old Norse",
@@ -787,29 +4573,580 @@
       "subregion": "Northern Europe",
       "continent": "Europe"
     },
-    "Tahitian": {
-      "name": "Tahitian",
+    "Southern Ndebele": {
+      "name": "Southern Ndebele",
       "countries": [
-        "PF"
+        "ZA"
       ],
       "representativePoint": {
-        "lat": -17.6,
-        "lng": -149.4
+        "lat": -29,
+        "lng": 24
       },
-      "subregion": "Polynesia",
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Norman": {
+      "name": "Norman",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 49.2,
+        "lng": -0.4
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Northern Sotho": {
+      "name": "Northern Sotho",
+      "countries": [
+        "ZA"
+      ],
+      "representativePoint": {
+        "lat": -29,
+        "lng": 24
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Navajo": {
+      "name": "Navajo",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 36,
+        "lng": -109
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "New Zealand Sign Language": {
+      "name": "New Zealand Sign Language",
+      "countries": [
+        "NZ"
+      ],
+      "representativePoint": {
+        "lat": -41,
+        "lng": 174
+      },
+      "subregion": "Australia and New Zealand",
       "continent": "Oceania"
     },
-    "Tongan": {
-      "name": "Tongan",
+    "Occitan": {
+      "name": "Occitan",
       "countries": [
-        "TO"
+        "FR",
+        "ES",
+        "IT"
       ],
       "representativePoint": {
-        "lat": -21.2,
-        "lng": -175.2
+        "lat": 44,
+        "lng": 3
       },
-      "subregion": "Polynesia",
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Old Dutch": {
+      "name": "Old Dutch",
+      "countries": [
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 52,
+        "lng": 5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Old Frisian": {
+      "name": "Old Frisian",
+      "countries": [
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": 6
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Ojibwe": {
+      "name": "Ojibwe",
+      "countries": [
+        "CA",
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": -82
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Oromo": {
+      "name": "Oromo",
+      "countries": [
+        "ET"
+      ],
+      "representativePoint": {
+        "lat": 9,
+        "lng": 40
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Old East Slavic": {
+      "name": "Old East Slavic",
+      "countries": [
+        "RU",
+        "UA",
+        "BY"
+      ],
+      "representativePoint": {
+        "lat": 51,
+        "lng": 30
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Ossetian": {
+      "name": "Ossetian",
+      "countries": [
+        "GE",
+        "RU"
+      ],
+      "representativePoint": {
+        "lat": 43,
+        "lng": 44
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Asia"
+    },
+    "Old Spanish": {
+      "name": "Old Spanish",
+      "countries": [
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 40,
+        "lng": -4
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Old Saxon": {
+      "name": "Old Saxon",
+      "countries": [
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": 9
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Ottoman Turkish": {
+      "name": "Ottoman Turkish",
+      "countries": [
+        "TR"
+      ],
+      "representativePoint": {
+        "lat": 41,
+        "lng": 29
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Old Turkic": {
+      "name": "Old Turkic",
+      "countries": [
+        "MN"
+      ],
+      "representativePoint": {
+        "lat": 47,
+        "lng": 102
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Old Welsh": {
+      "name": "Old Welsh",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 52.3,
+        "lng": -3.5
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Punjabi": {
+      "name": "Punjabi",
+      "countries": [
+        "PK",
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 31,
+        "lng": 74
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Middle Persian": {
+      "name": "Middle Persian",
+      "countries": [
+        "IR"
+      ],
+      "representativePoint": {
+        "lat": 32,
+        "lng": 53
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Palauan": {
+      "name": "Palauan",
+      "countries": [
+        "PW"
+      ],
+      "representativePoint": {
+        "lat": 7.5,
+        "lng": 134.5
+      },
+      "subregion": "Micronesia",
       "continent": "Oceania"
+    },
+    "Picard": {
+      "name": "Picard",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 50,
+        "lng": 2.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Pennsylvania German": {
+      "name": "Pennsylvania German",
+      "countries": [
+        "US",
+        "CA"
+      ],
+      "representativePoint": {
+        "lat": 40.3,
+        "lng": -76
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Old Persian": {
+      "name": "Old Persian",
+      "countries": [
+        "IR"
+      ],
+      "representativePoint": {
+        "lat": 30,
+        "lng": 53
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Phoenician": {
+      "name": "Phoenician",
+      "countries": [
+        "LB",
+        "SY"
+      ],
+      "representativePoint": {
+        "lat": 34,
+        "lng": 35.5
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Pali": {
+      "name": "Pali",
+      "countries": [
+        "IN",
+        "LK"
+      ],
+      "representativePoint": {
+        "lat": 25,
+        "lng": 83
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Powhatan": {
+      "name": "Powhatan",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 37.5,
+        "lng": -77
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Polish": {
+      "name": "Polish",
+      "countries": [
+        "PL"
+      ],
+      "representativePoint": {
+        "lat": 52,
+        "lng": 20
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Piedmontese": {
+      "name": "Piedmontese",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 45,
+        "lng": 7.7
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Pontic Greek": {
+      "name": "Pontic Greek",
+      "countries": [
+        "TR",
+        "GR"
+      ],
+      "representativePoint": {
+        "lat": 41,
+        "lng": 39.5
+      },
+      "subregion": "Southern Europe",
+      "continent": "Asia"
+    },
+    "Pre-Greek": {
+      "name": "Pre-Greek",
+      "countries": [
+        "GR"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": 22
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Old Prussian": {
+      "name": "Old Prussian",
+      "countries": [
+        "PL",
+        "RU"
+      ],
+      "representativePoint": {
+        "lat": 54,
+        "lng": 20
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Old Occitan": {
+      "name": "Old Occitan",
+      "countries": [
+        "FR",
+        "ES",
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 44,
+        "lng": 3
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Dari": {
+      "name": "Dari",
+      "countries": [
+        "AF"
+      ],
+      "representativePoint": {
+        "lat": 33,
+        "lng": 65
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Provençal": {
+      "name": "Provençal",
+      "countries": [
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 43.7,
+        "lng": 5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Pashto": {
+      "name": "Pashto",
+      "countries": [
+        "AF",
+        "PK"
+      ],
+      "representativePoint": {
+        "lat": 34,
+        "lng": 69
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Portuguese": {
+      "name": "Portuguese",
+      "countries": [
+        "PT",
+        "BR"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": -8
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Brazilian Portuguese": {
+      "name": "Brazilian Portuguese",
+      "countries": [
+        "BR"
+      ],
+      "representativePoint": {
+        "lat": -15,
+        "lng": -47
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Quechua": {
+      "name": "Quechua",
+      "countries": [
+        "PE",
+        "BO",
+        "EC"
+      ],
+      "representativePoint": {
+        "lat": -13,
+        "lng": -72
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Romansch": {
+      "name": "Romansch",
+      "countries": [
+        "CH"
+      ],
+      "representativePoint": {
+        "lat": 46.5,
+        "lng": 9.5
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Romanian": {
+      "name": "Romanian",
+      "countries": [
+        "RO"
+      ],
+      "representativePoint": {
+        "lat": 46,
+        "lng": 25
+      },
+      "subregion": "Southeast Europe",
+      "continent": "Europe"
+    },
+    "Old Portuguese": {
+      "name": "Old Portuguese",
+      "countries": [
+        "PT",
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 41,
+        "lng": -8
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Romani": {
+      "name": "Romani",
+      "countries": [
+        "RO",
+        "BG",
+        "SK",
+        "HU",
+        "RS"
+      ],
+      "representativePoint": {
+        "lat": 44,
+        "lng": 23
+      },
+      "subregion": "Southeast Europe",
+      "continent": "Europe"
+    },
+    "Russian": {
+      "name": "Russian",
+      "countries": [
+        "RU"
+      ],
+      "representativePoint": {
+        "lat": 56,
+        "lng": 38
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Rwanda-Rundi": {
+      "name": "Rwanda-Rundi",
+      "countries": [
+        "RW"
+      ],
+      "representativePoint": {
+        "lat": -2,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Kinyarwanda": {
+      "name": "Kinyarwanda",
+      "countries": [
+        "RW"
+      ],
+      "representativePoint": {
+        "lat": -2,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Kirundi": {
+      "name": "Kirundi",
+      "countries": [
+        "BI"
+      ],
+      "representativePoint": {
+        "lat": -3.5,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
     },
     "Sanskrit": {
       "name": "Sanskrit",
@@ -824,166 +5161,919 @@
       "subregion": "Southern Asia",
       "continent": "Asia"
     },
-    "Middle French": {
-      "name": "Middle French",
+    "Yakut": {
+      "name": "Yakut",
       "countries": [
-        "FR"
+        "RU"
       ],
       "representativePoint": {
-        "lat": 47,
-        "lng": 2
+        "lat": 62,
+        "lng": 129
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Sicilian": {
+      "name": "Sicilian",
+      "countries": [
+        "IT"
+      ],
+      "representativePoint": {
+        "lat": 37.5,
+        "lng": 14
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Scots": {
+      "name": "Scots",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 56.5,
+        "lng": -4
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Sindhi": {
+      "name": "Sindhi",
+      "countries": [
+        "PK",
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 26,
+        "lng": 68
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Southern Kurdish": {
+      "name": "Southern Kurdish",
+      "countries": [
+        "IR",
+        "IQ"
+      ],
+      "representativePoint": {
+        "lat": 34,
+        "lng": 46
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Northern Sami": {
+      "name": "Northern Sami",
+      "countries": [
+        "NO",
+        "SE",
+        "FI"
+      ],
+      "representativePoint": {
+        "lat": 69,
+        "lng": 23
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Sango": {
+      "name": "Sango",
+      "countries": [
+        "CF"
+      ],
+      "representativePoint": {
+        "lat": 7,
+        "lng": 21
+      },
+      "subregion": "Middle Africa",
+      "continent": "Africa"
+    },
+    "Old Irish": {
+      "name": "Old Irish",
+      "countries": [
+        "IE"
+      ],
+      "representativePoint": {
+        "lat": 53,
+        "lng": -8
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Serbo-Croatian": {
+      "name": "Serbo-Croatian",
+      "countries": [
+        "RS",
+        "HR",
+        "BA",
+        "ME"
+      ],
+      "representativePoint": {
+        "lat": 44,
+        "lng": 21
+      },
+      "subregion": "Southeast Europe",
+      "continent": "Europe"
+    },
+    "Sinhalese": {
+      "name": "Sinhalese",
+      "countries": [
+        "LK"
+      ],
+      "representativePoint": {
+        "lat": 7,
+        "lng": 81
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Slovak": {
+      "name": "Slovak",
+      "countries": [
+        "SK"
+      ],
+      "representativePoint": {
+        "lat": 48.7,
+        "lng": 19.5
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Slovene": {
+      "name": "Slovene",
+      "countries": [
+        "SI"
+      ],
+      "representativePoint": {
+        "lat": 46,
+        "lng": 15
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Samoan": {
+      "name": "Samoan",
+      "countries": [
+        "WS",
+        "AS"
+      ],
+      "representativePoint": {
+        "lat": -13.8,
+        "lng": -172
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Shona": {
+      "name": "Shona",
+      "countries": [
+        "ZW",
+        "MZ"
+      ],
+      "representativePoint": {
+        "lat": -19,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Somali": {
+      "name": "Somali",
+      "countries": [
+        "SO",
+        "ET",
+        "DJ",
+        "KE"
+      ],
+      "representativePoint": {
+        "lat": 6,
+        "lng": 47
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Albanian": {
+      "name": "Albanian",
+      "countries": [
+        "AL",
+        "XK"
+      ],
+      "representativePoint": {
+        "lat": 41,
+        "lng": 20
+      },
+      "subregion": "Southeast Europe",
+      "continent": "Europe"
+    },
+    "Swazi": {
+      "name": "Swazi",
+      "countries": [
+        "SZ",
+        "ZA"
+      ],
+      "representativePoint": {
+        "lat": -28.965,
+        "lng": 24.105
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Sotho": {
+      "name": "Sotho",
+      "countries": [
+        "ZA",
+        "LS"
+      ],
+      "representativePoint": {
+        "lat": -29,
+        "lng": 27
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Saterland Frisian": {
+      "name": "Saterland Frisian",
+      "countries": [
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 53.1,
+        "lng": 7.7
       },
       "subregion": "Western Europe",
       "continent": "Europe"
     },
-    "Latin": {
-      "name": "Latin",
+    "Sumerian": {
+      "name": "Sumerian",
+      "countries": [
+        "IQ"
+      ],
+      "representativePoint": {
+        "lat": 31,
+        "lng": 46
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Swedish": {
+      "name": "Swedish",
+      "countries": [
+        "SE",
+        "FI"
+      ],
+      "representativePoint": {
+        "lat": 60,
+        "lng": 15
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Swahili": {
+      "name": "Swahili",
+      "countries": [
+        "KE",
+        "TZ"
+      ],
+      "representativePoint": {
+        "lat": -6,
+        "lng": 39
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Classical Syriac": {
+      "name": "Classical Syriac",
+      "countries": [
+        "TR",
+        "IQ",
+        "SY"
+      ],
+      "representativePoint": {
+        "lat": 37,
+        "lng": 41
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Tamil": {
+      "name": "Tamil",
+      "countries": [
+        "IN",
+        "LK",
+        "SG"
+      ],
+      "representativePoint": {
+        "lat": 11,
+        "lng": 78
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Telugu": {
+      "name": "Telugu",
+      "countries": [
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 17.4,
+        "lng": 78.5
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Tetum": {
+      "name": "Tetum",
+      "countries": [
+        "TL"
+      ],
+      "representativePoint": {
+        "lat": -8.833,
+        "lng": 125.917
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Tajik": {
+      "name": "Tajik",
+      "countries": [
+        "TJ"
+      ],
+      "representativePoint": {
+        "lat": 38.5,
+        "lng": 71
+      },
+      "subregion": "Central Asia",
+      "continent": "Asia"
+    },
+    "Thai": {
+      "name": "Thai",
+      "countries": [
+        "TH"
+      ],
+      "representativePoint": {
+        "lat": 14,
+        "lng": 101
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Tigrinya": {
+      "name": "Tigrinya",
+      "countries": [
+        "ER",
+        "ET"
+      ],
+      "representativePoint": {
+        "lat": 15,
+        "lng": 39
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Turkmen": {
+      "name": "Turkmen",
+      "countries": [
+        "TM"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": 60
+      },
+      "subregion": "Central Asia",
+      "continent": "Asia"
+    },
+    "Tokelauan": {
+      "name": "Tokelauan",
+      "countries": [
+        "TK"
+      ],
+      "representativePoint": {
+        "lat": -9,
+        "lng": -172
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Tagalog": {
+      "name": "Tagalog",
+      "countries": [
+        "PH"
+      ],
+      "representativePoint": {
+        "lat": 14,
+        "lng": 121
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "Tswana": {
+      "name": "Tswana",
+      "countries": [
+        "BW",
+        "ZA"
+      ],
+      "representativePoint": {
+        "lat": -24,
+        "lng": 25
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Taíno": {
+      "name": "Taíno",
+      "countries": [
+        "DO",
+        "HT",
+        "CU",
+        "PR"
+      ],
+      "representativePoint": {
+        "lat": 19,
+        "lng": -71
+      },
+      "subregion": "Caribbean",
+      "continent": "Americas"
+    },
+    "Tongan": {
+      "name": "Tongan",
+      "countries": [
+        "TO"
+      ],
+      "representativePoint": {
+        "lat": -21.2,
+        "lng": -175.2
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Tonga (Malawi)": {
+      "name": "Tonga (Malawi)",
+      "countries": [
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -20,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Tonga (Mozambique)": {
+      "name": "Tonga (Mozambique)",
+      "countries": [
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -20,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Tonga (Zambia)": {
+      "name": "Tonga (Zambia)",
+      "countries": [
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -20,
+        "lng": 30
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Tok Pisin": {
+      "name": "Tok Pisin",
+      "countries": [
+        "PG"
+      ],
+      "representativePoint": {
+        "lat": -6,
+        "lng": 147
+      },
+      "subregion": "Melanesia",
+      "continent": "Oceania"
+    },
+    "Old Tupi": {
+      "name": "Old Tupi",
+      "countries": [
+        "BR"
+      ],
+      "representativePoint": {
+        "lat": -22.5,
+        "lng": -43
+      },
+      "subregion": "South America",
+      "continent": "Americas"
+    },
+    "Turkish": {
+      "name": "Turkish",
+      "countries": [
+        "TR"
+      ],
+      "representativePoint": {
+        "lat": 39,
+        "lng": 35
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Tsonga": {
+      "name": "Tsonga",
+      "countries": [
+        "ZA",
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -26.818,
+        "lng": 25.455
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Tatar": {
+      "name": "Tatar",
+      "countries": [
+        "RU"
+      ],
+      "representativePoint": {
+        "lat": 55,
+        "lng": 50
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Tuvaluan": {
+      "name": "Tuvaluan",
+      "countries": [
+        "TV"
+      ],
+      "representativePoint": {
+        "lat": -8,
+        "lng": 178
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Tocharian B": {
+      "name": "Tocharian B",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 41.5,
+        "lng": 82
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Tahitian": {
+      "name": "Tahitian",
+      "countries": [
+        "PF"
+      ],
+      "representativePoint": {
+        "lat": -17.6,
+        "lng": -149.4
+      },
+      "subregion": "Polynesia",
+      "continent": "Oceania"
+    },
+    "Uyghur": {
+      "name": "Uyghur",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 41,
+        "lng": 85
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Ukrainian": {
+      "name": "Ukrainian",
+      "countries": [
+        "UA"
+      ],
+      "representativePoint": {
+        "lat": 49,
+        "lng": 32
+      },
+      "subregion": "Eastern Europe",
+      "continent": "Europe"
+    },
+    "Munsee": {
+      "name": "Munsee",
+      "countries": [
+        "US",
+        "CA"
+      ],
+      "representativePoint": {
+        "lat": 42,
+        "lng": -80
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Unami": {
+      "name": "Unami",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 40,
+        "lng": -75
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Urdu": {
+      "name": "Urdu",
+      "countries": [
+        "PK",
+        "IN"
+      ],
+      "representativePoint": {
+        "lat": 33,
+        "lng": 73
+      },
+      "subregion": "Southern Asia",
+      "continent": "Asia"
+    },
+    "Uzbek": {
+      "name": "Uzbek",
+      "countries": [
+        "UZ"
+      ],
+      "representativePoint": {
+        "lat": 41.5,
+        "lng": 64
+      },
+      "subregion": "Central Asia",
+      "continent": "Asia"
+    },
+    "Venda": {
+      "name": "Venda",
+      "countries": [
+        "ZA",
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -26.818,
+        "lng": 25.455
+      },
+      "subregion": "Eastern Africa",
+      "continent": "Africa"
+    },
+    "Venetian": {
+      "name": "Venetian",
       "countries": [
         "IT"
       ],
       "representativePoint": {
-        "lat": 42,
-        "lng": 12
+        "lat": 45.4,
+        "lng": 12.3
       },
       "subregion": "Southern Europe",
       "continent": "Europe"
+    },
+    "Vietnamese": {
+      "name": "Vietnamese",
+      "countries": [
+        "VN"
+      ],
+      "representativePoint": {
+        "lat": 16,
+        "lng": 106
+      },
+      "subregion": "South-Eastern Asia",
+      "continent": "Asia"
+    },
+    "West Flemish": {
+      "name": "West Flemish",
+      "countries": [
+        "BE",
+        "NL"
+      ],
+      "representativePoint": {
+        "lat": 51.1,
+        "lng": 3
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Walloon": {
+      "name": "Walloon",
+      "countries": [
+        "BE"
+      ],
+      "representativePoint": {
+        "lat": 50.4,
+        "lng": 4.9
+      },
+      "subregion": "Western Europe",
+      "continent": "Europe"
+    },
+    "Middle Welsh": {
+      "name": "Middle Welsh",
+      "countries": [
+        "GB"
+      ],
+      "representativePoint": {
+        "lat": 52.3,
+        "lng": -3.8
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Wolof": {
+      "name": "Wolof",
+      "countries": [
+        "SN",
+        "GM"
+      ],
+      "representativePoint": {
+        "lat": 15,
+        "lng": -16
+      },
+      "subregion": "Western Africa",
+      "continent": "Africa"
+    },
+    "Wu": {
+      "name": "Wu",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 31.3,
+        "lng": 120.6
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Andalusian Arabic": {
+      "name": "Andalusian Arabic",
+      "countries": [
+        "ES"
+      ],
+      "representativePoint": {
+        "lat": 37.5,
+        "lng": -4.5
+      },
+      "subregion": "Southern Europe",
+      "continent": "Europe"
+    },
+    "Old Armenian": {
+      "name": "Old Armenian",
+      "countries": [
+        "AM"
+      ],
+      "representativePoint": {
+        "lat": 40,
+        "lng": 45
+      },
+      "subregion": "Western Asia",
+      "continent": "Asia"
+    },
+    "Xhosa": {
+      "name": "Xhosa",
+      "countries": [
+        "ZA"
+      ],
+      "representativePoint": {
+        "lat": -32,
+        "lng": 27
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
+    },
+    "Anglo-Norman": {
+      "name": "Anglo-Norman",
+      "countries": [
+        "GB",
+        "FR"
+      ],
+      "representativePoint": {
+        "lat": 49,
+        "lng": -1.5
+      },
+      "subregion": "Northern Europe",
+      "continent": "Europe"
+    },
+    "Narragansett": {
+      "name": "Narragansett",
+      "countries": [
+        "US"
+      ],
+      "representativePoint": {
+        "lat": 41.5,
+        "lng": -71.5
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Tocharian A": {
+      "name": "Tocharian A",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 41.7,
+        "lng": 86
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Yiddish": {
+      "name": "Yiddish",
+      "countries": [
+        "PL",
+        "UA",
+        "DE"
+      ],
+      "representativePoint": {
+        "lat": 51,
+        "lng": 19
+      },
+      "subregion": "Central Europe",
+      "continent": "Europe"
+    },
+    "Yoruba": {
+      "name": "Yoruba",
+      "countries": [
+        "NG",
+        "BJ"
+      ],
+      "representativePoint": {
+        "lat": 8,
+        "lng": 4
+      },
+      "subregion": "Western Africa",
+      "continent": "Africa"
+    },
+    "Yucatec Maya": {
+      "name": "Yucatec Maya",
+      "countries": [
+        "MX"
+      ],
+      "representativePoint": {
+        "lat": 20.5,
+        "lng": -89
+      },
+      "subregion": "North America",
+      "continent": "Americas"
+    },
+    "Cantonese": {
+      "name": "Cantonese",
+      "countries": [
+        "CN"
+      ],
+      "representativePoint": {
+        "lat": 23,
+        "lng": 113
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Chinese": {
+      "name": "Chinese",
+      "countries": [
+        "CN",
+        "TW",
+        "SG"
+      ],
+      "representativePoint": {
+        "lat": 39.9,
+        "lng": 116.4
+      },
+      "subregion": "Eastern Asia",
+      "continent": "Asia"
+    },
+    "Zulu": {
+      "name": "Zulu",
+      "countries": [
+        "ZA",
+        "ZW"
+      ],
+      "representativePoint": {
+        "lat": -29,
+        "lng": 31
+      },
+      "subregion": "Southern Africa",
+      "continent": "Africa"
     }
   },
   "masterSequence": [
     {
-      "id": "karaoke",
-      "word": "karaoke",
-      "year": 1975,
+      "id": "both:determiner",
+      "word": "both",
+      "pos": "determiner",
+      "year": 1200,
       "tier": 1,
       "originChain": [
-        "Japanese"
-      ],
-      "originLanguage": "Japanese",
-      "countries": [
-        "JP"
-      ],
-      "point": {
-        "lat": 36,
-        "lng": 138
-      },
-      "blurb": "Japanese kara 'empty' + oke (short for okestora) 'orchestra' — an 'empty orchestra'."
-    },
-    {
-      "id": "robot",
-      "word": "robot",
-      "year": 1923,
-      "tier": 2,
-      "originChain": [
-        "Czech"
-      ],
-      "originLanguage": "Czech",
-      "countries": [
-        "CZ"
-      ],
-      "point": {
-        "lat": 50,
-        "lng": 15
-      },
-      "blurb": "Coined in Czech (robota, 'forced labor') by Karel Capek's 1920 play R.U.R."
-    },
-    {
-      "id": "ballet",
-      "word": "ballet",
-      "year": 1635,
-      "tier": 3,
-      "originChain": [
-        "French"
-      ],
-      "originLanguage": "French",
-      "countries": [
-        "FR"
-      ],
-      "point": {
-        "lat": 47,
-        "lng": 2
-      },
-      "blurb": "From French ballet, from Italian balletto, a diminutive of ballo 'dance'."
-    },
-    {
-      "id": "elapse",
-      "word": "elapse",
-      "year": 1640,
-      "tier": 4,
-      "originChain": [
-        "Middle French",
-        "Latin"
-      ],
-      "originLanguage": "Latin",
-      "countries": [
-        "IT"
-      ],
-      "point": {
-        "lat": 42,
-        "lng": 12
-      },
-      "blurb": "From Middle French, from Latin elapsus, 'to slip away' (e- + labi)."
-    },
-    {
-      "id": "geyser",
-      "word": "geyser",
-      "year": 1785,
-      "tier": 5,
-      "originChain": [
-        "Icelandic"
-      ],
-      "originLanguage": "Icelandic",
-      "countries": [
-        "IS"
-      ],
-      "point": {
-        "lat": 65,
-        "lng": -18
-      },
-      "blurb": "From Icelandic Geysir, the famous hot spring, from geysa 'to gush'."
-    },
-    {
-      "id": "boondocks",
-      "word": "boondocks",
-      "year": 1945,
-      "tier": 6,
-      "originChain": [
-        "Tagalog"
-      ],
-      "originLanguage": "Tagalog",
-      "countries": [
-        "PH"
-      ],
-      "point": {
-        "lat": 14,
-        "lng": 121
-      },
-      "blurb": "From Tagalog bundok 'mountain', via US troops in the Philippines."
-    },
-    {
-      "id": "tea",
-      "word": "tea",
-      "year": 1650,
-      "tier": 7,
-      "originChain": [
-        "Dutch",
-        "Min Nan Chinese"
-      ],
-      "originLanguage": "Min Nan Chinese",
-      "countries": [
-        "CN"
-      ],
-      "point": {
-        "lat": 24.5,
-        "lng": 118
-      },
-      "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
-    },
-    {
-      "id": "they",
-      "word": "they",
-      "year": 1200,
-      "tier": 8,
-      "originChain": [
+        "Middle English",
         "Old Norse"
       ],
       "originLanguage": "Old Norse",
@@ -996,103 +6086,990 @@
         "lat": 61,
         "lng": 9
       },
-      "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+      "blurb": "From Middle English, ultimately from Old Norse."
     },
     {
-      "id": "taboo",
-      "word": "taboo",
-      "year": 1777,
-      "tier": 9,
-      "originChain": [
-        "Tongan"
-      ],
-      "originLanguage": "Tongan",
-      "countries": [
-        "TO"
-      ],
-      "point": {
-        "lat": -21.2,
-        "lng": -175.2
-      },
-      "blurb": "From Tongan tabu, 'sacred, forbidden', also via Cook's voyages."
-    },
-    {
-      "id": "malaria",
-      "word": "malaria",
-      "year": 1740,
-      "tier": 10,
-      "originChain": [
-        "Italian"
-      ],
-      "originLanguage": "Italian",
-      "countries": [
-        "IT"
-      ],
-      "point": {
-        "lat": 43,
-        "lng": 12
-      },
-      "blurb": "Italian mala aria, 'bad air' — from the old belief about swamp vapours."
-    },
-    {
-      "id": "pizza",
-      "word": "pizza",
-      "year": 1935,
-      "tier": 1,
-      "originChain": [
-        "Italian"
-      ],
-      "originLanguage": "Italian",
-      "countries": [
-        "IT"
-      ],
-      "point": {
-        "lat": 43,
-        "lng": 12
-      },
-      "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
-    },
-    {
-      "id": "tsunami",
-      "word": "tsunami",
-      "year": 1880,
+      "id": "protect:verb",
+      "word": "protect",
+      "pos": "verb",
+      "year": 1420,
       "tier": 2,
       "originChain": [
-        "Japanese"
+        "Latin"
       ],
-      "originLanguage": "Japanese",
+      "originLanguage": "Latin",
       "countries": [
-        "JP"
+        "IT"
       ],
       "point": {
-        "lat": 36,
-        "lng": 138
+        "lat": 42,
+        "lng": 12
       },
-      "blurb": "Japanese tsu 'harbor' + nami 'wave'."
+      "blurb": "From Latin."
+    },
+    {
+      "id": "simple:adjective",
+      "word": "simple",
+      "pos": "adjective",
+      "year": 1200,
+      "tier": 3,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "apartment:noun",
+      "word": "apartment",
+      "pos": "noun",
+      "year": 1640,
+      "tier": 4,
+      "originChain": [
+        "French",
+        "Italian",
+        "Spanish"
+      ],
+      "originLanguage": "Spanish",
+      "countries": [
+        "ES"
+      ],
+      "point": {
+        "lat": 40,
+        "lng": -4
+      },
+      "blurb": "From French, ultimately from Spanish."
+    },
+    {
+      "id": "professor:noun",
+      "word": "professor",
+      "pos": "noun",
+      "year": 1380,
+      "tier": 5,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "due:adjective",
+      "word": "due",
+      "pos": "adjective",
+      "year": 1300,
+      "tier": 6,
+      "originChain": [
+        "Old French",
+        "Latin",
+        "Proto-Italic"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Old French, ultimately from Proto-Italic."
+    },
+    {
+      "id": "alcohol:noun",
+      "word": "alcohol",
+      "pos": "noun",
+      "year": 1540,
+      "tier": 7,
+      "originChain": [
+        "Spanish",
+        "Arabic",
+        "Aramaic"
+      ],
+      "originLanguage": "Aramaic",
+      "countries": [
+        "SY",
+        "IQ",
+        "TR"
+      ],
+      "point": {
+        "lat": 35,
+        "lng": 39
+      },
+      "blurb": "From Arabic al-kuhl, itself from Aramaic."
+    },
+    {
+      "id": "yoga:noun",
+      "word": "yoga",
+      "pos": "noun",
+      "year": 1820,
+      "tier": 8,
+      "originChain": [
+        "Sanskrit",
+        "Proto-Indo-Aryan"
+      ],
+      "originLanguage": "Sanskrit",
+      "countries": [
+        "IN",
+        "NP"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 84
+      },
+      "blurb": "From Sanskrit, ultimately from Proto-Indo-Aryan."
+    },
+    {
+      "id": "bungalow:noun",
+      "word": "bungalow",
+      "pos": "noun",
+      "year": 1670,
+      "tier": 9,
+      "originChain": [
+        "Hindi"
+      ],
+      "originLanguage": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "point": {
+        "lat": 22,
+        "lng": 79
+      },
+      "blurb": "From Gujarati/Hindi bangla, 'of Bengal'."
     },
     {
       "id": "yogurt",
       "word": "yogurt",
       "year": 1625,
-      "tier": 3,
+      "tier": 10,
       "originChain": [
-        "Turkish"
+        "Ottoman Turkish",
+        "Proto-Turkic"
       ],
-      "originLanguage": "Turkish",
+      "originLanguage": "Ottoman Turkish",
       "countries": [
         "TR"
       ],
       "point": {
-        "lat": 39,
-        "lng": 35
+        "lat": 41,
+        "lng": 29
       },
       "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
+    },
+    {
+      "id": "their:determiner",
+      "word": "their",
+      "pos": "determiner",
+      "year": 1200,
+      "tier": 1,
+      "originChain": [
+        "Old Norse",
+        "Proto-Germanic"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Old Norse theirra, displacing Old English hira."
+    },
+    {
+      "id": "court:noun",
+      "word": "court",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "government:noun",
+      "word": "government",
+      "pos": "noun",
+      "year": 1380,
+      "tier": 3,
+      "originChain": [
+        "Middle English",
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Middle English, ultimately from Old French."
+    },
+    {
+      "id": "college:noun",
+      "word": "college",
+      "pos": "noun",
+      "year": 1380,
+      "tier": 4,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "mission:noun",
+      "word": "mission",
+      "pos": "noun",
+      "year": 1595,
+      "tier": 5,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "commander:noun",
+      "word": "commander",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 6,
+      "originChain": [
+        "Middle English",
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Middle English, ultimately from Old French."
+    },
+    {
+      "id": "inspector:noun",
+      "word": "inspector",
+      "pos": "noun",
+      "year": 1600,
+      "tier": 7,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "cotton:noun",
+      "word": "cotton",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 8,
+      "originChain": [
+        "Arabic"
+      ],
+      "originLanguage": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 46
+      },
+      "blurb": "From Arabic qutn, via Old French coton."
+    },
+    {
+      "id": "shampoo:verb",
+      "word": "shampoo",
+      "pos": "verb",
+      "year": 1762,
+      "tier": 9,
+      "originChain": [
+        "Hindi"
+      ],
+      "originLanguage": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "point": {
+        "lat": 22,
+        "lng": 79
+      },
+      "blurb": "From Hindi champo, 'to press, massage'."
+    },
+    {
+      "id": "algebra:noun",
+      "word": "algebra",
+      "pos": "noun",
+      "year": 1551,
+      "tier": 10,
+      "originChain": [
+        "Medieval Latin"
+      ],
+      "originLanguage": "Medieval Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "Coined in medieval Latin from Arabic al-jabr."
+    },
+    {
+      "id": "guy:noun",
+      "word": "guy",
+      "pos": "noun",
+      "year": 1806,
+      "tier": 1,
+      "originChain": [
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Guy Fawkes, whose effigy was burned on 5 November."
+    },
+    {
+      "id": "bag:noun",
+      "word": "bag",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Middle English, ultimately from Old Norse."
+    },
+    {
+      "id": "certain:adjective",
+      "word": "certain",
+      "pos": "adjective",
+      "year": 1300,
+      "tier": 3,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "private:adjective",
+      "word": "private",
+      "pos": "adjective",
+      "year": 1380,
+      "tier": 4,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "enemy:noun",
+      "word": "enemy",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 5,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "applause:noun",
+      "word": "applause",
+      "pos": "noun",
+      "year": 1420,
+      "tier": 6,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "advice:noun",
+      "word": "advice",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 7,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "tomato:noun",
+      "word": "tomato",
+      "pos": "noun",
+      "year": 1590,
+      "tier": 8,
+      "originChain": [
+        "Spanish",
+        "Classical Nahuatl",
+        "Proto-Nahuan"
+      ],
+      "originLanguage": "Classical Nahuatl",
+      "countries": [
+        "MX"
+      ],
+      "point": {
+        "lat": 19.4,
+        "lng": -99.1
+      },
+      "blurb": "From Nahuatl tomatl, via Spanish."
+    },
+    {
+      "id": "coyote:noun",
+      "word": "coyote",
+      "pos": "noun",
+      "year": 1759,
+      "tier": 9,
+      "originChain": [
+        "Spanish",
+        "Proto-Nahuan"
+      ],
+      "originLanguage": "Spanish",
+      "countries": [
+        "ES"
+      ],
+      "point": {
+        "lat": 40,
+        "lng": -4
+      },
+      "blurb": "From Mexican Spanish, from Nahuatl coyotl."
+    },
+    {
+      "id": "kiosk:noun",
+      "word": "kiosk",
+      "pos": "noun",
+      "year": 1625,
+      "tier": 10,
+      "originChain": [
+        "Persian"
+      ],
+      "originLanguage": "Persian",
+      "countries": [
+        "IR"
+      ],
+      "point": {
+        "lat": 32,
+        "lng": 54
+      },
+      "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
+    },
+    {
+      "id": "course:noun",
+      "word": "course",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 1,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "expect:verb",
+      "word": "expect",
+      "pos": "verb",
+      "year": 1550,
+      "tier": 2,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "normal:adjective",
+      "word": "normal",
+      "pos": "adjective",
+      "year": 1520,
+      "tier": 3,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "agent:noun",
+      "word": "agent",
+      "pos": "noun",
+      "year": 1470,
+      "tier": 4,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "contact:noun",
+      "word": "contact",
+      "pos": "noun",
+      "year": 1620,
+      "tier": 5,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "ridiculous:adjective",
+      "word": "ridiculous",
+      "pos": "adjective",
+      "year": 1540,
+      "tier": 6,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "magazine:noun",
+      "word": "magazine",
+      "pos": "noun",
+      "year": 1580,
+      "tier": 7,
+      "originChain": [
+        "Arabic"
+      ],
+      "originLanguage": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 46
+      },
+      "blurb": "From Arabic makhzan 'storehouse', via Italian and French."
+    },
+    {
+      "id": "tattoo:noun",
+      "word": "tattoo",
+      "pos": "noun",
+      "year": 1644,
+      "tier": 8,
+      "originChain": [
+        "Dutch"
+      ],
+      "originLanguage": "Dutch",
+      "countries": [
+        "NL"
+      ],
+      "point": {
+        "lat": 52,
+        "lng": 5
+      },
+      "blurb": "From Dutch tap-toe, 'shut the tap': the drumbeat that ordered soldiers back to their quarters."
+    },
+    {
+      "id": "ketchup:noun",
+      "word": "ketchup",
+      "pos": "noun",
+      "year": 1711,
+      "tier": 9,
+      "originChain": [
+        "Malay",
+        "Min Nan"
+      ],
+      "originLanguage": "Min Nan",
+      "countries": [
+        "CN"
+      ],
+      "point": {
+        "lat": 24.5,
+        "lng": 118
+      },
+      "blurb": "From a Chinese dialect word for fish sauce, via Malay."
+    },
+    {
+      "id": "mammoth",
+      "word": "mammoth",
+      "year": 1700,
+      "tier": 10,
+      "originChain": [
+        "Russian"
+      ],
+      "originLanguage": "Russian",
+      "countries": [
+        "RU"
+      ],
+      "point": {
+        "lat": 56,
+        "lng": 38
+      },
+      "blurb": "From Russian mammut, probably from a Siberian (Mansi) source word."
+    },
+    {
+      "id": "idea:noun",
+      "word": "idea",
+      "pos": "noun",
+      "year": 1580,
+      "tier": 1,
+      "originChain": [
+        "Latin",
+        "Ancient Greek",
+        "Proto-Hellenic"
+      ],
+      "originLanguage": "Ancient Greek",
+      "countries": [
+        "GR",
+        "TR",
+        "CY",
+        "IT"
+      ],
+      "point": {
+        "lat": 38,
+        "lng": 23
+      },
+      "blurb": "From Greek idea, 'form, pattern'."
+    },
+    {
+      "id": "country:noun",
+      "word": "country",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "club:noun",
+      "word": "club",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 3,
+      "originChain": [
+        "Middle English",
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "Originally 'a thick stick'."
+    },
+    {
+      "id": "impossible:adjective",
+      "word": "impossible",
+      "pos": "adjective",
+      "year": 1300,
+      "tier": 4,
+      "originChain": [
+        "Middle English",
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Middle English, ultimately from Old French."
+    },
+    {
+      "id": "guard:noun",
+      "word": "guard",
+      "pos": "noun",
+      "year": 1450,
+      "tier": 5,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Frankish"
+      ],
+      "originLanguage": "Frankish",
+      "countries": [
+        "DE",
+        "FR",
+        "NL"
+      ],
+      "point": {
+        "lat": 50.5,
+        "lng": 6.5
+      },
+      "blurb": "From Old French garde, of Germanic (Frankish) origin."
+    },
+    {
+      "id": "grace:noun",
+      "word": "grace",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 6,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "orange:noun",
+      "word": "orange",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 7,
+      "originChain": [
+        "Persian",
+        "Sanskrit"
+      ],
+      "originLanguage": "Sanskrit",
+      "countries": [
+        "IN",
+        "NP"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 84
+      },
+      "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+    },
+    {
+      "id": "lemon:noun",
+      "word": "lemon",
+      "pos": "noun",
+      "year": 1400,
+      "tier": 8,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Arabic"
+      ],
+      "originLanguage": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 46
+      },
+      "blurb": "Reached English through Old French and Arabic."
+    },
+    {
+      "id": "hazard:noun",
+      "word": "hazard",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 9,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Arabic"
+      ],
+      "originLanguage": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 46
+      },
+      "blurb": "From Arabic az-zahr, 'the die'."
     },
     {
       "id": "samovar",
       "word": "samovar",
       "year": 1830,
-      "tier": 4,
+      "tier": 10,
       "originChain": [
         "Russian"
       ],
@@ -1107,64 +7084,903 @@
       "blurb": "Russian samovar, 'self-boiler' — the tea urn of Russian tradition."
     },
     {
-      "id": "tycoon",
-      "word": "tycoon",
-      "year": 1857,
+      "id": "phone:noun",
+      "word": "phone",
+      "pos": "noun",
+      "year": 1884,
+      "tier": 1,
+      "originChain": [
+        "Ancient Greek"
+      ],
+      "originLanguage": "Ancient Greek",
+      "countries": [
+        "GR",
+        "TR",
+        "CY",
+        "IT"
+      ],
+      "point": {
+        "lat": 38,
+        "lng": 23
+      },
+      "blurb": "Clipped from telephone: Greek tele 'far' + phone 'voice'."
+    },
+    {
+      "id": "company:noun",
+      "word": "company",
+      "pos": "noun",
+      "year": 1250,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Middle English, ultimately from Old French."
+    },
+    {
+      "id": "tea:noun",
+      "word": "tea",
+      "pos": "noun",
+      "year": 1650,
+      "tier": 3,
+      "originChain": [
+        "Dutch",
+        "Malay",
+        "Min Nan"
+      ],
+      "originLanguage": "Min Nan",
+      "countries": [
+        "CN"
+      ],
+      "point": {
+        "lat": 24.5,
+        "lng": 118
+      },
+      "blurb": "Via Dutch thee from Min Nan Chinese te — the 'te' branch of the word's world map."
+    },
+    {
+      "id": "angry:adjective",
+      "word": "angry",
+      "pos": "adjective",
+      "year": 1350,
+      "tier": 4,
+      "originChain": [
+        "Middle English",
+        "Old Norse",
+        "Proto-Germanic"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Old Norse angr, 'grief'."
+    },
+    {
+      "id": "joke:noun",
+      "word": "joke",
+      "pos": "noun",
+      "year": 1660,
       "tier": 5,
       "originChain": [
-        "Japanese"
+        "Latin",
+        "Proto-Indo-European"
       ],
-      "originLanguage": "Japanese",
+      "originLanguage": "Latin",
       "countries": [
-        "JP"
+        "IT"
       ],
       "point": {
-        "lat": 36,
-        "lng": 138
+        "lat": 42,
+        "lng": 12
       },
-      "blurb": "Japanese taikun, 'great lord' — the shogun's title, later applied to US magnates."
+      "blurb": "From Latin iocus, 'a jest'."
     },
     {
-      "id": "rickshaw",
-      "word": "rickshaw",
-      "year": 1875,
+      "id": "leg:noun",
+      "word": "leg",
+      "pos": "noun",
+      "year": 1200,
       "tier": 6,
       "originChain": [
-        "Japanese"
+        "Middle English",
+        "Old Norse",
+        "Proto-Germanic"
       ],
-      "originLanguage": "Japanese",
+      "originLanguage": "Old Norse",
       "countries": [
-        "JP"
+        "NO",
+        "IS",
+        "DK"
       ],
       "point": {
-        "lat": 36,
-        "lng": 138
+        "lat": 61,
+        "lng": 9
       },
-      "blurb": "Japanese jinrikisha, 'man-powered vehicle' — shortened in English."
+      "blurb": "From Old Norse leggr, replacing Old English sceanc."
     },
     {
-      "id": "serendipity",
-      "word": "serendipity",
-      "year": 1754,
+      "id": "robot:noun",
+      "word": "robot",
+      "pos": "noun",
+      "year": 1923,
       "tier": 7,
       "originChain": [
-        "Persian"
+        "Czech"
       ],
-      "originLanguage": "Persian",
+      "originLanguage": "Czech",
       "countries": [
-        "IR"
+        "CZ"
       ],
       "point": {
-        "lat": 32,
-        "lng": 54
+        "lat": 50,
+        "lng": 15
       },
-      "blurb": "Coined by Horace Walpole from the Persian tale of the Three Princes of Serendip (Sri Lanka)."
+      "blurb": "Coined in Czech (robota, 'forced labor') by Karel Capek's 1920 play R.U.R."
     },
     {
-      "id": "window",
-      "word": "window",
-      "year": 1225,
+      "id": "sofa:noun",
+      "word": "sofa",
+      "pos": "noun",
+      "year": 1625,
       "tier": 8,
+      "originChain": [
+        "French",
+        "Arabic"
+      ],
+      "originLanguage": "Arabic",
+      "countries": [
+        "SA",
+        "EG",
+        "DZ"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 46
+      },
+      "blurb": "From Arabic suffah, a bench."
+    },
+    {
+      "id": "thug:noun",
+      "word": "thug",
+      "pos": "noun",
+      "year": 1808,
+      "tier": 9,
+      "originChain": [
+        "Hindi",
+        "Proto-Indo-Aryan"
+      ],
+      "originLanguage": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "point": {
+        "lat": 22,
+        "lng": 79
+      },
+      "blurb": "From Hindi thag, a member of a robber band."
+    },
+    {
+      "id": "they",
+      "word": "they",
+      "year": 1200,
+      "tier": 10,
+      "originChain": [
+        "Middle English",
+        "Old Norse",
+        "Proto-Germanic"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "Old Norse their — one of the pronouns borrowed wholesale from Norse."
+    },
+    {
+      "id": "trust:noun",
+      "word": "trust",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 1,
+      "originChain": [
+        "Middle English",
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Middle English, ultimately from Old Norse."
+    },
+    {
+      "id": "plan:noun",
+      "word": "plan",
+      "pos": "noun",
+      "year": 1670,
+      "tier": 2,
+      "originChain": [
+        "French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From French, ultimately from Latin."
+    },
+    {
+      "id": "join:verb",
+      "word": "join",
+      "pos": "verb",
+      "year": 1300,
+      "tier": 3,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "accept:verb",
+      "word": "accept",
+      "pos": "verb",
+      "year": 1380,
+      "tier": 4,
+      "originChain": [
+        "Middle English",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "decision:noun",
+      "word": "decision",
+      "pos": "noun",
+      "year": 1450,
+      "tier": 5,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "nature:noun",
+      "word": "nature",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 6,
+      "originChain": [
+        "Middle English",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "several:adjective",
+      "word": "several",
+      "pos": "adjective",
+      "year": 1420,
+      "tier": 7,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "chili:noun",
+      "word": "chili",
+      "pos": "noun",
+      "year": 1662,
+      "tier": 8,
+      "originChain": [
+        "Spanish",
+        "Classical Nahuatl"
+      ],
+      "originLanguage": "Classical Nahuatl",
+      "countries": [
+        "MX"
+      ],
+      "point": {
+        "lat": 19.4,
+        "lng": -99.1
+      },
+      "blurb": "From Spanish, ultimately from Classical Nahuatl."
+    },
+    {
+      "id": "soy:noun",
+      "word": "soy",
+      "pos": "noun",
+      "year": 1690,
+      "tier": 9,
+      "originChain": [
+        "Japanese",
+        "Chinese"
+      ],
+      "originLanguage": "Chinese",
+      "countries": [
+        "CN",
+        "TW",
+        "SG"
+      ],
+      "point": {
+        "lat": 39.9,
+        "lng": 116.4
+      },
+      "blurb": "From Japanese shoyu, from Chinese jiangyou."
+    },
+    {
+      "id": "bandana:noun",
+      "word": "bandana",
+      "pos": "noun",
+      "year": 1752,
+      "tier": 10,
+      "originChain": [
+        "Hindi"
+      ],
+      "originLanguage": "Hindi",
+      "countries": [
+        "IN"
+      ],
+      "point": {
+        "lat": 22,
+        "lng": 79
+      },
+      "blurb": "From Hindi."
+    },
+    {
+      "id": "them:pronoun",
+      "word": "them",
+      "pos": "pronoun",
+      "year": 1200,
+      "tier": 1,
+      "originChain": [
+        "Middle English",
+        "Old Norse",
+        "Proto-Germanic"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Old Norse theim, replacing Old English him."
+    },
+    {
+      "id": "fool:noun",
+      "word": "fool",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "area:noun",
+      "word": "area",
+      "pos": "noun",
+      "year": 1530,
+      "tier": 3,
+      "originChain": [
+        "Latin",
+        "Proto-Italic"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin, ultimately from Proto-Italic."
+    },
+    {
+      "id": "scene:noun",
+      "word": "scene",
+      "pos": "noun",
+      "year": 1535,
+      "tier": 4,
+      "originChain": [
+        "Middle French",
+        "Latin",
+        "Ancient Greek"
+      ],
+      "originLanguage": "Ancient Greek",
+      "countries": [
+        "GR",
+        "TR",
+        "CY",
+        "IT"
+      ],
+      "point": {
+        "lat": 38,
+        "lng": 23
+      },
+      "blurb": "From Greek skene, 'a stage'."
+    },
+    {
+      "id": "madam:noun",
+      "word": "madam",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 5,
+      "originChain": [
+        "Middle English",
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Middle English, ultimately from Old French."
+    },
+    {
+      "id": "video:noun",
+      "word": "video",
+      "pos": "noun",
+      "year": 1935,
+      "tier": 6,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin videre 'to see', coined on the model of audio."
+    },
+    {
+      "id": "pizza:noun",
+      "word": "pizza",
+      "pos": "noun",
+      "year": 1935,
+      "tier": 7,
+      "originChain": [
+        "Neapolitan"
+      ],
+      "originLanguage": "Neapolitan",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 40.8,
+        "lng": 14.3
+      },
+      "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
+    },
+    {
+      "id": "potato:noun",
+      "word": "potato",
+      "pos": "noun",
+      "year": 1565,
+      "tier": 8,
+      "originChain": [
+        "Spanish",
+        "Taíno"
+      ],
+      "originLanguage": "Taíno",
+      "countries": [
+        "DO",
+        "HT",
+        "CU",
+        "PR"
+      ],
+      "point": {
+        "lat": 19,
+        "lng": -71
+      },
+      "blurb": "From Spanish patata, from Taíno batata."
+    },
+    {
+      "id": "hurricane:noun",
+      "word": "hurricane",
+      "pos": "noun",
+      "year": 1555,
+      "tier": 9,
+      "originChain": [
+        "Spanish",
+        "Taíno"
+      ],
+      "originLanguage": "Taíno",
+      "countries": [
+        "DO",
+        "HT",
+        "CU",
+        "PR"
+      ],
+      "point": {
+        "lat": 19,
+        "lng": -71
+      },
+      "blurb": "From Taíno, via Spanish huracan."
+    },
+    {
+      "id": "cipher:noun",
+      "word": "cipher",
+      "pos": "noun",
+      "year": 1400,
+      "tier": 10,
+      "originChain": [
+        "Middle English",
+        "Old French"
+      ],
+      "originLanguage": "Old French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Old French cifre, from Arabic sifr, 'zero'."
+    },
+    {
+      "id": "take:verb",
+      "word": "take",
+      "pos": "verb",
+      "year": 1100,
+      "tier": 1,
+      "originChain": [
+        "Middle English",
+        "Old English",
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Old Norse taka, which displaced the native verb."
+    },
+    {
+      "id": "couple:noun",
+      "word": "couple",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "public:adjective",
+      "word": "public",
+      "pos": "adjective",
+      "year": 1380,
+      "tier": 3,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "lieutenant:noun",
+      "word": "lieutenant",
+      "pos": "noun",
+      "year": 1370,
+      "tier": 4,
+      "originChain": [
+        "Middle French"
+      ],
+      "originLanguage": "Middle French",
+      "countries": [
+        "FR"
+      ],
+      "point": {
+        "lat": 47,
+        "lng": 2
+      },
+      "blurb": "From Middle French."
+    },
+    {
+      "id": "difference:noun",
+      "word": "difference",
+      "pos": "noun",
+      "year": 1350,
+      "tier": 5,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "pressure:noun",
+      "word": "pressure",
+      "pos": "noun",
+      "year": 1380,
+      "tier": 6,
+      "originChain": [
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Latin."
+    },
+    {
+      "id": "chocolate:noun",
+      "word": "chocolate",
+      "pos": "noun",
+      "year": 1600,
+      "tier": 7,
+      "originChain": [
+        "Spanish",
+        "Yucatec Maya"
+      ],
+      "originLanguage": "Yucatec Maya",
+      "countries": [
+        "MX"
+      ],
+      "point": {
+        "lat": 20.5,
+        "lng": -89
+      },
+      "blurb": "From Spanish, ultimately from Yucatec Maya."
+    },
+    {
+      "id": "ballet:noun",
+      "word": "ballet",
+      "pos": "noun",
+      "year": 1635,
+      "tier": 8,
+      "originChain": [
+        "French",
+        "Italian"
+      ],
+      "originLanguage": "Italian",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 43,
+        "lng": 12
+      },
+      "blurb": "From French ballet, from Italian balletto, a diminutive of ballo 'dance'."
+    },
+    {
+      "id": "guru:noun",
+      "word": "guru",
+      "pos": "noun",
+      "year": 1690,
+      "tier": 9,
+      "originChain": [
+        "Sanskrit",
+        "Proto-Indo-Aryan"
+      ],
+      "originLanguage": "Sanskrit",
+      "countries": [
+        "IN",
+        "NP"
+      ],
+      "point": {
+        "lat": 24,
+        "lng": 84
+      },
+      "blurb": "From Hindi guru 'teacher', from Sanskrit guru 'venerable, weighty'."
+    },
+    {
+      "id": "geyser",
+      "word": "geyser",
+      "year": 1785,
+      "tier": 10,
+      "originChain": [
+        "Old Norse"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "From Icelandic Geysir, the famous hot spring, from geysa 'to gush'."
+    },
+    {
+      "id": "kid:noun",
+      "word": "kid",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 1,
+      "originChain": [
+        "Middle English",
+        "Old Norse",
+        "Proto-Germanic"
+      ],
+      "originLanguage": "Old Norse",
+      "countries": [
+        "NO",
+        "IS",
+        "DK"
+      ],
+      "point": {
+        "lat": 61,
+        "lng": 9
+      },
+      "blurb": "Originally 'a young goat'. (The 'child' sense is 1590s.)"
+    },
+    {
+      "id": "state:noun",
+      "word": "state",
+      "pos": "noun",
+      "year": 1200,
+      "tier": 2,
+      "originChain": [
+        "Middle English",
+        "Old French",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "prison:noun",
+      "word": "prison",
+      "pos": "noun",
+      "year": 1150,
+      "tier": 3,
+      "originChain": [
+        "Middle English",
+        "Latin"
+      ],
+      "originLanguage": "Latin",
+      "countries": [
+        "IT"
+      ],
+      "point": {
+        "lat": 42,
+        "lng": 12
+      },
+      "blurb": "From Middle English, ultimately from Latin."
+    },
+    {
+      "id": "window:noun",
+      "word": "window",
+      "pos": "noun",
+      "year": 1225,
+      "tier": 4,
       "originChain": [
         "Old Norse"
       ],
@@ -1181,48 +7997,55 @@
       "blurb": "Old Norse vindauga, 'wind-eye' — replacing Old English eagduru."
     },
     {
-      "id": "mammoth",
-      "word": "mammoth",
-      "year": 1700,
-      "tier": 9,
+      "id": "department:noun",
+      "word": "department",
+      "pos": "noun",
+      "year": 1470,
+      "tier": 5,
       "originChain": [
-        "Russian"
+        "French",
+        "Old French"
       ],
-      "originLanguage": "Russian",
+      "originLanguage": "Old French",
       "countries": [
-        "RU"
+        "FR"
       ],
       "point": {
-        "lat": 56,
-        "lng": 38
+        "lat": 47,
+        "lng": 2
       },
-      "blurb": "From Russian mammut, probably from a Siberian (Mansi) source word."
+      "blurb": "From French, ultimately from Old French."
     },
     {
-      "id": "juggernaut",
-      "word": "juggernaut",
-      "year": 1638,
-      "tier": 10,
+      "id": "kick:verb",
+      "word": "kick",
+      "pos": "verb",
+      "year": 1380,
+      "tier": 6,
       "originChain": [
-        "Sanskrit"
+        "Middle English",
+        "Old Norse"
       ],
-      "originLanguage": "Sanskrit",
+      "originLanguage": "Old Norse",
       "countries": [
-        "IN",
-        "NP"
+        "NO",
+        "IS",
+        "DK"
       ],
       "point": {
-        "lat": 24,
-        "lng": 84
+        "lat": 61,
+        "lng": 9
       },
-      "blurb": "From Sanskrit Jagannatha, 'lord of the world', whose festival cart was said to crush devotees."
+      "blurb": "From Middle English, ultimately from Old Norse."
     },
     {
-      "id": "coffee",
-      "word": "coffee",
-      "year": 1590,
-      "tier": 1,
+      "id": "sugar:noun",
+      "word": "sugar",
+      "pos": "noun",
+      "year": 1300,
+      "tier": 7,
       "originChain": [
+        "Middle English",
         "Arabic"
       ],
       "originLanguage": "Arabic",
@@ -1235,104 +8058,37 @@
         "lat": 24,
         "lng": 46
       },
-      "blurb": "From Arabic qahwah, likely via Turkish kahve and Dutch koffie."
+      "blurb": "Reached English via Old French and Arabic, ultimately Sanskrit."
     },
     {
-      "id": "jungle",
-      "word": "jungle",
-      "year": 1780,
-      "tier": 2,
+      "id": "barbecue:noun",
+      "word": "barbecue",
+      "pos": "noun",
+      "year": 1650,
+      "tier": 8,
       "originChain": [
-        "Hindi"
+        "Spanish",
+        "Taíno"
       ],
-      "originLanguage": "Hindi",
+      "originLanguage": "Taíno",
       "countries": [
-        "IN"
+        "DO",
+        "HT",
+        "CU",
+        "PR"
       ],
       "point": {
-        "lat": 22,
-        "lng": 79
+        "lat": 19,
+        "lng": -71
       },
-      "blurb": "From Hindi jangal 'wilderness, forest', from Sanskrit jangala."
+      "blurb": "From Taíno barbacoa, a wooden framework, via Spanish."
     },
     {
-      "id": "safari",
-      "word": "safari",
-      "year": 1860,
-      "tier": 3,
-      "originChain": [
-        "Swahili"
-      ],
-      "originLanguage": "Swahili",
-      "countries": [
-        "KE",
-        "TZ"
-      ],
-      "point": {
-        "lat": -6,
-        "lng": 39
-      },
-      "blurb": "From Swahili safari 'journey', from Arabic safar 'to travel'."
-    },
-    {
-      "id": "kiosk",
-      "word": "kiosk",
-      "year": 1625,
-      "tier": 4,
-      "originChain": [
-        "Turkish"
-      ],
-      "originLanguage": "Turkish",
-      "countries": [
-        "TR"
-      ],
-      "point": {
-        "lat": 39,
-        "lng": 35
-      },
-      "blurb": "From Turkish koshk, 'pavilion', ultimately from Persian."
-    },
-    {
-      "id": "paparazzi",
-      "word": "paparazzi",
-      "year": 1968,
-      "tier": 5,
-      "originChain": [
-        "Italian"
-      ],
-      "originLanguage": "Italian",
-      "countries": [
-        "IT"
-      ],
-      "point": {
-        "lat": 43,
-        "lng": 12
-      },
-      "blurb": "Italian, from Fellini's La Dolce Vita (1960): the photographer Paparazzo."
-    },
-    {
-      "id": "typhoon",
-      "word": "typhoon",
-      "year": 1585,
-      "tier": 6,
-      "originChain": [
-        "Cantonese"
-      ],
-      "originLanguage": "Cantonese",
-      "countries": [
-        "CN"
-      ],
-      "point": {
-        "lat": 23,
-        "lng": 113
-      },
-      "blurb": "From Cantonese taai fung 'great wind', blended with earlier trade-wind forms."
-    },
-    {
-      "id": "caravan",
+      "id": "caravan:noun",
       "word": "caravan",
+      "pos": "noun",
       "year": 1590,
-      "tier": 7,
+      "tier": 9,
       "originChain": [
         "Persian"
       ],
@@ -1347,59 +8103,23 @@
       "blurb": "From Persian karvan, a company of desert travellers."
     },
     {
-      "id": "guru",
-      "word": "guru",
+      "id": "avocado:noun",
+      "word": "avocado",
+      "pos": "noun",
       "year": 1690,
-      "tier": 8,
-      "originChain": [
-        "Hindi"
-      ],
-      "originLanguage": "Hindi",
-      "countries": [
-        "IN"
-      ],
-      "point": {
-        "lat": 22,
-        "lng": 79
-      },
-      "blurb": "From Hindi guru 'teacher', from Sanskrit guru 'venerable, weighty'."
-    },
-    {
-      "id": "tattoo",
-      "word": "tattoo",
-      "year": 1769,
-      "tier": 9,
-      "originChain": [
-        "Tahitian"
-      ],
-      "originLanguage": "Tahitian",
-      "countries": [
-        "PF"
-      ],
-      "point": {
-        "lat": -17.6,
-        "lng": -149.4
-      },
-      "blurb": "From Tahitian tatau, recorded on Cook's voyages."
-    },
-    {
-      "id": "orange",
-      "word": "orange",
-      "year": 1300,
       "tier": 10,
       "originChain": [
-        "Sanskrit"
+        "Classical Nahuatl"
       ],
-      "originLanguage": "Sanskrit",
+      "originLanguage": "Classical Nahuatl",
       "countries": [
-        "IN",
-        "NP"
+        "MX"
       ],
       "point": {
-        "lat": 24,
-        "lng": 84
+        "lat": 19.4,
+        "lng": -99.1
       },
-      "blurb": "A long march: Sanskrit naranga -> Persian -> Arabic -> Old French orenge -> English."
+      "blurb": "From Nahuatl ahuacatl, via Spanish."
     }
   ]
 }

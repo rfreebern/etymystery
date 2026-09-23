@@ -53,6 +53,10 @@ textarea { min-height: 60px; resize: vertical; }
 .tiers button.active { background: #3a5c8a; border-color: #4d78b0; }
 .warn { color: #ffd479; font-size: 12px; margin-top: 4px; }
 .issue { color: #ff8a80; font-size: 12px; margin-top: 4px; }
+/* Several recorded routes: the curator has to pick one. */
+.origins { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 2px 0 2px; }
+.origin-option { font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.verify { font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
 .meta { color: #7f8894; font-size: 12px; margin-top: 14px; line-height: 1.7; }
 .progress-bar { height: 5px; background: #262c35; border-radius: 3px; margin: 10px 0 16px; }
 .progress-bar > div { height: 100%; background: #2f6f4f; border-radius: 3px; }

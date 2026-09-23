@@ -54,8 +54,14 @@ export interface QueueItem {
   blurb: string;
   /** Part of speech this entry is about (required for homographs). */
   pos: string;
-  /** The origin the curator verified, when the chains disagree. */
+  /**
+   * The origin the curator verified. Empty when the routes disagree and nobody
+   * has chosen one yet — the card must make the curator pick, never default to
+   * the tie-break (that is how `back` became a French loanword).
+   */
   origin: string;
+  /** Drafted but not checked against a reference by a human yet. */
+  unverified: boolean;
 }
 
 export interface AdminState {
@@ -108,6 +114,7 @@ export function formatCuration(curation: Curation): string {
     if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
     if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
     if (entry.origin !== undefined) parts.push(`"origin": ${JSON.stringify(entry.origin)}`);
+    if (entry.unverified) parts.push(`"unverified": true`);
     return `  ${JSON.stringify(word)}: { ${parts.join(", ")} }`;
   });
   return `{\n${lines.join(",\n")}\n}\n`;
@@ -142,11 +149,15 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const byWord = new Map(worklist.map((candidate) => [candidate.word, candidate]));
   const skipWords = readSkipWords(paths.skip);
 
-  // The batch is keyed by work-list sense id, so `back|Old English` and
-  // `back|French` are two separate pieces of research.
+  // The batch is keyed by WORD: the work list's other rows for the same word are
+  // alternative routes to the same sense, and prompting per route asks the
+  // curator the same question several times.
   const queue: QueueItem[] = Object.keys(batch).map((sense) => {
     const candidate = bySense.get(sense) ?? byWord.get(wordOfSenseId(sense));
     const entry = batch[sense]!;
+    // With several recorded origins and none chosen, offer no default: the
+    // curator has to pick which sense this is.
+    const routeOrigin = candidate && candidate.origins.length > 1 ? "" : candidate?.origin ?? "";
     return {
       sense,
       word: candidate?.word ?? wordOfSenseId(sense),
@@ -161,7 +172,8 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       tier: entry.tier ?? candidate?.tier ?? 5,
       blurb: entry.blurb ?? "",
       pos: entry.pos ?? "",
-      origin: entry.origin ?? candidate?.origin ?? "",
+      origin: entry.origin ?? routeOrigin,
+      unverified: Boolean(entry.unverified),
     };
   });
 
@@ -206,7 +218,13 @@ export function pullNextBatch(paths: AdminPaths, limit: number): AdminState {
 
   const nextBatch: Curation = {};
   for (const candidate of fresh) {
-    nextBatch[candidate.sense] = { year: 0, tier: candidate.tier, origin: candidate.origin, blurb: "" };
+    nextBatch[candidate.word] = {
+      year: 0,
+      tier: candidate.tier,
+      // Only a single-route word has an origin to pre-fill.
+      ...(candidate.origins.length > 1 ? {} : { origin: candidate.origin }),
+      blurb: "",
+    };
   }
   writeBatch(paths.batch, nextBatch);
   return buildQueue(paths, 0);
@@ -222,6 +240,8 @@ export function saveEntry(
     blurb: string;
     pos?: string;
     origin?: string;
+    /** True when this year is a draft nobody has checked against a reference. */
+    unverified?: boolean;
   },
   index: number,
 ): AdminState {
@@ -243,6 +263,8 @@ export function saveEntry(
   // keep whatever is already recorded when the caller omits it.
   const origin = entry.origin?.trim() || existing?.origin;
   if (origin) saved.origin = origin;
+  // Saved fresh each time, so un-ticking "unverified" clears the flag.
+  if (entry.unverified) saved.unverified = true;
   batch[entry.sense] = saved;
   writeBatch(paths.batch, batch);
   return buildQueue(paths, index);

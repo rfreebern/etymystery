@@ -113,6 +113,7 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
               blurb: String(body.blurb ?? ""),
               pos: String(body.pos ?? ""),
               origin: String(body.origin ?? ""),
+              unverified: body.unverified === true,
             },
             Number(body.index ?? 0),
           );

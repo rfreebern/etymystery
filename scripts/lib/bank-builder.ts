@@ -67,6 +67,12 @@ export interface BuildBankReport {
    * so their answer is a guess rather than a verified fact.
    */
   ambiguousWithoutOrigin: number;
+  /**
+   * Accepted entries whose year nobody has checked against a reference yet (a
+   * model draft). The bank is playable either way; this is how it reports its
+   * own trustworthiness.
+   */
+  unverifiedEntries: number;
   /** Words dropped because their answer origin language was excluded. */
   excludedByOrigin: number;
   warnings: string[];
@@ -117,6 +123,7 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     withoutFrequencyRank: 0,
     ambiguousWords: 0,
     ambiguousWithoutOrigin: 0,
+    unverifiedEntries: 0,
     excludedByOrigin: 0,
     warnings: [],
   };
@@ -276,8 +283,13 @@ export function buildBankFromInputs(options: BuildBankOptions): {
       const deepestCode = langs.filter((code) => byCode[code]).pop()!;
       const meta = byCode[deepestCode]!;
       // Settled either way: a sense that is filtered out is still curated, and
-      // must not come back round as an uncurated candidate.
+      // must not come back round as an uncurated candidate. Curating a word
+      // settles the word — its other recorded origins are alternative routes to
+      // the same sense, not further puzzles (a deliberate second sense is added
+      // by hand as `word:pos:2`).
+      settled.add(term);
       settled.add(senseId(term, match.origin, origins.length));
+      if (curated.unverified) report.unverifiedEntries += 1;
       if (curated.pos && sense.pos !== curated.pos) {
         report.warnings.push(
           `"${key}": the entry's "pos" (${curated.pos}) does not match its sense key; the key wins`,

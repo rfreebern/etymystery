@@ -99,38 +99,34 @@ describe("settledSenseIds", () => {
     expect([...settledSenseIds({ just: { year: 1400 } }, byWord)]).toEqual(["just"]);
   });
 
-  it("settles only the sense a homograph entry names", () => {
+  it("settles a homograph as a word: its routes are alternatives, not more puzzles", () => {
     const settled = settledSenseIds({ "back:noun": { year: 1000, pos: "noun", origin: "Old English" } }, byWord);
-    expect([...settled]).toEqual(["back|Old English"]);
+    expect([...settled]).toEqual(["back"]);
   });
 
-  it("leaves a homograph unsettled until its origin is named", () => {
-    expect([...settledSenseIds({ "back:noun": { year: 1000, pos: "noun" } }, byWord)]).toEqual([]);
+  it("settles a homograph even without an origin — the word is researched either way", () => {
+    expect([...settledSenseIds({ "back:noun": { year: 1000, pos: "noun" } }, byWord)]).toEqual(["back"]);
   });
 });
 
 describe("selectNextBatch", () => {
   const candidates = parseWorklist(WORKLIST);
 
-  it("skips settled senses and skipped ones, keeping work-list order", () => {
+  it("skips settled words and skipped ones, keeping work-list order", () => {
     const batch = selectNextBatch(candidates, {
       settled: new Set<string>(["just"]),
       skip: new Set<string>(["money"]),
       limit: 10,
     });
-    expect(batch.map((candidate) => candidate.sense)).toEqual([
-      "must",
-      "tea",
-      "back|Middle French",
-      "back|Old English",
-    ]);
+    expect(batch.map((candidate) => candidate.sense)).toEqual(["must", "tea", "back|Middle French"]);
   });
 
-  it("leaves the other senses of a homograph queued when one is settled", () => {
+  it("asks about a homograph once, not once per recorded route", () => {
     const batch = selectNextBatch(candidates, {
-      settled: new Set<string>(["just", "money", "must", "tea", "back|Old English"]),
+      settled: new Set<string>(["just", "money", "must", "tea"]),
       limit: 10,
     });
+    // Both `back` rows are the same question, so only the first is queued.
     expect(batch.map((candidate) => candidate.sense)).toEqual(["back|Middle French"]);
   });
 

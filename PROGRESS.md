@@ -4,19 +4,18 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 3)
+## Status (as of 2026-09-21, session 4)
 
-Engine + data pipeline + web client COMPLETE and playable end to end against a
-30-word seed bank: 166/166 tests passing, typecheck clean, static build green.
-Language geography is generated (312 languages from the real Wiktionary code
-list, 96.9% of English donor rows covered) and the **real 4.2M-row etymology
-dataset has been ingested**: 41,985 candidate words whose origin can be mapped,
-17 bankable today because only the 30 seed words have curated years. Curation is
-the bottleneck, and it is now **ordered** (frequency rank: 2,380 of the top 5,000
-English words usable once English-origin words are excluded) and **tooled**
-(`npm run curate` for the loop, `npm run admin` for the word-plus-references UI).
-The timeline window was widened to **700–2025** in `src/timeline.ts`, which
-retroactively fixed three unwinnable rounds in the shipped bank.
+Engine + pipeline + web client COMPLETE, and the site is **published and playable**
+at <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
+`main`): 191/191 tests passing, typecheck clean, static build green. The real
+4.2M-row etymology dataset is ingested (41,985 candidate words / 62,469 candidate
+senses), and curation has begun: **119 curated words → 110 banked entries → 10
+days of puzzles** (was 30 words / 3 days). Every curated entry is flagged
+`unverified` until a human checks it against a reference, because the first batch
+was model-drafted with the fact marked rather than hidden. `npm run curate` has
+`next | merge | check | tier` (tier balancing sets days of play), and
+`npm run admin` is the word-plus-references UI for checking the drafts.
 
 ## Done
 
@@ -342,11 +341,56 @@ retroactively fixed three unwinnable rounds in the shipped bank.
 - tests: 189 total (+13) for sense keys, per-sense queueing, settled-sense logic,
   key composition, ordinal collisions, and one-row-per-sense parsing.
 
-## Verification (re-run before trusting anything)
+**Session 4 — curation drafting, provenance, tier balance** (this batch)
+
+- The real download URL (the repo's README only advertises dead OneDrive links):
+  https://github.com/droher/etymology-db/releases/download/2023-12/etymology.csv.gz
+- **Drafted 89 curated entries** (years + pos + the verified origin + blurbs) for
+  high-frequency loanwords: the Arabic/Persian layer (hazard, algebra, alcohol,
+  sugar, magazine, monsoon, sofa, cotton, lemon, cipher), Indic (shampoo,
+  bungalow, bandana, thug, yoga), Chinese/Japanese (ketchup, soy), the Taïno and
+  Nahuatl contact layer (hurricane, barbecue, canoe, hammock, maize, potato,
+  tomato, chocolate, avocado, chili, coyote) and the medieval Latin/Old French/
+  Old Norse core (country, court, prison, state, college, government, guard …).
+  Every drafted entry was validated against the work list FIRST — an entry whose
+  `origin` did not match a recorded route was rejected before merge. Result: 17 →
+  110 banked entries, 3 → 10 days of play.
+- `unverified` provenance flag (CurationEntryInput, carried by mergeCuration and
+  both formatCuration writers, counted in the build report, listed by `check`,
+  cleared in the admin app by ticking "checked against a reference"). All 119
+  curated entries are flagged: the seed set was model-drafted too. The bank never
+  overstates what a human has confirmed.
+- The 11 demo seed entries that were missing `pos`/`origin` were filled in and
+  their keys renamed to sense keys (`window` → `window:noun`); `tattoo`'s blurb
+  described the Tahitian skin sense while the recorded chains are Dutch and Hindi
+  only, so the entry was re-anchored to the sense the data supports (the 1640s
+  drum signal) rather than left contradicting itself.
+- **One prompt per word.** Work-list rows are one per recorded *route*, but routes
+  are usually alternatives for one sense (`sugar` has five: Arabic, Middle French,
+  Middle Persian, Old French, Sanskrit) — prompting per route asked the same
+  question five times. `settledSenseIds`/`selectNextBatch` now settle the word,
+  the batch is keyed by word, and a homograph's card pre-fills NO origin (that
+  default is exactly how `back` became a French loanword); the admin app refuses
+  to save such a card until one is picked. A deliberate second sense is still
+  `word:pos:2`.
+- `npm run curate -- --mode tier`: balances the curated pool across the ten tiers
+  by frequency decile, because days of play is the SMALLEST tier and the
+  chain-depth heuristic clumps everything into tiers 1–4 (110 entries produced
+  tier counts 28,25,15,27,5,1,2,3,2,2 = 1 day). Unranked words are skipped by the
+  slicing and left at tier 10. Balanced: 10 × 10 = 10 days.
+- `validateBank` now rejects the same word answered by the same origin language
+  twice, instead of rejecting any repeated word: "one entry per POS" needs
+  `back:noun` and `back:verb` to coexist (ids are sense keys and already unique).
+- Shipped bank v2 (110 entries, epoch unchanged at 20717) to
+  `web/public/word-bank.json`; the published site serves it.
+- tests: 191 total (+2) for the provenance round-trip and the duplicate-puzzle
+  invariant (plus two rewritten for word-level queueing).
+
+
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 189 passed (14 files)
-    npx vite build web        # 59.93 kB js (20.13 kB gzip), 2.63 kB css
+    npx vitest run            # 191 passed (14 files)
+    npx vite build web        # 59.9 kB js (20 kB gzip), 2.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
     npx tsx scripts/filter-edges.ts --edges data/etymology-db.csv.gz \
@@ -367,31 +411,45 @@ retroactively fixed three unwinnable rounds in the shipped bank.
 
 ## Remaining (next session)
 
-1. Curate — the process is in CURATION.md, the window is settled (700–2025), and
-   the tools are ready (`npm run admin` is the fastest path). Then:
-   a. `npm run curate -- --mode next --limit 25`, research each word (verify the
-      CHAIN as well as the year — the chain is a claim from an unvalidated
-      parse), `--mode merge`, `--mode check` for capacity.
-   b. Treat the 30 existing entries as demo data: only 17 have a chain in the
-      real dataset, so most of the file is fixture-based history.
-   c. Build the real bank as `appendToBank(v1, curatedWords)` with the SAME
-      epoch (20717) and version bump, so shipped tier positions never move.
-   d. Ship it: copy to web/public/word-bank.json, rebuild the web app.
-2. Decide the proto-language policy with the numbers now available:
-   default (respect "deepest origin") = 17 bankable / 4,141 words lost;
-   `--deepest-attested` = 21 bankable / 4,137 recovered. The lost words' answers
-   would be reconstructions (Proto-Indo-European, Proto-Germanic, ...), which
-   have no defensible home on a modern map.
-3. GitHub Action: typecheck + tests + validate the shipped bank + days-of-play
+1. Curate more — the loop is in CURATION.md. The bank is now 110 entries / 10 days
+   from 119 curated words, all of them `unverified` drafts. Two jobs, in order:
+   a. **Verify the drafts.** `npm run curate -- --mode check` lists them;
+      `npm run admin` shows each word beside Etymonline/Wiktionary/Ngrams so the
+      date can be confirmed in one screen. Tick "checked against a reference" to
+      clear the flag. This is the highest-value work: the years are claims, and
+      the whole game rests on them.
+   b. Pull the next batch (`--mode next`), research, `--mode merge`, then
+      `--mode tier` to re-balance and rebuild. 10 days of play needs 100 banked
+      entries; each additional day needs one more word in EVERY tier.
+2. Proto-language policy (unchanged, still open): default (respect "deepest
+   origin") = 17 bankable / 4,141 words lost; `--deepest-attested` = 21 bankable /
+   4,137 recovered. The lost words' answers would be reconstructions
+   (Proto-Indo-European, Proto-Germanic, ...), which have no defensible home on a
+   modern map.
+3. Chained data errors found in the real data while drafting — worth a filter:
+   `seen ← Arabic` and `sent ← Estonian` are foreign-language homographs, and
+   `yoga ← Chamorro` is a Wiktionary artifact. The work list's `chain` column is a
+   claim to verify, not just the year.
+4. GitHub Action: typecheck + tests + validate the shipped bank + days-of-play
    countdown (works today; the nightly rebuild needs the 143 MB asset).
-4. Hosting is wired: `main` pushes deploy to GitHub Pages via
-   `.github/workflows/pages.yml`. Remaining is a one-time repo setting (Settings →
-   Pages → Source: GitHub Actions) — until then the deploy step fails with a
-   permissions error and nothing is published.
 5. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
 
 ## Gotchas learned (do not re-fight)
+
+- A model-drafted fact is a claim, not a fact. Keep the provenance flag on it and
+  make the tooling report the count; do not quietly mix it with verified data.
+- Days of play is the SMALLEST tier, not the number of curated words. Curating
+  without re-balancing tiers can add 93 words and add zero days (it did: 28,25,
+  15,27,5,1,2,3,2,2 = 1 day from 110 entries).
+- A per-route work list is not a per-route questionnaire: `sugar`'s five origins
+  are one sense recorded five ways. Prompt per word, and never pre-fill an origin
+  where the routes disagree.
+- `getDailyPuzzle(bank, n)` takes a 0-based day INDEX (days since the epoch), not
+  an absolute day number — passing 20717 throws "bank exhausted" and looks like a
+  capacity bug.
+- Two senses of one word must be able to coexist, so bank identity is the sense
+  key; a uniqueness rule on `word` alone makes "one entry per POS" impossible.
 
 - run_commands batch items may execute CONCURRENTLY — never rely on
   cross-command ordering; chain dependent steps with && in ONE command.

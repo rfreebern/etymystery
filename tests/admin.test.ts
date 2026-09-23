@@ -108,13 +108,19 @@ describe("store", () => {
     });
   });
 
-  it("treats each sense of a homograph as its own queue item", () => {
+  it("prompts once per word, and a homograph gets no default origin", () => {
     const paths = makeWorkspace();
     const state = pullNextBatch(paths, 10);
     const back = state.queue.filter((item) => item.word === "back");
-    expect(back.map((item) => item.sense)).toEqual(["back|Middle French", "back|Old English"]);
-    expect(back.map((item) => item.origin)).toEqual(["Middle French", "Old English"]);
+    // One card for `back`, not one per recorded route: the routes are
+    // alternatives for the same sense, and the card lists them all.
+    expect(back.map((item) => item.sense)).toEqual(["back"]);
     expect(back[0]!.origins).toEqual(["Middle French", "Old English"]);
+    // No pre-filled answer: defaulting to the tie-break is how `back` silently
+    // became a French loanword.
+    expect(back[0]!.origin).toBe("");
+    // A single-route word still shows its origin, since there is nothing to pick.
+    expect(state.queue.find((item) => item.word === "just")!.origin).toBe("Old French");
   });
 
   it("saves an entry into the batch and refuses nonsense", () => {
@@ -163,13 +169,27 @@ describe("store", () => {
   it("files a sense under the key its part of speech composes", () => {
     const paths = makeWorkspace();
     pullNextBatch(paths, 10);
-    saveEntry(paths, { sense: "back|Old English", year: 1000, tier: 5, blurb: "Native.", pos: "noun" }, 0);
-    saveEntry(paths, { sense: "back|Middle French", year: 1400, tier: 6, blurb: "Later sense.", pos: "verb" }, 1);
+    saveEntry(
+      paths,
+      { sense: "back", year: 1000, tier: 5, blurb: "Native.", pos: "noun", origin: "Old English" },
+      0,
+    );
     const { added } = mergeBatch(paths);
-    expect(added).toEqual(["back:noun", "back:verb"]);
+    expect(added).toEqual(["back:noun"]);
     const curation = JSON.parse(readFileSync(paths.curation, "utf8"));
     expect(curation["back:noun"]).toMatchObject({ year: 1000, pos: "noun", origin: "Old English" });
-    expect(curation["back:verb"]).toMatchObject({ year: 1400, pos: "verb", origin: "Middle French" });
+  });
+
+  it("records an entry as unverified until a human clears the flag", () => {
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 10);
+    saveEntry(paths, { sense: "just", year: 1400, tier: 2, blurb: "", unverified: true }, 0);
+    let curation = readFileSync(paths.batch, "utf8");
+    expect(curation).toContain('"unverified": true');
+    // Re-saving with the flag cleared drops it (the entry is rebuilt each save).
+    saveEntry(paths, { sense: "just", year: 1400, tier: 2, blurb: "", unverified: false }, 0);
+    curation = readFileSync(paths.batch, "utf8");
+    expect(curation).not.toContain("unverified");
   });
 
   it("ships defaults that match the CLI's paths", () => {

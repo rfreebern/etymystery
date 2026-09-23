@@ -53,6 +53,9 @@ function formatEntry(entry: CurationEntryInput): string {
   const parts: string[] = [];
   if (entry.year !== undefined) parts.push(`"year": ${entry.year}`);
   if (entry.tier !== undefined) parts.push(`"tier": ${entry.tier}`);
+  if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
+  if (entry.origin !== undefined) parts.push(`"origin": ${JSON.stringify(entry.origin)}`);
+  if (entry.unverified) parts.push(`"unverified": true`);
   if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
   return parts.length ? `{ ${parts.join(", ")} }` : "{}";
 }
@@ -93,7 +96,9 @@ const limit = Number.parseInt(values.limit!, 10) || 25;
 const yearFloor = Number.parseInt(values.floor!, 10);
 const yearCeiling = Number.parseInt(values.ceiling!, 10);
 
-if (!["next", "merge", "check"].includes(mode)) fail(`--mode must be next | merge | check, got "${mode}"`);
+if (!["next", "merge", "check", "tier"].includes(mode)) {
+  fail(`--mode must be next | merge | check | tier, got "${mode}"`);
+}
 
 const curation = readJson<Curation>(values.curation!);
 
@@ -108,9 +113,17 @@ if (mode === "next") {
   });
   const skeleton: Curation = {};
   for (const candidate of batch) {
-    // Keyed by work-list sense id (`back|Old English`); `origin` is the sense's
-    // answer and `pos` — which composes the sense key — is the curator's to fill.
-    skeleton[candidate.sense] = { year: 0, tier: candidate.tier, origin: candidate.origin, blurb: "" };
+    // Keyed by WORD, not by work-list route: a word's other recorded origins are
+    // alternative routes to the same sense (`sugar` has five), so prompting per
+    // route would ask the curator the same question repeatedly. `origin` is left
+    // unset when the routes disagree — pinning the tie-break pick there is how
+    // `back` silently became a French loanword.
+    skeleton[candidate.word] = {
+      year: 0,
+      tier: candidate.tier,
+      ...(candidate.origins.length > 1 ? {} : { origin: candidate.origin }),
+      blurb: "",
+    };
   }
   writeFileSync(values.batch!, formatCuration(skeleton));
 
@@ -159,6 +172,40 @@ if (mode === "next") {
     console.log(`\n${blocking.length} entries need attention:`);
     for (const issue of blocking) console.log(`  ${issue.word}: ${issue.problem}`);
   }
+} else if (mode === "tier") {
+  // Days of play = the smallest tier, so tiers have to be *balanced* or the
+  // scarcest one caps the bank. The chain-depth heuristic cannot do that (it
+  // clumps most curated words into the easy tiers), so assign tiers by
+  // obscurity instead: rank the curated pool by word frequency and cut it into
+  // ten equal slices. Rarest first-class entries land in tier 10.
+  const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
+  const rankOf = new Map(candidates.map((candidate) => [candidate.word, candidate.frequencyRank]));
+  const keys = Object.keys(curation).filter((key) => Number.isFinite(curation[key]!.year));
+  // Only words the work list ranks can enter the bank at all (an unranked word has
+  // no mappable chain). Letting those consume slice slots would skew every tier.
+  const ranked = keys.filter((key) => rankOf.get(key.split(":")[0] ?? key) !== undefined);
+  const ordered = ranked.sort((a, b) => {
+    const ra = rankOf.get(a.split(":")[0] ?? a)!;
+    const rb = rankOf.get(b.split(":")[0] ?? b)!;
+    return ra === rb ? a.localeCompare(b) : ra - rb;
+  });
+  const counts = new Array<number>(10).fill(0);
+  ordered.forEach((key, index) => {
+    const tier = Math.min(10, Math.floor((index * 10) / ordered.length) + 1);
+    curation[key]!.tier = tier;
+    counts[tier - 1]! += 1;
+  });
+  for (const key of keys) {
+    if (ranked.includes(key)) continue;
+    curation[key]!.tier = 10; // unbankable today; tier is a placeholder
+  }
+  writeFileSync(values.curation!, formatCuration(curation));
+  console.log(
+    `balanced ${ordered.length} curated entries across 10 tiers by frequency rank` +
+      (keys.length > ordered.length ? ` (${keys.length - ordered.length} unranked left at tier 10)` : ""),
+  );
+  console.log(`tier counts: ${counts.join(", ")}`);
+  console.log(`capacity: ${Math.min(...counts)} days of puzzles (the scarcest tier sets it)`);
 } else {
   const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
   const audit = auditCuration(curation, {
@@ -179,6 +226,15 @@ if (mode === "next") {
   console.log(`${audit.curated} of ${candidates.length} candidate senses have a year`);
   console.log(`tier counts: ${tierCounts.join(", ")}`);
   console.log(`capacity: ${Math.min(...tierCounts)} days of puzzles (the scarcest tier sets it)`);
+  const unverified = Object.entries(curation)
+    .filter(([, entry]) => entry.unverified && Number.isFinite(entry.year))
+    .map(([word]) => word);
+  if (unverified.length) {
+    console.log(
+      `\n${unverified.length} entries are marked "unverified" (drafted, not checked against a ` +
+        `reference): ${unverified.join(", ")}`,
+    );
+  }
   const ambiguousWords = new Set(
     candidates.filter((candidate) => candidate.origins.length > 1).map((candidate) => candidate.word),
   ).size;

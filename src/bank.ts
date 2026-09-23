@@ -162,7 +162,7 @@ export function validateBank(bank: WordBank): void {
     problems.push(`tiers must have exactly ${TIER_COUNT} buckets`);
   } else {
     const seenIds = new Set<string>();
-    const seenWords = new Set<string>();
+    const seenProvenance = new Set<string>();
     for (let t = 0; t < bank.tiers.length; t++) {
       for (const entry of bank.tiers[t]!) {
         try {
@@ -175,8 +175,15 @@ export function validateBank(bank: WordBank): void {
         }
         if (seenIds.has(entry.id)) problems.push(`duplicate entry id: ${entry.id}`);
         seenIds.add(entry.id);
-        if (seenWords.has(entry.word.toLowerCase())) problems.push(`duplicate word: ${entry.word}`);
-        seenWords.add(entry.word.toLowerCase());
+        // A puzzle entry is a *sense*, so one word may legitimately appear twice
+        // (`back` the noun is inherited from Old English; another sense came via
+        // French). What must never repeat is the same word answered by the same
+        // origin language — that is the same puzzle twice.
+        const provenance = `${entry.word.toLowerCase()}|${entry.originLanguage.toLowerCase()}`;
+        if (seenProvenance.has(provenance)) {
+          problems.push(`duplicate puzzle: ${entry.word} answered by ${entry.originLanguage} appears twice`);
+        }
+        seenProvenance.add(provenance);
       }
     }
   }

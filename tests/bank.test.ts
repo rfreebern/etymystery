@@ -16,6 +16,7 @@ function makeBankEntries(perTier: number): BankEntry[] {
 
 const LANGUAGES = {
   French: { name: "French", countries: ["FR"], representativePoint: { lat: 47, lng: 2 } },
+  "Middle French": { name: "Middle French", countries: ["FR"], representativePoint: { lat: 47, lng: 2 } },
 };
 
 describe("buildWordBank", () => {
@@ -132,13 +133,30 @@ describe("validateBank", () => {
     expect(() => validateBank(tampered)).toThrow(BankValidationError);
   });
 
-  it("detects duplicate words across tiers", () => {
+  it("detects the same word answered by the same origin twice", () => {
     const entries = makeBankEntries(2);
+    // Different ids and different tiers, but the same puzzle: same word, same
+    // answer language.
     entries[0]!.word = "sameword";
     entries[11]!.word = "SameWord";
     expect(() =>
       buildWordBank({ version: 1, epochStartDay: 0, entries, languages: LANGUAGES }),
-    ).toThrow(/duplicate word/i);
+    ).toThrow(/duplicate puzzle/i);
+  });
+
+  it("allows one word to be two puzzles when the senses have different origins", () => {
+    // `back` the noun is inherited; another sense arrived via French. Entry ids
+    // are sense keys, so both can ship — they are not the same puzzle.
+    const entries = makeBankEntries(2);
+    entries[0]!.id = "sameword:noun";
+    entries[0]!.word = "sameword";
+    entries[0]!.originLanguage = "French";
+    entries[11]!.id = "sameword:verb";
+    entries[11]!.word = "sameword";
+    entries[11]!.originLanguage = "Middle French";
+    expect(() =>
+      buildWordBank({ version: 1, epochStartDay: 0, entries, languages: LANGUAGES }),
+    ).not.toThrow();
   });
 
   it("detects missing language metadata", () => {

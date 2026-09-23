@@ -29,8 +29,15 @@ export interface CurationEntryInput {
    */
   origin?: string;
   /**
-   * The curation key this entry should be filed under, when the batch key was a
-   * work-list sense id (`word|origin`). Set by the tools; ignored on read.
+   * Set when the year was NOT checked by a human against a reference (e.g. it was
+   * drafted by a model). Such entries are counted in the build report and listed
+   * by `curate --mode check`, so a shipped bank can always say how much of itself
+   * is unverified.
+   */
+  unverified?: boolean;
+  /**
+   * The curation key this entry should be filed under, when it differs from the
+   * key it was queued under. Set by the tools; ignored on read.
    */
   key?: string;
 }
@@ -80,27 +87,22 @@ export function wordOfSenseId(id: string): string {
 }
 
 /**
- * Which work-list senses a curation file has already settled. Callers pass the
- * work list's candidates by word, because whether a word needs one candidate or
- * one per origin depends on how many origins it has.
+ * Which words a curation file has already settled. Work-list rows are one per
+ * recorded route, but the routes are usually *alternatives for the same sense*
+ * (`sugar` has five: Arabic, Middle French, Middle Persian, Old French,
+ * Sanskrit) rather than different puzzles. So curating a word settles the word:
+ * a curator who wants a second sense adds a second key deliberately
+ * (`word:pos:2`), which is what the ordinals are for.
  */
 export function settledSenseIds(
   curation: Curation,
-  candidatesByWord: ReadonlyMap<string, { origins: string[]; deepestLanguage: string }>,
+  _candidatesByWord?: ReadonlyMap<string, { origins: string[]; deepestLanguage: string }>,
 ): Set<string> {
   const settled = new Set<string>();
-  for (const [key, entry] of Object.entries(curation)) {
+  for (const key of Object.keys(curation)) {
     const parsed = parseSenseKey(key);
     if (!parsed) continue;
-    const candidate = candidatesByWord.get(parsed.word);
-    const origins = candidate?.origins ?? [];
-    if (origins.length <= 1) {
-      settled.add(parsed.word);
-      continue;
-    }
-    // A homograph settles nothing until its own sense is named: a bare `pos`
-    // entry, or one relying on the tie-break pick, leaves every sense queued.
-    if (entry.origin) settled.add(`${parsed.word}|${entry.origin}`);
+    settled.add(parsed.word);
   }
   return settled;
 }
@@ -187,9 +189,15 @@ export function selectNextBatch(
   const skip = options.skip ?? new Set<string>();
   const settled = options.settled ?? new Set<string>();
   const batch: WorklistCandidate[] = [];
+  const seenWords = new Set<string>();
   for (const candidate of candidates) {
     if (batch.length >= options.limit) break;
-    if (settled.has(candidate.sense) || skip.has(candidate.sense) || skip.has(candidate.word)) continue;
+    if (settled.has(candidate.sense) || settled.has(candidate.word)) continue;
+    if (skip.has(candidate.sense) || skip.has(candidate.word)) continue;
+    // One row per word: its other origins are alternatives to choose between,
+    // not further prompts (the row carries the whole `origins` list).
+    if (seenWords.has(candidate.word)) continue;
+    seenWords.add(candidate.word);
     batch.push(candidate);
   }
   return batch;
@@ -359,6 +367,10 @@ export function mergeCuration(
     if (entry.blurb?.trim()) cleaned.blurb = entry.blurb.trim();
     if (pos) cleaned.pos = pos;
     if (entry.origin?.trim()) cleaned.origin = entry.origin.trim();
+    // Provenance travels with the entry: a drafted year stays marked until a
+    // human clears the flag, so the shipped bank can always state how much of
+    // itself nobody has checked against a reference.
+    if (entry.unverified) cleaned.unverified = true;
     merged[key] = cleaned;
     added.push(key);
   }

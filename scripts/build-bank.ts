@@ -127,6 +127,12 @@ try {
         `the tie-break picked for them`,
     );
   }
+  if (report.unverifiedEntries) {
+    console.log(
+      `        ${report.unverifiedEntries} accepted entries are marked "unverified": a draft nobody has ` +
+        `checked against a reference yet (listed by \`npm run curate -- --mode check\`)`,
+    );
+  }
   if (report.excludedByOrigin) {
     console.log(
       `excluded by origin (${[...(excludeOriginCodes ?? [])].join(", ")}): ${report.excludedByOrigin} words`,

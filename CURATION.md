@@ -46,6 +46,11 @@ and answer, and writes a skeleton to `data/curation-batch.json` (`"year": 0`
 means "not researched yet"). Already-curated words and anything listed in
 `data/skip-words.txt` (passed with `--skip`) are skipped.
 
+It asks about each **word** once. The work list carries a row per recorded route
+(`sugar` has five), but those routes are usually alternatives for one sense
+rather than five puzzles, so the row lists them all and you pick the one you
+verified — see "Parts of speech and multiple origins".
+
 ## 1b. Or use the admin app (recommended)
 
 ```bash
@@ -103,6 +108,26 @@ For every word in the batch:
    Never add colour you cannot source.
 6. **Any attested year from 700 onward is playable.** `check` flags years outside
    the window with the exact score they could reach.
+7. **Say who checked it.** An entry you verified against a reference needs
+   nothing extra. An entry you did *not* verify — a draft from a model, a guess
+   from general knowledge — gets `"unverified": true` (in the admin app, leave
+   the "I checked this date against a reference" box unticked). The build report
+   counts those and `check` lists them, so the bank never overstates itself.
+
+### Letting a model draft the years
+
+Hand-writing thousands of years is the bottleneck, so drafting is allowed — with
+provenance. The entries marked `"unverified": true` in `curated/curation.json` were
+produced that way: a batch drafted from general knowledge, then validated against
+the work list (every entry's `origin` had to match a recorded route or it was
+rejected before it could be merged), merged with `--mode merge`, and flagged. Those
+89 drafted words plus the seed set took the bank from 17 accepted entries to 110
+and from 3 days of play to 10.
+
+A drafted `year` is a claim about a fact, exactly like the chain. It is the entry
+to trust *last*: check it in the admin app (Etymonline and Wiktionary have the
+date in the first screen) and clear the flag. `npm run curate -- --mode check`
+lists every unverified entry by name.
 
 ## 3. Validate and merge
 
@@ -124,8 +149,26 @@ npm run curate -- --mode check
 Reports how many ranked candidates have a year, the per-tier histogram, and
 **capacity in days of play** — the scarcest tier sets it, because every day needs
 exactly one word from each of the ten tiers. It also lists issues: missing years,
-tiers out of range, capitalised keys, words with no mappable chain, and years the
-slider cannot express, with the score damage quantified.
+tiers out of range, capitalised keys, words with no mappable chain, years the
+slider cannot express (with the score damage quantified), and the entries that
+are still marked `unverified`.
+
+## 4b. Balance the tiers (do this before shipping)
+
+```bash
+npm run curate -- --mode tier
+```
+
+Days of play is the **smallest** tier, so an unbalanced bank wastes everything
+else. The chain-depth heuristic cannot balance anything — it clumps most curated
+words into the easy tiers (the first curation round produced tier counts
+`28, 25, 15, 27, 5, 1, 2, 3, 2, 2`, i.e. one day of play from 110 entries) — so
+this mode assigns tiers by **obscurity** instead: it ranks the curated pool by
+frequency and cuts it into ten equal slices, most common in tier 1, rarest in
+tier 10. Same 110 entries, balanced: `10 × 10`, ten days.
+
+Words with no frequency rank are skipped by the slicing (they mostly cannot build
+at all) and left at tier 10. Re-run it whenever you add a batch, then rebuild.
 
 ## 5. Ship it
 
@@ -176,10 +219,18 @@ When you curate a sense:
   report counts how many entries rest on that guess.
 
 Whether a word is a homograph is not a judgement call: the `origins` column lists
-every place its recorded chains support, and each of those is a separate row in
-the queue. Finishing the noun of `back` leaves the verb (or the other noun) in the
-queue — `curate --mode check` reports progress in senses, and the audit insists on
-`pos` + `origin` for anything with more than one recorded origin.
+every place its recorded chains support. But **curating a word settles the word** —
+the queue prompts once, the card lists every route, and you pick the one this sense
+came from. The routes are usually not separate puzzles: `sugar`'s five "origins"
+(Arabic, Middle French, Middle Persian, Old French, Sanskrit) are the same
+etymology recorded as alternative routes and truncated at different depths, so
+prompting per route asked the same question five times. A genuinely separate sense
+is added deliberately, as `word:pos:2`.
+
+Nothing is pre-filled for a word whose routes disagree. Defaulting to the
+builder's tie-break is precisely how `back` silently became a French loanword, so
+the admin app refuses to save such a card until you choose, and the CLI leaves
+`origin` empty.
 
 Two details worth knowing:
 
