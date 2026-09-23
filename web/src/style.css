@@ -99,12 +99,16 @@ main {
 }
 .tl-era { color: var(--muted); font-size: 12px; min-height: 16px; }
 
-/* Vertical alignment of a custom range thumb differs per engine, and on touch
-   devices it hangs below the timeline box. The tablet is lifted by half its own
-   height, which is the nudge that matches what iOS/Android render; `translateY`
-   (not margin) so it cannot affect the layout of the track or the labels. Change
-   this single value if a device wants a different offset. */
-.tl-slider { --thumb-lift: -50%; }
+/* A custom range thumb is vertically aligned differently by touch engines: on a
+   phone the tablet hung below the timeline box, while desktop browsers centre it on
+   the track (lifting it there just pushes it too high). So the default is no lift,
+   and the touch layout — a device whose primary input cannot hover — lifts the thumb
+   by half its own height. `translateY` rather than margin, so it cannot disturb the
+   track or the labels. Change this one number if a device wants a different offset. */
+.tl-slider { --thumb-lift: 0; }
+@media (hover: none) and (pointer: coarse) {
+  .tl-slider { --thumb-lift: -50%; }
+}
 .tl-slider {
   -webkit-appearance: none; appearance: none;
   width: 100%; height: 30px; margin: 0; padding: 0;

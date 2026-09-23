@@ -108,9 +108,11 @@ are clamped to the map's own edges.
 
 On a narrow screen (< 640px) the era ruler under the slider is hidden, because four
 absolutely positioned labels do not fit; the period names are still spelled out above
-the slider (`1450 – 1550 · Middle English · Early Modern`). The tablet thumb is
-lifted by half its height (`--thumb-lift`) so it sits on the timeline rather than
-hanging below it, which is what touch browsers otherwise do with a custom thumb.
+the slider (`1450 – 1550 · Middle English · Early Modern`). A custom range thumb is
+aligned differently by touch engines: on a phone the tablet hung below the timeline
+box, while desktop browsers centre it on the track. So `--thumb-lift` is 0 by default
+and the thumb is lifted by half its height only in the touch layout
+(`@media (hover: none) and (pointer: coarse)`).
 
 **The timeline** asks for a **100-year window**, not a single year: the handle is a
 tablet spanning exactly 100 years and it moves in 25-year steps (arrow keys work).

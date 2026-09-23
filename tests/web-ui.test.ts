@@ -216,8 +216,18 @@ describe("touch and small screens", () => {
     expect(mobile).not.toContain(".tl-era");
   });
 
-  it("lifts the tablet thumb so it cannot hang off the timeline", () => {
-    expect(css).toContain("--thumb-lift: -50%");
+  it("lifts the tablet thumb only in the touch layout", () => {
+    // Desktop centres a custom thumb on the track; touching it up pushes it too high
+    // (reported). The touch layout needs the nudge, so the default has to stay 0 and
+    // the lift has to live behind the touch media query.
+    const liftDefault = css.slice(css.indexOf(".tl-slider { --thumb-lift"), css.indexOf("}", css.indexOf(".tl-slider { --thumb-lift")));
+    expect(liftDefault).toContain("--thumb-lift: 0");
+
+    const touchStart = css.indexOf("(hover: none) and (pointer: coarse)");
+    expect(touchStart).toBeGreaterThan(-1);
+    const touchBlock = css.slice(touchStart, css.indexOf("\n}", touchStart));
+    expect(touchBlock).toContain("--thumb-lift: -50%");
+
     const ruleFor = (selector: string): string => {
       const at = css.indexOf(selector);
       return at < 0 ? "" : css.slice(css.indexOf("{", at) + 1, css.indexOf("}", at));

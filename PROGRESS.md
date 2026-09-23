@@ -731,18 +731,20 @@ on-land anchors** (this batch)
 - **Era ruler hidden below 640px.** Four absolutely positioned labels do not fit a
   phone (`Early Modern` is 15% of the track), and the same information is already in
   words above the slider. The `.tl-era` line is deliberately *not* hidden.
-- **The tablet thumb lifted by half its height** (`--thumb-lift: -50%`, applied as
-  `translateY` to both the `-webkit` and `-moz` thumb), because it hung off the bottom
-  of the timeline panel on the device. One variable, and the comment says so: if a
-  device wants a different offset, that number is the only thing to change. Applied
-  unconditionally rather than behind a media query — a `pointer: coarse` scope would
-  leave touchscreen laptops misaligned — so this is the one change in this batch worth
-  eyeballing on a desktop browser.
+- **The tablet thumb lifted by half its height in the touch layout**
+  (`--thumb-lift: -50%`, applied as `translateY` to both the `-webkit` and `-moz`
+  thumb), because it hung off the bottom of the timeline panel on a phone. Reported
+  back immediately: *unconditional* lifting pushed it too high on desktop, where the
+  thumb was already centred on the track. Now the default is `--thumb-lift: 0` and
+  only `@media (hover: none) and (pointer: coarse)` lifts it — the touch layout,
+  excluding a mouse/trackpad primary input. One number is the whole knob, and the test
+  asserts both halves (default 0, touch -50%), verified to fail if either is undone.
 - tests: 269 total (+6: four pinch cases in `tests/view.test.ts`, plus three
   source/CSS guards in `tests/web-ui.test.ts` for the pinch wiring, the hidden ruler
   and the thumb lift). Build verified: `Math.hypot`, `pointercancel`,
-  `setPointerCapture` and `touchAction` all present in the shipped bundle, and the
-  mobile `timeline-scale{display:none}` rule ships in the CSS.
+  `setPointerCapture` and `touchAction` all present in the shipped bundle, the mobile
+  `timeline-scale{display:none}` rule ships in the CSS, and the built stylesheet
+  carries both `--thumb-lift: 0` and the touch override.
 
 ## Verification (re-run before trusting anything)
 
@@ -812,6 +814,10 @@ on-land anchors** (this batch)
 
 ## Gotchas learned (do not re-fight)
 
+- A cosmetic offset tuned for one device class must be scoped to it. The thumb lift
+  fixed a phone and broke desktop in the same commit because it was applied
+  unconditionally; the touch engines align a custom range thumb differently, so the
+  rule belongs in `@media (hover: none) and (pointer: coarse)` with a neutral default.
 - A source that skips a real, locatable language silently moves a puzzle's answer to
   a shallower one. `coyote` had no `Spanish -> Nahuatl` edge at all, so the answer
   became Spain and a correct pin scored zero. Check the *chain*, not just the year:
