@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 227/227 tests passing, typecheck clean, static build green. The bank is
+`main`): 240/240 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -450,11 +450,39 @@ so the period labels change exactly where the handle crosses them.
   scoring (inside/edges/outside/zero-width/reversed/BCE/monotonic), slider bounds,
   `erasSpanned`, `guessRange`'s legacy tolerance.
 
+**Session 5 (cont.) — the route line read backwards** (this batch)
+
+- Reported from play: `enemy` showed `Route: English ← Latin ← Old French ← Middle
+  English` next to "From Middle English, ultimately from Latin." The blurb was
+  right and the route was reversed — `originChain` is ordered immediate-source-first
+  and the renderer called `.reverse()` on it, which does not just look odd, it
+  asserts the opposite derivation (English from Latin via Middle English).
+- `web/src/reveal.ts` (new, DOM-free) now owns the formatting: `routeLabel` returns
+  `English ← Middle English ← Old French ← Latin` — deepest last, immediate source
+  beside English — and `main.ts` no longer touches the chain order.
+- Driving the fix against the shipped bank turned up a second confusion waiting
+  behind it: **16 of 100 entries record hops DEEPER than the answer** (`due`:
+  `English ← Old French ← Latin ← Proto-Italic`, answer Latin), because the answer
+  is the deepest hop with a home on a modern map. So the route now stops at the
+  answer, picks that hop out in the accent colour, and `beyondNote` says why:
+  "Recorded deeper: Proto-Italic — no anchor on a modern map, so the answer is
+  Latin". Checked across the bank: the answer is always a hop in its own chain, no
+  hop before the answer is unlocatable, and all seven beyond-the-answer hops are
+  Proto-* reconstructions.
+- `tests/reveal.test.ts` (+11) covers the direction, single-hop chains, the
+  past-the-answer split and the note; plus four assertions over the shipped bank
+  (the reported `enemy` case exactly, answer present in chain, nothing locatable is
+  skipped, the answer itself is always locatable). A source guard in
+  `tests/web-ui.test.ts` fails if `.reverse()` ever comes back — verified by
+  reintroducing it.
+
+
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 227 passed (17 files)
-    npx vite build web        # 64.8 kB js / 4.2 kB css
+    npx vitest run            # 240 passed (18 files)
+    npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
     npx tsx scripts/filter-edges.ts --edges data/etymology-db.csv.gz \

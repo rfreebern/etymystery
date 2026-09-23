@@ -113,6 +113,24 @@ describe("the answer marker on the timeline", () => {
   });
 });
 
+describe("the origin route line", () => {
+  it("never reverses the chain for display", () => {
+    // The bug this guards: `[...originChain].reverse()` printed the route backwards
+    // ("English ← Latin ← Old French ← Middle English"), contradicting the blurb
+    // and claiming the opposite derivation. The formatting module owns the order.
+    expect(main).not.toMatch(/originChain\]?\s*\.reverse\(\)/);
+    expect(main).toContain("routeParts(entry.originChain, entry.originLanguage)");
+    expect(main).toContain("beyondNote(entry.originLanguage, route.beyond)");
+  });
+
+  it("marks which hop was asked about", () => {
+    // The chain can continue past the answer, so the answer hop is picked out
+    // rather than left as whatever happens to be last.
+    expect(main).toContain('el("b", "hop-answer", hop)');
+    expect(css).toMatch(/\.route \.hop-answer/);
+  });
+});
+
 describe("score labels", () => {
   it("names the three components in full", () => {
     expect(main).toContain('["Year Score", stored.temporal]');

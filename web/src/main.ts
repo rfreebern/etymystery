@@ -18,6 +18,7 @@ import {
   tabletWidthPx,
   yearPositionPct,
 } from "./slider";
+import { beyondNote, routeParts } from "./reveal";
 import { ZOOM_STEP } from "./view";
 import {
   currentRoundIndex,
@@ -290,7 +291,22 @@ async function boot(): Promise<void> {
       scores.append(chip);
     }
     panel.append(scores, el("div", "credit-line", creditLabel(stored.credit)));
-    panel.append(el("div", "route", `Route: English ← ${[...entry.originChain].reverse().join(" ← ")}`));
+
+    // The route reads in the direction of derivation, deepest hop last, with the
+    // hop the player was asked about picked out — the chain can extend past it.
+    const route = routeParts(entry.originChain, entry.originLanguage);
+    const routeLine = el("div", "route");
+    routeLine.append(document.createTextNode("Route: English ← "));
+    route.hops.forEach((hop, i) => {
+      if (i > 0) routeLine.append(document.createTextNode(" ← "));
+      routeLine.append(
+        hop === entry.originLanguage ? el("b", "hop-answer", hop) : document.createTextNode(hop),
+      );
+    });
+    panel.append(routeLine);
+    const deeper = beyondNote(entry.originLanguage, route.beyond);
+    if (deeper) panel.append(el("div", "route beyond-note", deeper));
+
     panel.append(el("div", "route", `Answer: ${entry.originLanguage} · first used around ${entry.year}`));
     // Say plainly whether the window caught the year — it is the whole temporal
     // mechanic, and the only feedback that teaches where to place it.
