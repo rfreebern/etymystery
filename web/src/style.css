@@ -153,6 +153,18 @@ main {
   /* Over the thumb is exactly where it needs to be; it must not eat the drag. */
   pointer-events: none;
 }
+/* A coarse answer is a span, not a point: it is drawn as a band across the years
+   the record leaves open. Same stacking level as the dot, for the same reason. */
+.tl-answer-band {
+  position: absolute; top: 50%; z-index: 2;
+  height: 12px;
+  transform: translateY(-50%);
+  border-radius: 6px;
+  background: var(--good);
+  opacity: 0.75;
+  border: 1px solid #fff;
+  pointer-events: none;
+}
 
 .timeline-scale { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
 .timeline-scale .era {

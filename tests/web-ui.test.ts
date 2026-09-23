@@ -96,21 +96,34 @@ describe("the answer marker on the timeline", () => {
   it("is only drawn by the reveal, never during the round", () => {
     // It marks the answer: calling it while the player is still guessing would give
     // the round away, so the round-building code must never call it.
-    expect(functionBody(main, "renderRound")).not.toContain("markAnswerYear(");
+    expect(functionBody(main, "renderRound")).not.toContain("markAnswer(");
     expect(functionBody(main, "renderRound")).not.toContain("tl-answer");
-    expect(functionBody(main, "markAnswerYear")).toContain('"tl-answer"');
-    expect(functionBody(main, "renderReveal")).toContain("markAnswerYear(entry.year)");
+    expect(functionBody(main, "markAnswer")).toContain('"tl-answer"');
+    expect(functionBody(main, "renderReveal")).toContain("markAnswer(entry)");
   });
 
   it("is positioned with the same mapping the thumb uses", () => {
-    const marker = functionBody(main, "markAnswerYear");
-    expect(marker).toContain("yearPositionPct(year, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)");
+    const marker = functionBody(main, "markAnswer");
+    expect(marker).toContain("yearPositionPct(span.from, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)");
     // Percentage of the track, so it survives a resize without recomputation.
     expect(marker).toMatch(/style\.left = `\$\{yearPositionPct\([^)]*\)\}%`/);
     // And it is appended to the track that wraps the slider — the same box the
     // tablet's geometry is measured against.
     expect(marker).toContain("timelineNodes.track.append(marker)");
     expect(functionBody(main, "renderRound")).toContain("track.append(slider)");
+  });
+
+  it("draws a coarse answer as a band across its span, not a false point", () => {
+    // "in use by 1150" leaves 450 years open, so the marker is a band from the
+    // record's floor to the bound, using the same geometry as the dot.
+    const marker = functionBody(main, "markAnswer");
+    expect(marker).toContain("spanBandPct(span, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)");
+    expect(marker).toMatch(/style\.width = `\$\{band\.widthPct\}%`/);
+    expect(marker).toContain('"tl-answer-band"');
+    const band = /\.tl-answer-band\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    expect(band).toContain("z-index: 2"); // in front of the thumb, as for the dot
+    expect(band).toContain("var(--good)");
+    expect(band).toContain("pointer-events: none");
   });
 
   it("is layered in front of the thumb, which needs explicit stacking", () => {
@@ -170,7 +183,17 @@ describe("the reveal heading", () => {
 
   it("drops the 'Answer:' prefix", () => {
     expect(main).not.toContain("Answer: ");
-    expect(literals(main).some((s) => s.includes("first used around"))).toBe(true);
+    // The wording lives in reveal.ts so the coarse/precise distinction is testable.
+    expect(main).toContain("answerYearLabel(entry.year, entry.yearTo)");
+    expect(literals(reveal).some((s) => s.includes("first used around"))).toBe(true);
+  });
+
+  it("says which kind of date the answer has, and why it was graded that way", () => {
+    // A full score for an early window on an undated word reads as the game being
+    // generous unless the reveal says the record is vague.
+    expect(main).toContain("coarseSpanNote(entry.year, entry.yearTo)");
+    expect(main).toContain("outsideSpanYears(answer, guessed.start, guessed.end)");
+    expect(main).toContain("The answer's recorded span overlaps it");
   });
 });
 

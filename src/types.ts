@@ -40,6 +40,13 @@ export interface BankEntry {
   pos?: string;
   /** Year the word entered English (negative = BCE). Fact data, curated by hand. */
   year: number;
+  /**
+   * Latest year of the answer's span, when the record only bounds the first use
+   * ("recorded in Old English" is "before 1150"). Absent for a precisely dated
+   * entry, where `year` is the whole answer. A guessed window overlapping
+   * `year`..`yearTo` scores full marks.
+   */
+  yearTo?: number;
   /** Difficulty tier 1 (easiest) .. 10 (hardest). */
   tier: number;
   /** Ordered origin chain from the word's immediate source outwards, e.g. ["French", "Latin"]. */

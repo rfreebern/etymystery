@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  answerSpan,
   haversineKm,
   scoreGeographic,
   scoreRound,
   scoreTemporalRange,
+  scoreTemporalSpan,
   type GeocodeContext,
 } from "../src/scoring";
 import type { BankEntry, LanguageInfo, LatLng } from "../src/types";
@@ -421,3 +423,69 @@ describe("scoreGeographic - multi-hop words (deep origin + intermediate)", () =>
     expect(tokyo).toBe(0); // beyond the 5000 km outer limit
   });
 });
+
+describe("coarse answers are graded as a span, not a guessed year", () => {
+  // The problem this exists for: no source dates an inherited word more precisely
+  // than "recorded in Old English". Forcing a curator to pick 1000 or 1100 turns a
+  // player's guess of 900-1000 into 100/100 or 5/100 on the curator's coin flip.
+  const inherited = { year: 700, yearTo: 1150 }; // "in use by 1150"
+  const ctx = makeContext();
+
+  it("reads a plain entry as a zero-width span", () => {
+    expect(answerSpan({ year: 1590 })).toEqual({ from: 1590, to: 1590 });
+    expect(answerSpan(inherited)).toEqual({ from: 700, to: 1150 });
+    // A backwards pair is data the validator rejects; scoring must not invert it.
+    expect(answerSpan({ year: 1150, yearTo: 700 })).toEqual({ from: 700, to: 1150 });
+  });
+
+  it("gives full marks to any window overlapping the span", () => {
+    for (const [start, end] of [
+      [700, 800],
+      [900, 1000],
+      [1050, 1150],
+      [1100, 1200],
+    ] as const) {
+      expect(scoreTemporalSpan(answerSpan(inherited), start, end), `${start}-${end}`).toBe(100);
+    }
+  });
+
+  it("decays by the gap to the nearer end, exactly as for a single year", () => {
+    // 1150 is the last year the word can have appeared, so a window ending at 1250
+    // missed it by 100 years, the same as a point answer 100 years out.
+    expect(scoreTemporalSpan(answerSpan(inherited), 1200, 1300)).toBe(scoreTemporalRange(1150, 1200, 1300));
+    expect(scoreTemporalSpan(answerSpan(inherited), 1300, 1400)).toBe(scoreTemporalRange(1150, 1300, 1400));
+    // Below the floor is a miss by the distance to the span's start.
+    expect(scoreTemporalSpan(answerSpan(inherited), 500, 600)).toBe(scoreTemporalRange(700, 500, 600));
+  });
+
+  it("never scores a span worse than the best year inside it", () => {
+    // Monotonicity: widening an answer's uncertainty cannot punish a player who
+    // guessed inside the older, narrower claim.
+    const narrow = scoreTemporalRange(1000, 1000, 1100);
+    const wide = scoreTemporalSpan(answerSpan(inherited), 1000, 1100);
+    expect(wide).toBeGreaterThanOrEqual(narrow);
+    expect(wide).toBe(100);
+  });
+
+  it("carries the span through a whole round", () => {
+    const entry: BankEntry = {
+      id: "give",
+      word: "give",
+      year: 700,
+      yearTo: 1150,
+      tier: 3,
+      originChain: ["Old English"],
+      originLanguage: "Old English",
+      countries: ["FR"],
+      point: { lat: 47, lng: 2 },
+      blurb: "From Old English giefan.",
+    };
+    const guess = { yearStart: 900, yearEnd: 1000, point: { lat: 47, lng: 2 } };
+    const flat = scoreRound(entry, guess, ctx);
+    expect(flat.temporal).toBe(100);
+    // A window 200 years past the span's end loses most of the temporal score.
+    const late = scoreRound(entry, { ...guess, yearStart: 1300, yearEnd: 1400 }, ctx);
+    expect(late.temporal).toBe(scoreTemporalRange(1150, 1300, 1400));
+  });
+});
+

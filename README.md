@@ -138,12 +138,13 @@ asserts no mouse-only word leaks into the touch set.
 
 **Once you lock it in, the round is frozen for input**: the pin cannot be moved and
 the window cannot be dragged, because the score is already persisted and a movable
-guess would misrepresent it. The answer's year is then marked on the timeline with a
-green circle, so you can see at a glance how far off the window was — and when the
-answer falls inside your 100 years, that circle still shows *in front of* the tablet
-rather than disappearing behind it. Zoom and pan stay live — inspecting the answer is
-what the map is for at that point. The reveal leads with the word in medium type, then
-the answer in larger type (`Latin · first used around 1200`) since the answer is what
+guess would misrepresent it. The answer is then marked on the timeline: a green
+circle on its year, or a green band across those years when the record only bounds
+the date. Either way it shows *in front of* the tablet when the answer falls inside
+your 100 years rather than disappearing behind it. Zoom and pan stay live — inspecting
+the answer is what the map is for at that point. The reveal leads with the word in
+medium type, then the answer in larger type (`Latin · first used around 1200`, or
+`Old English · first recorded between 700 and 1150`) since the answer is what
 the round was about, then the score chips, the credit line and the full origin route
 **oldest first**, ending at English — `Latin → Old French → Middle English → English`
 — with the hop you were asked about picked out in amber. The recorded chain can
@@ -201,7 +202,9 @@ Inputs:
    counted in the build report — this is the curation worklist. Entries are
    keyed by **sense**, not by word: `back`, or `back:noun`, or `bank:noun:2` for a
    second sense of the same part of speech (a word like `sole` has four recorded
-   origins), with `pos` and `origin` fields saying which sense it is — see
+   origins), with `pos` and `origin` fields saying which sense it is. A word no
+   source dates precisely takes a **span** (`year` + `yearTo`, meaning "first used
+   somewhere in here") instead of a fabricated year — see
    [CURATION.md](CURATION.md).
 
 The full dataset never fits in memory comfortably, so filter it once to the
@@ -275,6 +278,13 @@ etymology-db's exact column schema). Together with the 22-language
   is 99, a century out is 37, two centuries out is 14. The slider's geometry lives
   in `src/scoring.ts` (`GUESS_SPAN_YEARS`, `GUESS_STEP_YEARS`) and the client's
   alignment maths in `web/src/slider.ts`.
+  Many words have **no precise date**: an inherited word is recorded only by period
+  ("in use by 1150"), so its answer is a **span** (`year`..`yearTo`) rather than one
+  invented year. Any window *overlapping* the span scores 100, and the score decays
+  by the gap to the nearer end; the reveal says `first recorded between 700 and 1150`
+  and explains why, and the timeline draws the answer as a band instead of a dot.
+  Curating a guessed year instead would make the player's score depend on the
+  curator's coin flip — see "Undated words" in [CURATION.md](CURATION.md).
 - **Geographic** (0-100), hop-aware, and the **country is the unit of knowledge**.
   The answer is anchored to the word's DEEPEST origin (e.g. Arabic for a word that
   went Arabic -> French -> English):

@@ -3,7 +3,10 @@
  *
  * Temporal: the player positions a 100-year window on the timeline, so any answer
  * that falls INSIDE the guessed range is a perfect score; outside it the score
- * decays with how far out the answer fell.
+ * decays with how far out the answer fell. An answer is a SPAN rather than a point
+ * because many words have no precise date ("recorded in Old English" is only
+ * "before 1150"); a window overlapping that span is a full hit, which is the
+ * honest reading of a record that will not narrow it further.
  *
  * Geographic: hop-aware and country-aware. The answer is anchored to the
  * word's DEEPEST origin (the last entry of originChain); intermediate hops
@@ -83,17 +86,46 @@ export interface GeographicDetail {
 }
 
 /**
- * Temporal proximity on 0..100 for a guessed RANGE of years. The player picks a
- * 100-year window; an answer anywhere inside it scores 100 (the answer years are
- * century-granular, so demanding a tighter hit would be luck, not knowledge).
- * An answer outside decays with its distance from the nearer edge.
+ * The years an answer can have been first used in: a single year for a precisely
+ * dated word, a range when the record only bounds it.
+ *
+ * Coarse answers are a large share of English vocabulary. Wiktionary and the
+ * reference works date inherited words by period at best ("recorded in Old
+ * English", "before 1150"), and forcing a curator to pick one year makes the
+ * player's score depend on a coin flip: the same word dated 1100 or 1000 turns a
+ * guess of 900-1000 into 5/100 or 100/100. A span removes the invented
+ * precision: any window overlapping what the record actually says is correct.
  */
-export function scoreTemporalRange(answerYear: number, from: number, to: number): number {
+export interface AnswerSpan {
+  /** Earliest year the answer can be. */
+  from: number;
+  /** Latest year the answer can be; equal to `from` for a precisely dated word. */
+  to: number;
+}
+
+/** The span an entry's answer covers; a precisely dated entry is zero-width. */
+export function answerSpan(answer: { year: number; yearTo?: number }): AnswerSpan {
+  const to = answer.yearTo ?? answer.year;
+  return to >= answer.year ? { from: answer.year, to } : { from: to, to: answer.year };
+}
+
+/**
+ * Temporal proximity on 0..100 for a guessed RANGE of years. A guessed window
+ * overlapping the answer's span scores 100 (answer dates are century-granular at
+ * best, so demanding a tighter hit would be luck, not knowledge); otherwise the
+ * score decays with the gap to the nearer end of the span.
+ */
+export function scoreTemporalSpan(answer: AnswerSpan, from: number, to: number): number {
   const start = Math.min(from, to);
   const end = Math.max(from, to);
-  const over =
-    answerYear < start ? start - answerYear : answerYear > end ? answerYear - end : 0;
-  return Math.round(100 * Math.exp(-over / TEMPORAL_DECAY_YEARS));
+  const gap =
+    answer.from > end ? answer.from - end : answer.to < start ? start - answer.to : 0;
+  return Math.round(100 * Math.exp(-gap / TEMPORAL_DECAY_YEARS));
+}
+
+/** A single answer year is the degenerate span; kept for callers that hold one. */
+export function scoreTemporalRange(answerYear: number, from: number, to: number): number {
+  return scoreTemporalSpan({ from: answerYear, to: answerYear }, from, to);
 }
 
 /** A place the pin can be scored against: the deep origin, or an intermediate hop. */
@@ -226,7 +258,7 @@ export function scoreRound(
   guess: RoundGuess,
   ctx: GeocodeContext,
 ): RoundScore {
-  const temporal = scoreTemporalRange(entry.year, guess.yearStart, guess.yearEnd);
+  const temporal = scoreTemporalSpan(answerSpan(entry), guess.yearStart, guess.yearEnd);
   const geo = guess.point
     ? scoreGeographic(entry, guess.point, ctx)
     : ({ score: 0, credit: "none", matchedCountry: null, distanceKm: null } as GeographicDetail);

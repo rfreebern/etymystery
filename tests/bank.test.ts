@@ -186,3 +186,18 @@ describe("interleave", () => {
     }
   });
 });
+
+describe("the answer span in a bank entry", () => {
+  it("accepts a coarse span and reads it back", () => {
+    // Validate only rejects data problems: the span is a fact about the record.
+    expect(() => validateEntry(makeEntry({ year: 700, yearTo: 1150 }))).not.toThrow();
+    expect(() => validateEntry(makeEntry({ year: 700 }))).not.toThrow();
+  });
+
+  it("rejects a span that runs backwards or past the timeline", () => {
+    expect(() => validateEntry(makeEntry({ year: 1150, yearTo: 700 }))).toThrow(/yearTo/);
+    expect(() => validateEntry(makeEntry({ year: 700, yearTo: 2201 }))).toThrow(/yearTo/);
+    expect(() => validateEntry(makeEntry({ year: 700, yearTo: Number.NaN }))).toThrow(/yearTo/);
+  });
+});
+

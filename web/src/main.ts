@@ -5,6 +5,7 @@
 
 import { ROUNDS_PER_DAY, validateBank } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
+import { answerSpan } from "../../src/scoring";
 import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, sliderStartBounds } from "../../src/timeline";
 import { feature } from "topojson-client";
 import type { BankEntry, WordBank } from "../../src/types";
@@ -12,13 +13,14 @@ import { createGeocodeContext, toCountryFeatures } from "./geo-context";
 import { createWorldMap, type WorldMap } from "./map";
 import {
   eraSegments,
-  outsideYears,
+  outsideSpanYears,
   rangeEraLabel,
   rangeLabel,
+  spanBandPct,
   tabletWidthPx,
   yearPositionPct,
 } from "./slider";
-import { ROUTE_ARROW, beyondNote, routeLine } from "./reveal";
+import { ROUTE_ARROW, answerYearLabel, beyondNote, coarseSpanNote, routeLine } from "./reveal";
 import { ZOOM_STEP } from "./view";
 import { hintsFor, isTouchFirst } from "./copy";
 import {
@@ -105,14 +107,26 @@ async function boot(): Promise<void> {
   let timelineNodes: { track: HTMLElement } | null = null;
 
   /**
-   * Mark the answer year on the timeline. Called from the reveal ONLY: the marker
-   * is the answer, so showing it any earlier would give the round away.
+   * Mark the answer on the timeline: a dot on the year for a precisely dated word,
+   * a band across the span for a coarse one ("in use by 1150" covers 700..1150).
+   * Called from the reveal ONLY: the marker is the answer, so showing it any
+   * earlier would give the round away.
    */
-  function markAnswerYear(year: number): void {
+  function markAnswer(entry: BankEntry): void {
     if (!timelineNodes) return;
+    const span = answerSpan(entry);
+    if (span.to > span.from) {
+      const band = spanBandPct(span, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX);
+      const marker = el("div", "tl-answer-band");
+      marker.style.left = `${band.leftPct}%`;
+      marker.style.width = `${band.widthPct}%`;
+      marker.title = `recorded somewhere between ${span.from} and ${span.to}`;
+      timelineNodes.track.append(marker);
+      return;
+    }
     const marker = el("div", "tl-answer");
-    marker.style.left = `${yearPositionPct(year, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)}%`;
-    marker.title = `${year}: the year English first used it`;
+    marker.style.left = `${yearPositionPct(span.from, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)}%`;
+    marker.title = `${span.from}: the year English first used it`;
     timelineNodes.track.append(marker);
   }
 
@@ -288,7 +302,7 @@ async function boot(): Promise<void> {
     );
     const answerLine = el("div", "reveal-answer");
     answerLine.append(el("b", "hop-answer", entry.originLanguage));
-    answerLine.append(document.createTextNode(` · first used around ${entry.year}`));
+    answerLine.append(document.createTextNode(` · ${answerYearLabel(entry.year, entry.yearTo)}`));
     panel.append(answerLine);
 
     const scores = el("div", "scores");
@@ -320,25 +334,34 @@ async function boot(): Promise<void> {
     const older = beyondNote(entry.originLanguage, line.beyond);
     if (older) panel.append(el("div", "route beyond-note", older));
 
-    // Say plainly whether the window caught the year: it is the whole temporal
-    // mechanic, and the only feedback that teaches where to place it.
+    // Say plainly whether the window caught the answer: it is the whole temporal
+    // mechanic, and the only feedback that teaches where to place it. A coarse
+    // answer is a span, so any overlap is a hit.
     const guessed = guessRange(stored.guess);
-    const missed = outsideYears(entry.year, guessed.start, guessed.end);
+    const answer = answerSpan(entry);
+    const missed = outsideSpanYears(answer, guessed.start, guessed.end);
+    const coarse = answer.to > answer.from;
     panel.append(
       el(
         "div",
         "route",
         `Your window: ${rangeLabel(guessed.start, guessed.end)}. ${
           missed === 0
-            ? "The answer is inside it ✓"
+            ? coarse
+              ? "The answer's recorded span overlaps it ✓"
+              : "The answer is inside it ✓"
             : `The answer fell ${missed} year${missed === 1 ? "" : "s"} outside it.`
         }`,
       ),
     );
+    // Explain the grading for an undated word, or a full score for an early window
+    // reads as the game being generous rather than the record being vague.
+    const spanNote = coarseSpanNote(entry.year, entry.yearTo);
+    if (spanNote) panel.append(el("div", "beyond-note", spanNote));
     panel.append(el("p", "prompt", entry.blurb));
-    // The answer's own year, on the timeline the player just used, is the clearest
+    // The answer's own span, on the timeline the player just used, is the clearest
     // possible statement of how close the window was.
-    markAnswerYear(entry.year);
+    markAnswer(entry);
 
     const actions = el("div", "actions");
     const next = el("button", undefined, isComplete(session) ? "See results" : "Next word");

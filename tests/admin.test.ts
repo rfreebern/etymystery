@@ -296,3 +296,36 @@ describe("http api", () => {
     expect(result.state.curatedCount).toBeGreaterThan(1);
   });
 });
+
+describe("coarse answer spans in the admin app", () => {
+  it("stores a span and rejects a backwards one", () => {
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 3);
+    const state = saveEntry(
+      paths,
+      { sense: "money", year: 700, yearTo: 1150, tier: 2, blurb: "" },
+      0,
+    );
+    expect(state.queue.find((item) => item.sense === "money")).toMatchObject({
+      year: 700,
+      yearTo: 1150,
+    });
+    // The file format keeps the CLI and the app interchangeable.
+    expect(readFileSync(paths.batch, "utf8")).toContain('"yearTo": 1150');
+    expect(() =>
+      saveEntry(paths, { sense: "money", year: 1150, yearTo: 700, tier: 2, blurb: "" }, 0),
+    ).toThrow(/at or after year 1150/);
+    // A bound equal to the year is not a span, so it is dropped rather than stored.
+    const plain = saveEntry(paths, { sense: "money", year: 1150, yearTo: 1150, tier: 2, blurb: "" }, 0);
+    expect(plain.queue.find((item) => item.sense === "money")!.yearTo).toBe(0);
+  });
+
+  it("offers the span field in the client, with the rule that explains it", () => {
+    // app.js is plain JS: nothing typechecks it, so its wiring is asserted here.
+    const client = readFileSync("admin/public/app.js", "utf8");
+    expect(client).toContain('el("year-to")');
+    expect(client).toContain("yearTo:");
+    expect(client).toContain("in use by");
+  });
+});
+

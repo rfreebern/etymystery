@@ -9,7 +9,7 @@
  * Greek) curatable instead of unusable, while leaving difficulty to the tiers.
  */
 
-import { GUESS_SPAN_YEARS, GUESS_STEP_YEARS, scoreTemporalRange } from "./scoring";
+import { GUESS_SPAN_YEARS, GUESS_STEP_YEARS, scoreTemporalSpan, type AnswerSpan } from "./scoring";
 
 export const ANSWER_YEAR_MIN = 700;
 export const ANSWER_YEAR_MAX = 2025;
@@ -59,20 +59,22 @@ export function sliderStartBounds(
 }
 
 /**
- * The best temporal score a player could possibly get for an answer year, given
- * the window the slider can express. Delegates to the real scorer — the best
- * window is the legal one closest to the answer (centred on it where possible) —
- * so this can never drift from what the game actually awards.
+ * The best temporal score a player could possibly get for an answer, given the
+ * window the slider can express. Delegates to the real scorer — the best window is
+ * the legal one closest to the answer (centred on it where possible) — so this can
+ * never drift from what the game actually awards. Accepts a coarse span as well as
+ * a single year, because an undated word is a range.
  */
 export function bestPossibleTemporal(
-  year: number,
+  answer: number | AnswerSpan,
   floor: number = ANSWER_YEAR_MIN,
   ceiling: number = ANSWER_YEAR_MAX,
 ): number {
-  const { min, max, span } = sliderStartBounds(floor, ceiling);
-  const centred = year - span / 2;
-  const start = Math.min(Math.max(centred, min), max);
-  return scoreTemporalRange(year, start, start + span);
+  const span: AnswerSpan = typeof answer === "number" ? { from: answer, to: answer } : answer;
+  const { min, max, span: width } = sliderStartBounds(floor, ceiling);
+  const centre = (span.from + span.to) / 2;
+  const start = Math.min(Math.max(centre - width / 2, min), max);
+  return scoreTemporalSpan(span, start, start + width);
 }
 
 /** Is this year playable on the timeline at all? */

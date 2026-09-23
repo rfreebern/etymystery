@@ -326,3 +326,28 @@ describe("buildBankFromInputs", () => {
     const elapse = result.bank!.tiers.flat().find((e) => e.word === "elapse")!;
     expect(elapse.originChain).toEqual(["frm", "Latin"]); // raw code fallback for display
   });
+
+describe("a coarse answer reaches the bank as a span", () => {
+  it("keeps yearTo for a period-dated word and nothing for a precise one", () => {
+    const result = buildBankFromInputs({
+      edgesText: EDGES_CSV,
+      languagesText: LANGUAGES_TSV,
+      curation: {
+        ...CURATION,
+        // "recorded in Old English": no source narrows it, so the entry states the
+        // span the record allows rather than inventing a year.
+        pizza: { year: 700, yearTo: 1150, tier: 1 },
+      },
+      version: 1,
+      epochStartDay: 0,
+    });
+    const coarse = result.bank!.masterSequence.find((entry) => entry.word === "pizza")!;
+    expect(coarse.year).toBe(700);
+    expect(coarse.yearTo).toBe(1150);
+    // A precisely dated neighbour gains no span at all. (Read from the tiers: the
+    // interleaved sequence stops at the shallowest tier, which here holds one word.)
+    const precise = result.bank!.tiers.flat().find((entry) => entry.word === "coffee")!;
+    expect(precise.yearTo).toBeUndefined();
+  });
+});
+

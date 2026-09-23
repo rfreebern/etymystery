@@ -353,6 +353,11 @@ export function buildBankFromInputs(options: BuildBankOptions): {
         word: sense.word,
         ...(sense.pos ? { pos: sense.pos } : {}),
         year: Math.round(curated.year),
+        // A coarse answer ("in use by 1150") keeps its upper bound, so the game
+        // scores any window overlapping the span rather than one invented year.
+        ...(curated.yearTo !== undefined && Math.round(curated.yearTo) > Math.round(curated.year)
+          ? { yearTo: Math.round(curated.yearTo) }
+          : {}),
         tier: curated.tier ?? assignTier({ chainDepth: langs.length, frequencyRank }),
         originChain: chainNames,
         originLanguage: meta.name,

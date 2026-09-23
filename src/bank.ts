@@ -126,6 +126,12 @@ export function validateEntry(entry: BankEntry): void {
   if (!Number.isFinite(entry.year) || entry.year < -4000 || entry.year > 2200) {
     problems.push("year must be a finite year between -4000 and 2200");
   }
+  if (
+    entry.yearTo !== undefined &&
+    (!Number.isFinite(entry.yearTo) || entry.yearTo < entry.year || entry.yearTo > 2200)
+  ) {
+    problems.push("yearTo must be a finite year at or after year (the upper bound of the answer span)");
+  }
   if (!Number.isInteger(entry.tier) || entry.tier < 1 || entry.tier > TIER_COUNT) {
     problems.push(`tier must be an integer in 1..${TIER_COUNT}`);
   }

@@ -64,3 +64,27 @@ export function beyondNote(answerLanguage: string, beyond: readonly string[]): s
   );
 }
 
+/**
+ * How the answer's date reads. Many words have no precise date: the references say
+ * "recorded in Old English" or "before 1150", which the bank stores as a span
+ * (`year`..`yearTo`) rather than one invented year. The wording follows the data,
+ * so the reveal never claims a precision the record does not have.
+ */
+export function answerYearLabel(year: number, yearTo?: number): string {
+  if (yearTo === undefined || yearTo <= year) return `first used around ${year}`;
+  return `first recorded between ${year} and ${yearTo}`;
+}
+
+/**
+ * Why a coarse span is graded the way it is, or null for a precisely dated word.
+ * Without this a player who guessed 700-800 on an undated word sees 100/100 and
+ * cannot tell whether the window was right or the game was generous.
+ */
+export function coarseSpanNote(year: number, yearTo?: number): string | null {
+  if (yearTo === undefined || yearTo <= year) return null;
+  return (
+    `No source dates ${year === yearTo ? "it" : "this"} more exactly than “in use by ${yearTo}”, ` +
+    `so any window touching ${year} – ${yearTo} counts as a hit.`
+  );
+}
+

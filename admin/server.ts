@@ -109,6 +109,7 @@ function handleRequest(req: IncomingMessage, res: ServerResponse): void {
             {
               sense: String(body.sense ?? ""),
               year: Number(body.year),
+              yearTo: body.yearTo === undefined ? undefined : Number(body.yearTo),
               tier: Number(body.tier),
               blurb: String(body.blurb ?? ""),
               pos: String(body.pos ?? ""),

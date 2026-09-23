@@ -9,9 +9,11 @@ import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, sliderStartBounds } from "../src/time
 import {
   GUESS_SPAN_YEARS,
   eraSegments,
+  outsideSpanYears,
   outsideYears,
   rangeEraLabel,
   rangeLabel,
+  spanBandPct,
   tabletWidthPx,
   windowYears,
   yearFraction,
@@ -146,3 +148,31 @@ describe("timeline slider geometry", () => {
     expect(eraSegments(1600, 1600)).toEqual([]);
   });
 });
+
+describe("span geometry", () => {
+  it("measures a miss to the nearest end of the span", () => {
+    const inherited = { from: 700, to: 1150 };
+    expect(outsideSpanYears(inherited, 900, 1000)).toBe(0); // overlap
+    expect(outsideSpanYears(inherited, 1050, 1150)).toBe(0); // touches the end
+    expect(outsideSpanYears(inherited, 1250, 1350)).toBe(100); // 1150 -> 1250
+    expect(outsideSpanYears(inherited, 400, 500)).toBe(200); // 700 -> 500
+    // A point answer is the degenerate span, so the old helper agrees.
+    expect(outsideSpanYears({ from: 1601, to: 1601 }, 1450, 1550)).toBe(outsideYears(1601, 1450, 1550));
+  });
+
+  it("places a band on the same scale the thumb uses", () => {
+    const band = spanBandPct({ from: 700, to: 1150 }, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX);
+    expect(band.leftPct).toBe(0); // the floor of the timeline
+    expect(band.leftPct + band.widthPct).toBeCloseTo(
+      yearPositionPct(1150, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX),
+      6,
+    );
+    // The band starts where the dot for its first year would sit.
+    expect(band.leftPct).toBeCloseTo(yearPositionPct(700, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX), 6);
+    // A span outside the window clamps onto the track rather than off it.
+    const clamped = spanBandPct({ from: 300, to: 500 }, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX);
+    expect(clamped.leftPct).toBe(0);
+    expect(clamped.widthPct).toBe(0);
+  });
+});
+

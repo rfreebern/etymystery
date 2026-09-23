@@ -250,3 +250,39 @@ describe("mergeCuration", () => {
     expect(result.skipped).toEqual(["back|Old English"]);
   });
 });
+
+describe("coarse answer spans", () => {
+  it("carries yearTo through a merge, and refuses to call a point a span", () => {
+    const merged = mergeCuration(
+      {},
+      {
+        give: { year: 700, yearTo: 1150, tier: 3 },
+        take: { year: 1000, yearTo: 1000 }, // equal bounds are just a year
+      },
+    );
+    expect(merged.merged.give).toMatchObject({ year: 700, yearTo: 1150 });
+    expect(merged.merged.take).toEqual({ year: 1000 });
+  });
+
+  it("flags a backwards span and one running past the timeline", () => {
+    const audit = auditCuration(
+      { give: { year: 1150, yearTo: 700 }, take: { year: 1900, yearTo: 2100 } },
+      { knownWords: new Set(["give", "take"]), yearFloor: 700, yearCeiling: 2025 },
+    );
+    const problems = audit.issues.map((issue) => `${issue.word}: ${issue.problem}`).join(" | ");
+    expect(problems).toContain("yearTo 700 must be at or after year 1150");
+    expect(problems).toContain("past the end of the timeline (2025)");
+  });
+
+  it("does not call a coarse inherited word unplayable", () => {
+    // The point of spans: "in use by 1150" is winnable, unlike a fabricated year
+    // below the slider floor, and the audit must not tell the curator otherwise.
+    const audit = auditCuration(
+      { give: { year: 700, yearTo: 1150 } },
+      { knownWords: new Set(["give"]), yearFloor: 700, yearCeiling: 2025 },
+    );
+    expect(audit.issues).toEqual([]);
+    expect(audit.unplayableOnSlider).toEqual([]);
+  });
+});
+

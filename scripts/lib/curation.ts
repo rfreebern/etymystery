@@ -4,6 +4,7 @@
  *
  * "Curation" here means the hand-researched facts for one word:
  *   - year:  when ENGLISH first used it (not when the donor language had it)
+ *   - yearTo: the upper bound, when the record only bounds the first use
  *   - tier:  optional difficulty override (1 easy .. 10 hard)
  *   - blurb: optional one-line reveal text
  *
@@ -15,6 +16,14 @@ import { bestPossibleTemporal } from "../../src/timeline";
 
 export interface CurationEntryInput {
   year?: number;
+  /**
+   * Upper bound of the answer's span, for words no source dates precisely.
+   * "Recorded in Old English" is only "in use by 1150": set `year` to the earliest
+   * year the record allows (the timeline floor for anything inherited) and
+   * `yearTo` to that bound. Never invent a point for a coarse date: a fabricated
+   * year makes the player's score depend on the curator's coin flip.
+   */
+  yearTo?: number;
   tier?: number;
   blurb?: string;
   /**
@@ -277,6 +286,19 @@ export function auditCuration(
       continue;
     }
     curated += 1;
+    if (entry.yearTo !== undefined && (!Number.isFinite(entry.yearTo) || entry.yearTo < entry.year)) {
+      issues.push({
+        word,
+        problem: `yearTo ${entry.yearTo} must be at or after year ${entry.year} (it is the upper bound)`,
+      });
+    } else if (entry.yearTo !== undefined && entry.yearTo > options.yearCeiling) {
+      // Playable (the span covers `year`) but nonsense data: nothing can be first
+      // used after the timeline ends.
+      issues.push({
+        word,
+        problem: `yearTo ${entry.yearTo} is past the end of the timeline (${options.yearCeiling})`,
+      });
+    }
     if (entry.year < options.yearFloor || entry.year > options.yearCeiling) {
       issues.push({
         word,
@@ -363,6 +385,11 @@ export function mergeCuration(
       key = composeSenseKey(word, pos, ordinal);
     }
     const cleaned: CurationEntryInput = { year: Math.round(entry.year) };
+    // A span only means something wider than a point; `yearTo == year` is just a
+    // year, and a backwards pair is a data error the audit reports.
+    if (entry.yearTo !== undefined && Math.round(entry.yearTo) > cleaned.year!) {
+      cleaned.yearTo = Math.round(entry.yearTo);
+    }
     if (entry.tier !== undefined) cleaned.tier = entry.tier;
     if (entry.blurb?.trim()) cleaned.blurb = entry.blurb.trim();
     if (pos) cleaned.pos = pos;

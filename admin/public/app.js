@@ -83,6 +83,8 @@ function readForm() {
     sense: item.sense,
     word: item.word,
     year: Number(el("year").value),
+    // Blank means "precisely dated": the answer is the year above on its own.
+    yearTo: el("year-to").value === "" ? undefined : Number(el("year-to").value),
     tier: Number(document.querySelector(".tiers button.active")?.dataset.tier || item.tier),
     blurb: el("blurb").value,
     pos: el("pos")?.value ?? "",
@@ -175,6 +177,21 @@ function render() {
         <span class="muted">${item.year > 0 ? "" : "not saved until a year is entered"}</span>
       </div>
       <div id="year-warn" class="warn" hidden></div>
+    </div>
+    <div class="field">
+      <label for="year-to">Only dated as “in use by” a year? Put that year here</label>
+      <div class="row">
+        <input id="year-to" type="number" min="0" max="2200" step="1"
+          value="${item.yearTo > 0 ? item.yearTo : ""}" placeholder="e.g. 1150" />
+        <span class="muted">${
+          item.yearTo > 0
+            ? `a span: any window touching ${item.year} – ${item.yearTo} scores full marks`
+            : "leave blank for a precise date"
+        }</span>
+      </div>
+      <div class="muted">For words the references only date by period (“recorded in Old English”,
+        “before 1150”): put the earliest year the record allows above and the bound here. Never
+        invent a point: a guessed year would make the player's score depend on our coin flip.</div>
     </div>
     <div class="field">
       <label for="pos">Part of speech</label>

@@ -113,9 +113,38 @@ export function rangeEraLabel(start: number, end: number): string {
 
 /** How far an answer fell outside the guessed window (0 when inside). */
 export function outsideYears(answerYear: number, start: number, end: number): number {
+  return outsideSpanYears({ from: answerYear, to: answerYear }, start, end);
+}
+
+/**
+ * How far an answer SPAN fell outside the guessed window (0 when they overlap).
+ * A coarse answer covers a range of years, so only a window missing the whole span
+ * counts as a miss, and the distance is the gap between the two ranges.
+ */
+export function outsideSpanYears(
+  answer: { from: number; to: number },
+  start: number,
+  end: number,
+): number {
   const from = Math.min(start, end);
   const to = Math.max(start, end);
-  if (answerYear < from) return from - answerYear;
-  if (answerYear > to) return answerYear - to;
+  if (answer.from > to) return answer.from - to;
+  if (answer.to < from) return from - answer.to;
   return 0;
+}
+
+/**
+ * A span's band on the track, as percentages ready for CSS: the same mapping the
+ * thumb uses, so the band starts and ends on the years it names. A coarse answer
+ * is drawn as a band rather than a dot because "somewhere in 700 – 1150" is what
+ * the record actually says.
+ */
+export function spanBandPct(
+  span: { from: number; to: number },
+  floor: number,
+  ceiling: number,
+): { leftPct: number; widthPct: number } {
+  const left = yearPositionPct(span.from, floor, ceiling);
+  const right = yearPositionPct(span.to, floor, ceiling);
+  return { leftPct: Math.min(left, right), widthPct: Math.abs(right - left) };
 }

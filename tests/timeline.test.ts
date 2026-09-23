@@ -79,3 +79,23 @@ describe("answer window", () => {
     expect(isPlayableYear(Number.NaN)).toBe(false);
   });
 });
+
+describe("bestPossibleTemporal with a coarse span", () => {
+  it("finds the best legal window for a span, not just a point", () => {
+    const span = { from: 700, to: 1150 };
+    // Some legal window always overlaps the span, so an undated inherited word is
+    // always winnable — this is the promise that keeps them curatable.
+    expect(bestPossibleTemporal(span)).toBe(100);
+    expect(bestPossibleTemporal({ from: 1400, to: 1450 })).toBe(100);
+    // Below the floor, the span's own start is what the earliest window misses.
+    expect(bestPossibleTemporal({ from: 600, to: 650 }, 1500, 2025)).toBe(
+      scoreTemporalRange(650, 1500, 1600),
+    );
+  });
+
+  it("agrees with the single-year form when the span is zero-width", () => {
+    for (const year of [700, 1200, 1590, 2025, 2050]) {
+      expect(bestPossibleTemporal({ from: year, to: year })).toBe(bestPossibleTemporal(year));
+    }
+  });
+});

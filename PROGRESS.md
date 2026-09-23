@@ -4,17 +4,19 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 5)
+## Status (as of 2026-09-21, session 12)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 278/278 tests passing, typecheck clean, static build green. The bank is
+`main`): 299/299 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
-human checks the dates against a reference. Session 5 reworked the two inputs: the
-map now zooms and pans, and the timeline asks for a **100-year window** (tablet
-handle, 25-year steps, answer inside the window = perfect temporal score) instead
-of a single year — with the slider/era-scale geometry now derived from one mapping
-so the period labels change exactly where the handle crosses them.
+human checks the dates against a reference. Session 12 made an answer a **span**:
+words no source dates past a period ("recorded in Old English", "in use by 1150")
+are curated as `year` + `yearTo` and scored by overlap, instead of forcing a
+fabricated year that would decide the player's score by coin flip. Earlier
+sessions: the map zooms/pans, the timeline asks for a **100-year window** (tablet
+handle, 25-year steps), and the curation loop, admin app and scoring leniency were
+each rebuilt around what the *record* can actually support.
 
 ## Done
 
@@ -770,6 +772,43 @@ on-land anchors** (this batch)
   query changed.
 - tests: 278 total (+9). Build verified: both copy sets ship in the bundle.
 
+**Session 12 — undated words are a span, not an invented year** (this batch)
+
+- Reported while curating: a large share of words can only be dated as "pre-12th
+  century". Picking a year for them is arbitrary. Measured: **16-19% of the ranked
+  list** (18 of the top 100, 56 of the top 300, 160 of the top 1000) are inherited
+  from Old/Middle English, where no reference narrows the first use past a period.
+- The cost was the game's, not just the curator's: the same word dated 1100 or 1000
+  turns a guess of 900-1000 into 100/100 or 5/100. **A fabricated year makes the
+  player's score depend on a coin flip** — so an answer is now a *span*.
+- `year` is the earliest year the record allows (the timeline floor, 700, for
+  anything inherited) and the new optional `yearTo` is the bound ("in use by 1150").
+  `answerSpan()` reads an entry as a zero-width span when `yearTo` is absent, so
+  every existing entry and test behaves exactly as before.
+- Scoring: `scoreTemporalSpan` gives 100 when the player's window *overlaps* the
+  span and decays by the gap to the nearer end. `scoreTemporalRange(year, …)` is now
+  the degenerate case, kept so callers holding one year still read naturally;
+  `bestPossibleTemporal` accepts either.
+- The reveal follows the data: `first recorded between 700 and 1150` instead of
+  `first used around 1149`, plus a note saying why the window scores full marks
+  (`No source dates this more exactly than "in use by 1150"`), because an
+  unexplained 100 reads as the game being generous. The "answer is inside it"
+  verdict becomes "the answer's recorded span overlaps it".
+- The timeline draws a **band** across the span (`spanBandPct`, same mapping as the
+  dot, same `z-index: 2` so it still shows in front of the tablet) rather than a dot
+  on one invented year. The dot remains for precisely dated words.
+- Curation: `yearTo` flows through `mergeCuration` (a bound equal to the year is
+  dropped — that is just a year), the build report and `validateEntry` reject a
+  backwards or past-the-timeline bound, and the admin app has a field for it
+  ("Only dated as *in use by* a year?") next to the year, with the rule in its
+  help text. The audit never calls a coarse inherited word unplayable.
+- Verified on the real dataset: `give` (inherited Old English, span 700..1150)
+  enters the bank with `yearTo`, and windows 700-1200 all score 100, 1200-1300
+  scores 61, 1300-1400 scores 22. Nothing was shipped: the probe used a copy of the
+  curation, because the year still needs a human to check it.
+- tests: 299 total (+21).
+
+
 ## Verification (re-run before trusting anything)
 
 
@@ -787,8 +826,8 @@ on-land anchors** (this batch)
 
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 278 passed (20 files)
-    npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
+    npx vitest run            # 299 passed (20 files)
+    npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
     npx tsx scripts/filter-edges.ts --edges data/etymology-db.csv.gz \
@@ -819,6 +858,10 @@ on-land anchors** (this batch)
    b. Pull the next batch (`--mode next`), research, `--mode merge`, then
       `--mode tier` to re-balance and rebuild. 10 days of play needs 100 banked
       entries; each additional day needs one more word in EVERY tier.
+      **One word in six is undated** (inherited Old/Middle English). Curate those as
+      a span (`year` = 700, `yearTo` = the bound the reference gives) using the new
+      field in the admin app, rather than picking a year: `give` is the worked
+      example in CURATION.md.
 2. Proto-language policy (unchanged, still open): default (respect "deepest
    origin") = 17 bankable / 4,141 words lost; `--deepest-attested` = 21 bankable /
    4,137 recovered. The lost words' answers would be reconstructions
@@ -1030,3 +1073,13 @@ on-land anchors** (this batch)
   `--deepest-attested` changes the pipeline's default anchoring, while a curated
   `origin` is authoritative for that one entry (it anchors to the deepest
   placeable hop of the chosen branch).
+- Never invent a point where the record only gives a period. Forcing a year onto an
+  undated word makes the *player's* score depend on the curator's choice (1100 vs
+  1000 for `give` turns a guess of 900-1000 into 100/100 or 5/100), so the answer is
+  a span (`year`..`yearTo`) and the game grades any overlapping window. The same
+  reasoning applies to any future field that would have to guess at a fact.
+- An answer that is a range needs the whole stack told, not just the scorer: the
+  marker becomes a band, the label changes wording, the miss distance is measured to
+  the nearest end, and the curation tools must accept, validate and persist the
+  bound. `answerSpan()` (a zero-width span for a single year) is what keeps the two
+  shapes from forking into separate code paths.

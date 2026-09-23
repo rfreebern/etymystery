@@ -8,7 +8,7 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ROUTE_ARROW, beyondNote, routeLabel, routeLine } from "../web/src/reveal";
+import { ROUTE_ARROW, answerYearLabel, beyondNote, coarseSpanNote, routeLabel, routeLine } from "../web/src/reveal";
 import type { WordBank } from "../src/types";
 
 describe("routeLabel", () => {
@@ -152,3 +152,23 @@ describe("the shipped bank's chains", () => {
     }
   });
 });
+
+describe("the answer's date wording", () => {
+  it("distinguishes a precise year from a coarse span", () => {
+    // The reveal must not claim precision the record does not have.
+    expect(answerYearLabel(1590)).toBe("first used around 1590");
+    expect(answerYearLabel(700, 1150)).toBe("first recorded between 700 and 1150");
+    // An "equal bounds" pair is a point, not a span.
+    expect(answerYearLabel(1000, 1000)).toBe("first used around 1000");
+  });
+
+  it("explains why a coarse span is graded generously", () => {
+    expect(coarseSpanNote(1590)).toBeNull();
+    const note = coarseSpanNote(700, 1150)!;
+    expect(note).toContain("in use by 1150");
+    expect(note).toContain("700 – 1150");
+    // No em dashes in user-visible prose (the project's copy rule).
+    expect(note).not.toContain("—");
+  });
+});
+

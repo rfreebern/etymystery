@@ -99,7 +99,8 @@ For every word in the batch:
    bulk-copied into the repo.
 3. **Match the granularity the reference gives you.** Scoring gives full credit
    within ±50 years, so a decade ("1640s" → 1640) or a mid-century value for
-   "16th century" is fine. Do not invent precision.
+   "16th century" is fine. Do not invent precision. If the reference will not give
+   a year at all, see "Undated words: curate the span" below.
 4. **Adjust the tier only if the suggestion is wrong.** The suggested tier comes
    from chain depth and frequency; the difficulty ladder matters more than any
    single word. Tier 1 should be easy for a casual player, tier 10 genuinely hard.
@@ -114,7 +115,38 @@ For every word in the batch:
    the "I checked this date against a reference" box unticked). The build report
    counts those and `check` lists them, so the bank never overstates itself.
 
-### Letting a model draft the years
+### Undated words: curate the span, never a point
+
+Roughly **one word in six** of the ranked list is inherited from Old or Middle
+English, and no reference dates those first uses more precisely than a period:
+"recorded in Old English", "before 1150". **Do not pick a year for them.** A
+fabricated year makes the player's score depend on the curator's coin flip — the
+same word dated 1000 or 1100 turns a guess of 900-1000 into 100/100 or 5/100, so
+the difficulty of the round is decided by curation mood, not by knowledge.
+
+Instead state the span the record allows:
+
+```json
+"give": { "year": 700, "yearTo": 1150, "pos": "verb", "origin": "Old English", "unverified": true }
+```
+
+- `year` is the **earliest** year the record allows. For anything inherited that is
+  the timeline floor, 700 (the start of the English written record).
+- `yearTo` is the **upper bound**: the year by which the word was in use.
+- Leave `yearTo` off, or equal to `year`, for a normally dated word. Nothing else
+  changes for those.
+
+The game then scores any 100-year window **overlapping** the span as a full hit and
+decays by the gap to the nearer end, the reveal reads `first recorded between 700
+and 1150` with a note saying why, and the timeline draws the answer as a **band**
+across those years instead of a dot on one. `give` measured end to end: windows
+700-1200 all score 100, 1200-1300 scores 61, 1300-1400 scores 22.
+
+In the admin app this is the "Only dated as *in use by* a year?" field under the
+year. `check` flags a `yearTo` before its `year` and any bound past the end of the
+timeline; a coarse inherited word is never reported as unplayable.
+
+
 
 Hand-writing thousands of years is the bottleneck, so drafting is allowed — with
 provenance. The entries marked `"unverified": true` in `curated/curation.json` were

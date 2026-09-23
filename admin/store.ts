@@ -50,6 +50,11 @@ export interface QueueItem {
   origins: string[];
   inWorklist: boolean;
   year: number;
+  /**
+   * Upper bound of the answer's span, or 0 for a precisely dated word. Undated
+   * words ("recorded in Old English") are curated as a span, not a guessed year.
+   */
+  yearTo: number;
   tier: number;
   blurb: string;
   /** Part of speech this entry is about (required for homographs). */
@@ -110,6 +115,7 @@ export function formatCuration(curation: Curation): string {
     const entry = curation[word]!;
     const parts: string[] = [];
     if (entry.year !== undefined) parts.push(`"year": ${entry.year}`);
+    if (entry.yearTo !== undefined) parts.push(`"yearTo": ${entry.yearTo}`);
     if (entry.tier !== undefined) parts.push(`"tier": ${entry.tier}`);
     if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
     if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
@@ -169,6 +175,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       origins: candidate?.origins ?? [],
       inWorklist: Boolean(candidate),
       year: entry.year ?? 0,
+      yearTo: entry.yearTo ?? 0,
       tier: entry.tier ?? candidate?.tier ?? 5,
       blurb: entry.blurb ?? "",
       pos: entry.pos ?? "",
@@ -236,6 +243,11 @@ export function saveEntry(
   entry: {
     sense: string;
     year: number;
+    /**
+     * Upper bound of the answer's span for an undated word ("in use by 1150").
+     * Omitted or equal to `year` means the answer is a single year.
+     */
+    yearTo?: number;
     tier: number;
     blurb: string;
     pos?: string;
@@ -249,6 +261,15 @@ export function saveEntry(
   if (!(entry.sense in batch)) throw new Error(`"${entry.sense}" is not in the current batch`);
   const year = Math.round(entry.year);
   if (!Number.isFinite(year) || year < 0 || year > 2200) throw new Error(`year ${entry.year} is out of range`);
+  // Reject a backwards span rather than narrowing it silently: the curator is
+  // stating a fact about the record, and getting it inverted means the entry is
+  // wrong, not that it needs tidying.
+  let yearTo: number | undefined;
+  if (entry.yearTo !== undefined && Number.isFinite(entry.yearTo) && entry.yearTo > 0) {
+    const bound = Math.round(entry.yearTo);
+    if (bound < year) throw new Error(`yearTo ${entry.yearTo} must be at or after year ${year}`);
+    if (bound > year) yearTo = bound;
+  }
   const tier = Math.round(entry.tier);
   if (!Number.isInteger(tier) || tier < 1 || tier > 10) throw new Error(`tier ${entry.tier} must be 1..10`);
   const pos = (entry.pos ?? "").trim().toLowerCase();
@@ -257,6 +278,7 @@ export function saveEntry(
   }
   const existing = batch[entry.sense];
   const saved: Curation[string] = { year, tier };
+  if (yearTo !== undefined) saved.yearTo = yearTo;
   if (entry.blurb.trim()) saved.blurb = entry.blurb.trim();
   if (pos) saved.pos = pos;
   // The sense's origin comes from the work list and is not the caller's to lose:
