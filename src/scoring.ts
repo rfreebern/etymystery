@@ -8,12 +8,12 @@
  * Geographic: hop-aware and country-aware. The answer is anchored to the
  * word's DEEPEST origin (the last entry of originChain); intermediate hops
  * (e.g. the French in Arabic -> French -> English) score partial credit
- * (INTERMEDIATE_WEIGHT) only when the pin lands directly inside them, while
- * the deep origin gets border-proximity falloff. Region/continent matches
- * are reveal-time LABELS only: they never add points beyond border
- * proximity. Pins farther than MAX_RELEVANCE_KM from every hop score
- * nothing. This yields: deep origin > on-the-route country > nearby wrong
- * country > far away = zero.
+ * (INTERMEDIATE_WEIGHT) only when the pin lands directly inside them. Country is
+ * the unit of knowledge: a pin anywhere inside the answer's country is full marks,
+ * while a wrong country scores by border proximity (1500 km decay scale) and a pin
+ * farther than MAX_RELEVANCE_KM from every hop scores nothing. Region/continent
+ * matches are reveal-time LABELS only and never add points. This yields: deep
+ * origin's country > on-the-route country > nearby wrong country > far away = zero.
  */
 
 import type { BankEntry, LanguageInfo, LatLng, RoundGuess, RoundScore } from "./types";
@@ -28,12 +28,12 @@ export const GUESS_SPAN_YEARS = 100;
 export const GUESS_STEP_YEARS = 25;
 /** Years over which temporal score decays beyond the guessed window. */
 export const TEMPORAL_DECAY_YEARS = 100;
-/** Distance over which geographic score decays beyond the answer border. */
+/** Curator's rule: the country IS the unit of knowledge, so a pin inside the
+ *  answer's country scores full marks. Distance within a country is not a signal:
+ *  the representative point of a long-dead language is a rough centroid (Rome for
+ *  Latin, Oslo for Old Norse), and dozens of mapped languages share one country
+ *  (20 in Italy alone), so nudging the pin cannot mean "wrong language". */
 export const GEO_DECAY_KM = 1500;
-/** Max penalty for pinning far from the answer point *inside* the right country. */
-export const INSIDE_PENALTY_MAX = 0.1;
-/** Distance at which the in-country penalty reaches its max. */
-export const INSIDE_PENALTY_DISTANCE_KM = 3000;
 /** Ordering of credit labels by match quality (labels only; score unaffected). */
 const CREDIT_RANK: Record<RoundScore["credit"], number> = {
   none: 0,
@@ -114,32 +114,31 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
     return { score: 0, credit: "none", matchedCountry: null, distanceKm: null };
   }
 
-  // 1. Direct hit on the deep origin's country: high score, gentle decay.
+  // 1. Direct hit on the deep origin's country: full marks, wherever in the
+  //    country the pin lands. Distance inside a country is not evidence of a wrong
+  //    answer (see GEO_DECAY_KM) — a pin in northern Italy is as correct for Latin
+  //    as one on Rome.
   for (const country of deep.countries) {
     if (ctx.contains(country, guess)) {
-      const dist = haversineKm(deep.point, guess);
-      const penalty = INSIDE_PENALTY_MAX * Math.min(1, dist / INSIDE_PENALTY_DISTANCE_KM);
       return {
-        score: Math.round(100 * (1 - penalty)),
+        score: 100,
         credit: "country",
         matchedCountry: country,
-        distanceKm: Math.round(dist),
+        distanceKm: Math.round(haversineKm(deep.point, guess)),
       };
     }
   }
 
-  // 2. Direct hit on an intermediate hop: partial credit (Variant B — no
+  // 2. Direct hit on an intermediate hop: partial credit, flat (Variant B — no
   //    border falloff; you must land inside the actual hop country).
   for (const hop of intermediates) {
     for (const country of hop.countries) {
       if (ctx.contains(country, guess)) {
-        const dist = haversineKm(hop.representativePoint!, guess);
-        const penalty = INSIDE_PENALTY_MAX * Math.min(1, dist / INSIDE_PENALTY_DISTANCE_KM);
         return {
-          score: Math.round(100 * (1 - penalty) * INTERMEDIATE_WEIGHT),
+          score: Math.round(100 * INTERMEDIATE_WEIGHT),
           credit: "intermediate",
           matchedCountry: country,
-          distanceKm: Math.round(dist),
+          distanceKm: Math.round(haversineKm(hop.representativePoint!, guess)),
         };
       }
     }

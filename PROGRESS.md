@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 251/251 tests passing, typecheck clean, static build green. The bank is
+`main`): 252/252 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -570,14 +570,52 @@ so the period labels change exactly where the handle crosses them.
   `assembleBank: false`, because a skipped word leaves its tier empty and a bank
   cannot be assembled from that.
 
+**Session 7 — the country is the unit of knowledge** (this batch)
+
+- Asked: can several language centroids share one country (Cantonese vs Mandarin
+  vs Fuzhounese), and if so does the exact pin matter? And if not, shouldn't a pin
+  anywhere in the right country be full marks? (A northern-Italy pin for Latin
+  scored 98 only because it is far from Rome.)
+- **Measured it.** The bank maps 304 languages over 155 countries, and multi-language
+  countries are the norm, not the exception: the US hosts 17 mapped languages (spread
+  11,392 km English to Hawaiian), CN 13 (Mandarin, Cantonese, Hokkien, Min Nan, Wu,
+  Middle Chinese, Tocharian A/B ... spread 3,813 km), IN 14, IT 20, CA 8, RU 7, MX 2
+  (Nahuatl in Mexico City vs Yucatec Maya in Yucatán, ~1,063 km). **99 of 100 bank
+  entries share their country with another mapped language.**
+- But the distance was a bad proxy: most of those rivals are in the same country only
+  because the curated country sets are generous and overlapping (Ancient Greek claims
+  IT through Magna Graecia; Chinese claims SG). So the old rule was mostly measuring
+  distance from an arbitrary centroid, which is exactly why a correct Milan pin lost
+  2 points.
+- **Changed it:** a pin anywhere inside the deep origin's country now scores 100, and
+  an intermediate hop inside its country scores a flat 70. `INSIDE_PENALTY_MAX` and
+  `INSIDE_PENALTY_DISTANCE_KM` are gone; `distanceKm` is still reported for the
+  reveal, it just no longer scores. Wrong-country behaviour is untouched (border
+  proximity, 5000 km outer limit).
+- Measured the effect against the real map: of 166 (entry, country) pairs, **every
+  one** had a reachable point that scored under 100 before (median 96, worst 90) and
+  scores 100 now. 88 of them are more than 1000 km from the answer point, 22 more
+  than 3000 km (FR 7,637 km, RU 6,841 km, DZ 5,397 km).
+- The 22 are the wrinkle worth knowing: "inside the country" includes far-flung
+  territory, so a pin in French Guiana is 100 for Old French and Vladivostok is 100
+  for Russian. That is consistent with the rule and with the language table (Arabic
+  genuinely claims SA/EG/DZ), so it is left as is; a distance cap would reintroduce
+  the arbitrariness the change removes.
+- tests: 252 (+1). The scoring suite now has an IT rectangle and a Latin fixture, and
+  asserts the reported case directly (Milan and Sicily both 100 for Latin), plus full
+  marks at Vladivostok for Russian (was 90) and the flat intermediate credit (was
+  65-70, now exactly 70).
+
 ## Verification (re-run before trusting anything)
 
 
 
 
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 251 passed (18 files)
+    npx vitest run            # 252 passed (18 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -631,6 +669,11 @@ so the period labels change exactly where the handle crosses them.
   the blurb naming a placeable language the chain lacks is the tell.
 - `buildWordBank` refuses a bank with an empty tier, so a test whose fixture drops a
   word by design must pass `assembleBank: false` and assert on the report instead.
+- Distance inside a country is not evidence of a wrong answer: the curated country
+  sets are generous and overlapping (99 of 100 entries share their country with
+  another mapped language; 20 languages claim Italy), so distance-to-centroid mostly
+  measured arbitrariness. Country is the unit; the pin's distance is reported, not
+  scored.
 - A native range input's thumb is a pseudo-element of the input: nothing inside the
   input paints above it. To put something "in front of the thumb" it must be a
   sibling with a higher z-index, and both need explicit z-indices so the result does

@@ -23,6 +23,7 @@ const RECTS: Record<string, Rect> = {
   CN: { lonMin: 73, lonMax: 135, latMin: 18, latMax: 53 },
   EG: { lonMin: 25, lonMax: 34.4, latMin: 22, latMax: 31.5 },
   DZ: { lonMin: -8.7, lonMax: 12, latMin: 19, latMax: 37 },
+  IT: { lonMin: 7, lonMax: 18.5, latMin: 36.6, latMax: 47.1 },
 };
 
 const REGIONS: Record<string, { subregion?: string; continent?: string }> = {
@@ -38,6 +39,7 @@ const REGIONS: Record<string, { subregion?: string; continent?: string }> = {
   CN: { subregion: "Eastern Asia", continent: "Asia" },
   EG: { subregion: "Northern Africa", continent: "Africa" },
   DZ: { subregion: "Northern Africa", continent: "Africa" },
+  IT: { subregion: "Southern Europe", continent: "Europe" },
 };
 
 function inRect(rect: Rect, p: LatLng): boolean {
@@ -110,6 +112,18 @@ const arabicWord: BankEntry = {
   blurb: "From Arabic qahwah.",
 };
 
+const latinWord: BankEntry = {
+  id: "enemy",
+  word: "enemy",
+  year: 1200,
+  tier: 4,
+  originChain: ["Middle English", "Old French", "Latin"],
+  originLanguage: "Latin",
+  countries: ["IT"],
+  point: { lat: 41.9, lng: 12.5 }, // Rome
+  blurb: "From Middle English, ultimately from Latin.",
+};
+
 describe("haversineKm", () => {
   it("computes known great-circle distances", () => {
     const london = { lat: 51.5074, lng: -0.1278 };
@@ -167,10 +181,23 @@ describe("scoreTemporalRange", () => {
 describe("scoreGeographic - country-aware leniency", () => {
   const ctx = makeContext();
 
-  it("scores any pin inside the answer country high, even far from the answer point", () => {
+  it("gives full marks anywhere inside the answer country, however far from the point", () => {
+    // Vladivostok is ~6,400 km from Moscow. The country is the unit of knowledge,
+    // so where inside it you pin is not evidence of a wrong answer.
     const detail = scoreGeographic(russianWord, { lat: 43.1, lng: 131.9 }, ctx);
     expect(detail.credit).toBe("country");
-    expect(detail.score).toBe(90);
+    expect(detail.score).toBe(100);
+    expect(detail.distanceKm).toBeGreaterThan(6000); // still reported for the reveal
+  });
+
+  it("REQUIREMENT: northern Italy is full marks for Latin", () => {
+    // Reported from play: a Milan pin scored 98 because it is far from Rome. The
+    // answer country is right, so it is 100.
+    const milan = scoreGeographic(latinWord, { lat: 45.46, lng: 9.19 }, ctx);
+    expect(milan.credit).toBe("country");
+    expect(milan.score).toBe(100);
+    const sicily = scoreGeographic(latinWord, { lat: 37.5, lng: 14 }, ctx);
+    expect(sicily.score).toBe(100);
   });
 
   it("gives a perfect score at the answer point", () => {
@@ -301,10 +328,11 @@ describe("scoreGeographic - multi-hop words (deep origin + intermediate)", () =>
     const paris = scoreGeographic(multiHop, { lat: 48.85, lng: 2.35 }, ctx);
     expect(paris.credit).toBe("intermediate");
     expect(paris.score).toBe(70); // 100 * INTERMEDIATE_WEIGHT
+    // Flat inside the hop country: no distance component, for the same reason the
+    // deep origin's country has none.
     const lyon = scoreGeographic(multiHop, { lat: 45.76, lng: 4.84 }, ctx);
     expect(lyon.credit).toBe("intermediate");
-    expect(lyon.score).toBeGreaterThanOrEqual(65);
-    expect(lyon.score).toBeLessThan(70);
+    expect(lyon.score).toBe(70);
   });
 
   it("REQUIREMENT: Saudi Arabia > France > wrong > zero for Arabic->French->English", () => {

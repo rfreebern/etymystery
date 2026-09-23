@@ -254,21 +254,26 @@ etymology-db's exact column schema). Together with the 22-language
   is 99, a century out is 37, two centuries out is 14. The slider's geometry lives
   in `src/scoring.ts` (`GUESS_SPAN_YEARS`, `GUESS_STEP_YEARS`) and the client's
   alignment maths in `web/src/slider.ts`.
-- **Geographic** (0-100), hop-aware and deliberately lenient. The answer is
-  anchored to the word's DEEPEST origin (e.g. Arabic for a word that went
-  Arabic -> French -> English):
-  - pin inside the deep origin's country: high score with only a gentle
-    decay from the answer point (max 10-point penalty);
-  - pin inside an intermediate-hop country (e.g. France): direct hit only,
-    weighted 0.7 — "right route, right stop";
+- **Geographic** (0-100), hop-aware, and the **country is the unit of knowledge**.
+  The answer is anchored to the word's DEEPEST origin (e.g. Arabic for a word that
+  went Arabic -> French -> English):
+  - pin anywhere inside the deep origin's country: **full marks**. Where inside a
+    country you pin is not evidence of a wrong answer: the answer point is a rough
+    centroid for a historical language (Rome for Latin, Oslo for Old Norse), and
+    dozens of mapped languages can share one country (20 of them claim Italy), so
+    distance-to-centroid would penalise correct answers arbitrarily. The distance is
+    still reported for the reveal, it just does not score;
+  - pin inside an intermediate-hop country (e.g. France): direct hit only, flat 0.7,
+    meaning "right route, right stop";
   - pin in the wrong country: proximity to the deep origin's *border* (not
     centroid), 1500 km decay scale;
   - region/continent matches (UN M49 subregion / continent, anchored to
-    the deep origin) are shown as reveal-time labels only — they never
+    the deep origin) are shown as reveal-time labels only; they never
     add points beyond border proximity;
   - outer limit: pins farther than 5000 km from every hop score 0.
-  - Result: Saudi Arabia > France > wrong-but-near > zero (covered by
-    explicit tests, including the Russia-vs-Netherlands case).
+  - Result: right country = 100, Saudi Arabia > France > wrong-but-near > zero
+    (covered by explicit tests, including the Russia-vs-Netherlands and
+    northern-Italy-for-Latin cases).
 - Round total: mean of the two axes; both components are shown separately
   on reveal.
 

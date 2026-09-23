@@ -116,7 +116,9 @@ describe("world-atlas integration", () => {
 
     const vladivostok = scoreGeographic(russianWord, { lat: 43.1, lng: 131.9 }, ctx);
     expect(vladivostok.credit).toBe("country");
-    expect(vladivostok.score).toBe(90);
+    // Full marks: the right country is the right answer, wherever inside it the
+    // pin lands (this used to score 90 for being far from Moscow).
+    expect(vladivostok.score).toBe(100);
 
     const utrecht = scoreGeographic(norwegianWord, { lat: 52.08, lng: 5.12 }, ctx);
     expect(utrecht.credit).toBe("continent");
