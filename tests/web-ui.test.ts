@@ -84,7 +84,10 @@ describe("scored rounds are frozen", () => {
   });
 
   it("tells the player what is still possible once frozen", () => {
-    expect(functionBody(main, "lockRound").toLowerCase()).toMatch(/zoom and pan/);
+    // The wording is device-appropriate (see tests/copy.test.ts); here it only has to
+    // be the copied line, not the drag hint the round started with.
+    expect(functionBody(main, "lockRound")).toContain("hints.locked");
+    expect(functionBody(main, "lockRound")).not.toContain("hints.timeline");
     expect(css).toMatch(/\.tl-slider:disabled/);
   });
 });
@@ -214,6 +217,18 @@ describe("touch and small screens", () => {
     // `.tl-era` (the "Middle English · Early Modern" line) is NOT hidden: it is the
     // same information in words, and it stays on every screen size.
     expect(mobile).not.toContain(".tl-era");
+  });
+
+  it("never hard-codes mouse-only copy in the client", () => {
+    // The client asks the copy module, so the device-specific wording lives in one
+    // place and cannot be left behind on the desktop phrasing.
+    expect(main).toContain("hintsFor(isTouchFirst())");
+    for (const literal of ["scroll to zoom", "click to pin", "Zoom in (or scroll", "← → for 25-year steps"]) {
+      expect(main, literal).not.toContain(literal);
+    }
+    for (const key of ["hints.map", "hints.zoomIn", "hints.timeline", "hints.locked"]) {
+      expect(main, key).toContain(key);
+    }
   });
 
   it("lifts the tablet thumb only in the touch layout", () => {

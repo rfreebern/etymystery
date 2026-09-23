@@ -20,6 +20,7 @@ import {
 } from "./slider";
 import { ROUTE_ARROW, beyondNote, routeLine } from "./reveal";
 import { ZOOM_STEP } from "./view";
+import { hintsFor, isTouchFirst } from "./copy";
 import {
   currentRoundIndex,
   guessRange,
@@ -33,6 +34,9 @@ import {
 } from "./game";
 
 const app = document.getElementById("app")!;
+
+/** Hints phrased for how this device is driven: mouse-and-keyboard, or touch. */
+const hints = hintsFor(isTouchFirst());
 
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
@@ -159,10 +163,10 @@ async function boot(): Promise<void> {
       return button;
     };
     mapTools.append(
-      tool("+", "Zoom in (or scroll / double-click the map)", () => worldMap.zoomBy(ZOOM_STEP)),
-      tool("−", "Zoom out", () => worldMap.zoomBy(1 / ZOOM_STEP)),
-      tool("Reset", "Fit the whole world again", () => worldMap.resetView()),
-      el("span", "map-hint", "scroll to zoom · drag to pan · click to pin"),
+      tool("+", hints.zoomIn, () => worldMap.zoomBy(ZOOM_STEP)),
+      tool("−", hints.zoomOut, () => worldMap.zoomBy(1 / ZOOM_STEP)),
+      tool("Reset", hints.reset, () => worldMap.resetView()),
+      el("span", "map-hint", hints.map),
     );
     mapPanel.append(worldMap.svg, mapTools);
     worldMap.onPick((lngLat) => {
@@ -228,11 +232,7 @@ async function boot(): Promise<void> {
     const track = el("div", "tl-track");
     track.append(slider);
 
-    const hint = el(
-      "div",
-      "tl-hint",
-      "drag, or use ← → for 25-year steps · any answer inside the window scores full marks",
-    );
+    const hint = el("div", "tl-hint", hints.timeline);
     timeline.append(
       el("label", undefined, `First used in this ${bounds.span}-year window`),
       head,
@@ -258,7 +258,7 @@ async function boot(): Promise<void> {
       worldMap.allowPicking(false);
       submitButton.disabled = true;
       submitButton.textContent = "Locked in";
-      hint.textContent = "Locked in. Zoom and pan the map to inspect the answer.";
+      hint.textContent = hints.locked;
     }
 
     submitButton.addEventListener("click", () => {

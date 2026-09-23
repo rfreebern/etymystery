@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 269/269 tests passing, typecheck clean, static build green. The bank is
+`main`): 278/278 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -746,6 +746,30 @@ on-land anchors** (this batch)
   `timeline-scale{display:none}` rule ships in the CSS, and the built stylesheet
   carries both `--thumb-lift: 0` and the touch override.
 
+**Session 11 — hints in the device's own vocabulary** (this batch)
+
+- Reported: the copy assumes a desktop — "scroll to zoom", "click to pin", "use ← →
+  for 25-year steps" mean nothing on a phone. All device-dependent wording moved to
+  `web/src/copy.ts`: `DESKTOP_HINTS` (scroll / click / double-click / arrow keys) and
+  `TOUCH_HINTS` (pinch / tap / drag the handle), selected by `isTouchFirst()` on the
+  same query the stylesheet switches its layout with, `(hover: none) and
+  (pointer: coarse)`. The neutral lines (`Zoom out`, `Fit the whole world again`) are
+  shared, and the frozen-round line reads `Zoom and pan` or `Pinch and drag`
+  accordingly.
+- Read once per load rather than subscribed to: a device does not change class
+  mid-round, so re-rendering hints on a media-query flip would be machinery for the
+  rare case of plugging a mouse into a tablet. `matchMedia` being absent (node, old
+  browsers) falls back to `navigator.maxTouchPoints`.
+- Guards: `tests/copy.test.ts` asserts the touch set contains none of
+  `scroll / click / double-click / ← / → / cursor`, that the desktop set names its own
+  gestures, that the neutral strings are identical, that `isTouchFirst` follows the
+  query *and* the `maxTouchPoints` fallback, and that the stylesheet still carries
+  `TOUCH_QUERY` (two languages cannot share a constant, so the drift is asserted).
+  `tests/web-ui.test.ts` asserts the client never hard-codes the mouse-only strings
+  again. Both verified to fail: a `click` inserted into the touch copy, and the CSS
+  query changed.
+- tests: 278 total (+9). Build verified: both copy sets ship in the bundle.
+
 ## Verification (re-run before trusting anything)
 
 
@@ -760,8 +784,10 @@ on-land anchors** (this batch)
 
 
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 269 passed (19 files)
+    npx vitest run            # 278 passed (20 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

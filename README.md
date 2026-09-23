@@ -130,6 +130,12 @@ player's 100 years, so the slider's last position is 1925 — with era markers
 playable; that window lives in `src/timeline.ts` and is shared with the curation
 tooling, so the tools can never disagree with what the game scores.
 
+The hints name the gesture the device actually has: **pinch, drag and tap** on a
+touch-first device (`(hover: none) and (pointer: coarse)`), and **scroll, drag and
+click** — plus `←`/`→` for 25-year steps — with a mouse and keyboard. The wording
+lives in `web/src/copy.ts` so the two vocabularies cannot drift apart, and a test
+asserts no mouse-only word leaks into the touch set.
+
 **Once you lock it in, the round is frozen for input**: the pin cannot be moved and
 the window cannot be dragged, because the score is already persisted and a movable
 guess would misrepresent it. The answer's year is then marked on the timeline with a
