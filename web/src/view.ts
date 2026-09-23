@@ -77,3 +77,31 @@ export function toMapPoint(view: View, x: number, y: number): { x: number; y: nu
 export function viewTransform(view: View): string {
   return `translate(${view.tx} ${view.ty}) scale(${view.k})`;
 }
+
+/** A two-finger gesture: where the fingers were, and how far apart. */
+export interface PinchSpan {
+  midX: number;
+  midY: number;
+  distance: number;
+}
+
+/**
+ * Apply a pinch step: scale by how much the fingers spread, and follow their
+ * midpoint. The map point under the midpoint stays under it, which is what makes
+ * the gesture feel attached to the fingers rather than to the screen.
+ *
+ * The map has no rotate or tilt, so the gesture is expressed entirely through the
+ * existing zoom/pan state — same clamping as wheel zoom, so a pinch cannot drag the
+ * world off screen either.
+ */
+export function pinch(
+  view: View,
+  from: PinchSpan,
+  to: PinchSpan,
+  width: number,
+  height: number,
+): View {
+  const factor = from.distance > 0 && to.distance > 0 ? to.distance / from.distance : 1;
+  const zoomed = zoomAt(view, factor, from.midX, from.midY, width, height);
+  return panBy(zoomed, to.midX - from.midX, to.midY - from.midY, width, height);
+}

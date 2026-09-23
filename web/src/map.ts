@@ -10,7 +10,7 @@
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import type { CountryFeature } from "./geo-context";
 import type { BankEntry, LatLng } from "../../src/types";
-import { IDENTITY, ZOOM_STEP, panBy, toMapPoint, viewTransform, zoomAt, type View } from "./view";
+import { IDENTITY, ZOOM_STEP, panBy, pinch, toMapPoint, viewTransform, zoomAt, type View } from "./view";
 
 const WIDTH = 960;
 const HEIGHT = 500;
@@ -131,19 +131,57 @@ export function createWorldMap(container: HTMLElement, features: CountryFeature[
     applyView();
   });
 
-  // ---- pan ------------------------------------------------------------------
+  // ---- pan and pinch --------------------------------------------------------
+  // Every active pointer, in viewBox coordinates, so two of them can be read as a
+  // pinch. One pointer pans; two pinch (scale by their spread, follow their midpoint).
+  const pointers = new Map<number, { x: number; y: number }>();
   let dragging: { pointerId: number; x: number; y: number; moved: number } | null = null;
+  let pinchSpan: { midX: number; midY: number; distance: number } | null = null;
+
+  const spanOf = (): { midX: number; midY: number; distance: number } | null => {
+    const [a, b] = [...pointers.values()];
+    if (!a || !b) return null;
+    return {
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+      distance: Math.hypot(a.x - b.x, a.y - b.y),
+    };
+  };
+
   svg.addEventListener("pointerdown", (event: PointerEvent) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 && event.pointerType === "mouse") return;
     const { x, y } = toViewBox(event);
-    dragging = { pointerId: event.pointerId, x, y, moved: 0 };
-    draggedRecently = false;
+    pointers.set(event.pointerId, { x, y });
     svg.setPointerCapture(event.pointerId);
-    svg.classList.add("dragging");
+    draggedRecently = false;
+    if (pointers.size === 1) {
+      dragging = { pointerId: event.pointerId, x, y, moved: 0 };
+      svg.classList.add("dragging");
+    } else if (pointers.size === 2) {
+      dragging = null; // two fingers is a pinch, not a pan
+      pinchSpan = spanOf();
+      svg.classList.remove("dragging");
+    }
   });
+
   svg.addEventListener("pointermove", (event: PointerEvent) => {
-    if (!dragging || dragging.pointerId !== event.pointerId) return;
+    if (!pointers.has(event.pointerId)) return;
     const { x, y } = toViewBox(event);
+    pointers.set(event.pointerId, { x, y });
+
+    if (pointers.size >= 2) {
+      const span = spanOf();
+      if (span && pinchSpan) {
+        view = pinch(view, pinchSpan, span, WIDTH, HEIGHT);
+        applyView();
+        // A pinch must never be read as a pin drop when the fingers lift.
+        draggedRecently = true;
+      }
+      pinchSpan = span;
+      return;
+    }
+
+    if (!dragging || dragging.pointerId !== event.pointerId) return;
     const dx = x - dragging.x;
     const dy = y - dragging.y;
     dragging.x = x;
@@ -154,14 +192,23 @@ export function createWorldMap(container: HTMLElement, features: CountryFeature[
     view = panBy(view, dx, dy, WIDTH, HEIGHT);
     applyView();
   });
-  const endDrag = (event: PointerEvent): void => {
-    if (!dragging || dragging.pointerId !== event.pointerId) return;
-    dragging = null;
-    svg.classList.remove("dragging");
+
+  const endPointer = (event: PointerEvent): void => {
+    if (!pointers.has(event.pointerId)) return;
+    pointers.delete(event.pointerId);
     if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId);
+    if (pointers.size < 2) pinchSpan = null;
+    if (dragging && dragging.pointerId === event.pointerId) {
+      dragging = null;
+      svg.classList.remove("dragging");
+    } else if (pointers.size === 1) {
+      // One finger left after a pinch: keep panning from where it is.
+      const [id, point] = [...pointers.entries()][0]!;
+      dragging = { pointerId: id, x: point.x, y: point.y, moved: 0 };
+    }
   };
-  svg.addEventListener("pointerup", endDrag);
-  svg.addEventListener("pointercancel", endDrag);
+  svg.addEventListener("pointerup", endPointer);
+  svg.addEventListener("pointercancel", endPointer);
 
   // ---- pin drop -------------------------------------------------------------
   svg.addEventListener("click", (event: MouseEvent) => {

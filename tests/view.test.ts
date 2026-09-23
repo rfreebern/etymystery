@@ -11,6 +11,7 @@ import {
   ZOOM_STEP,
   clampView,
   panBy,
+  pinch,
   toMapPoint,
   viewTransform,
   zoomAt,
@@ -68,5 +69,40 @@ describe("view", () => {
 
   it("survives a degenerate zoom of zero", () => {
     expect(toMapPoint({ k: 0, tx: 10, ty: 10 }, 110, 110)).toEqual({ x: 100, y: 100 });
+  });
+});
+
+describe("pinch", () => {
+  it("scales by how far the fingers spread", () => {
+    const from = { midX: 400, midY: 250, distance: 100 };
+    const to = { midX: 400, midY: 250, distance: 200 };
+    expect(pinch(IDENTITY, from, to, W, H).k).toBeCloseTo(2, 6);
+    // Fingers closing pinch out again.
+    expect(pinch(zoomAt(IDENTITY, 2, 400, 250, W, H), to, from, W, H).k).toBeCloseTo(1, 6);
+  });
+
+  it("keeps the map point under the fingers, and follows their midpoint", () => {
+    const from = { midX: 300, midY: 200, distance: 120 };
+    const to = { midX: 360, midY: 230, distance: 240 }; // spread 2x and moved 60,30
+    const view = pinch(IDENTITY, from, to, W, H);
+    // The map point that was under the old midpoint is under the new one.
+    const mapPoint = toMapPoint(IDENTITY, from.midX, from.midY);
+    const projected = { x: mapPoint.x * view.k + view.tx, y: mapPoint.y * view.k + view.ty };
+    expect(projected.x).toBeCloseTo(to.midX, 6);
+    expect(projected.y).toBeCloseTo(to.midY, 6);
+  });
+
+  it("cannot zoom past the limits or drag the world off screen", () => {
+    const far = { midX: 100, midY: 100, distance: 10 };
+    const veryFar = { midX: 100, midY: 100, distance: 100000 };
+    expect(pinch(IDENTITY, far, veryFar, W, H).k).toBe(MAX_ZOOM);
+    const squeezed = pinch(IDENTITY, veryFar, far, W, H);
+    expect(squeezed.k).toBe(MIN_ZOOM);
+    expect(squeezed).toMatchObject({ tx: 0, ty: 0 });
+  });
+
+  it("ignores a degenerate span instead of producing NaN", () => {
+    const view = pinch(IDENTITY, { midX: 10, midY: 10, distance: 0 }, { midX: 10, midY: 10, distance: 0 }, W, H);
+    expect(view).toEqual(IDENTITY);
   });
 });

@@ -99,6 +99,12 @@ main {
 }
 .tl-era { color: var(--muted); font-size: 12px; min-height: 16px; }
 
+/* Vertical alignment of a custom range thumb differs per engine, and on touch
+   devices it hangs below the timeline box. The tablet is lifted by half its own
+   height, which is the nudge that matches what iOS/Android render; `translateY`
+   (not margin) so it cannot affect the layout of the track or the labels. Change
+   this single value if a device wants a different offset. */
+.tl-slider { --thumb-lift: -50%; }
 .tl-slider {
   -webkit-appearance: none; appearance: none;
   width: 100%; height: 30px; margin: 0; padding: 0;
@@ -112,6 +118,7 @@ main {
 .tl-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: var(--tablet-w, 48px); height: 26px;
+  transform: translateY(var(--thumb-lift, 0));
   border-radius: 7px; background: var(--accent);
   border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
@@ -119,6 +126,7 @@ main {
 .tl-slider::-moz-range-track { height: 8px; border-radius: 4px; background: #2c3242; }
 .tl-slider::-moz-range-thumb {
   width: var(--tablet-w, 48px); height: 26px;
+  transform: translateY(var(--thumb-lift, 0));
   border-radius: 7px; background: var(--accent);
   border: 1px solid rgba(255, 255, 255, 0.45);
 }
@@ -197,6 +205,10 @@ button.secondary { background: #2c3242; color: var(--ink); }
 
 @media (max-width: 640px) {
   .rounds-grid { grid-template-columns: 1fr 1fr; }
+  /* The era ruler below the slider is cramped at this width (four absolutely
+     positioned labels), and the same information is already spelled out above the
+     slider ("1450 – 1550 · Middle English · Early Modern"). */
+  .timeline-scale { display: none; }
 }
 
 /* Attributions: present for licence compliance, quiet enough to ignore. */

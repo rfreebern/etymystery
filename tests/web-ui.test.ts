@@ -193,11 +193,38 @@ describe("the game's copy", () => {
   });
 });
 
-describe("score labels", () => {
-  it("names the three components in full", () => {
-    expect(main).toContain('["Year Score", stored.temporal]');
-    expect(main).toContain('["Map Score", stored.geographic]');
-    expect(main).toContain('["Round Score", stored.total]');
+describe("touch and small screens", () => {
+  it("pins the map with two fingers, and never mistakes a pinch for a pin drop", () => {
+    // One pointer pans, two pinch: the gesture is read from the spread of the
+    // pointers and applied through the shared view maths.
+    expect(map).toContain("const pointers = new Map<number,");
+    expect(map).toContain("pointers.size >= 2");
+    expect(map).toContain("view = pinch(view, pinchSpan, span, WIDTH, HEIGHT)");
+    expect(map).toContain("pinchSpan = spanOf()");
+    // Lifting two fingers must not place a pin at the last touch.
+    expect(map).toContain("A pinch must never be read as a pin drop");
+    // The browser must not scroll or zoom the page instead of pinching the map.
+    expect(map).toContain('svg.style.touchAction = "none"');
+  });
+
+  it("drops the era ruler on a phone, keeping the period names above the slider", () => {
+    const start = css.indexOf("@media (max-width: 640px)");
+    const mobile = start < 0 ? "" : css.slice(start, css.indexOf("\n}", start));
+    expect(mobile).toContain(".timeline-scale { display: none; }");
+    // `.tl-era` (the "Middle English · Early Modern" line) is NOT hidden: it is the
+    // same information in words, and it stays on every screen size.
+    expect(mobile).not.toContain(".tl-era");
+  });
+
+  it("lifts the tablet thumb so it cannot hang off the timeline", () => {
+    expect(css).toContain("--thumb-lift: -50%");
+    const ruleFor = (selector: string): string => {
+      const at = css.indexOf(selector);
+      return at < 0 ? "" : css.slice(css.indexOf("{", at) + 1, css.indexOf("}", at));
+    };
+    for (const selector of [".tl-slider::-webkit-slider-thumb", ".tl-slider::-moz-range-thumb"]) {
+      expect(ruleFor(selector), selector).toContain("transform: translateY(var(--thumb-lift, 0))");
+    }
   });
 
   it("leaves no bare component labels behind", () => {

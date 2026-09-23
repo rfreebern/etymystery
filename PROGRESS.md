@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 263/263 tests passing, typecheck clean, static build green. The bank is
+`main`): 269/269 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -713,6 +713,37 @@ on-land anchors** (this batch)
 - tests: 263 total (+2). Verification: tsc clean, 263/263, vite build green (serves
   `countries-50m.json`), subpath serve returns 200 for page, bundle, bank and map.
 
+**Session 10 — mobile: pinch to zoom, a readable timeline, a thumb that sits still**
+(this batch)
+
+- **Pinch zoom.** The map tracked a single pointer for panning and nothing for two,
+  so a two-finger gesture was either ignored or read as a drag. It now tracks every
+  active pointer in viewBox coordinates; one pans, two scale by their spread and
+  follow their midpoint. The maths is a new `pinch()` in `web/src/view.ts` (DOM-free,
+  like the rest of the view state) so its invariants are testable: the map point under
+  the fingers stays under them, `k` scales by the distance ratio, the same clamps
+  apply as wheel zoom (a pinch cannot drag the world off screen or exceed 8x), and a
+  degenerate span cannot produce NaN. Verified the guard bites by deleting the pinch
+  call and watching the test fail.
+- **A pinch never becomes a pin.** Lifting two fingers raises `draggedRecently`, so
+  the click that ends a gesture cannot drop a pin at the last touch. `touch-action:
+  none` (already set) is what stops the browser zooming the page instead.
+- **Era ruler hidden below 640px.** Four absolutely positioned labels do not fit a
+  phone (`Early Modern` is 15% of the track), and the same information is already in
+  words above the slider. The `.tl-era` line is deliberately *not* hidden.
+- **The tablet thumb lifted by half its height** (`--thumb-lift: -50%`, applied as
+  `translateY` to both the `-webkit` and `-moz` thumb), because it hung off the bottom
+  of the timeline panel on the device. One variable, and the comment says so: if a
+  device wants a different offset, that number is the only thing to change. Applied
+  unconditionally rather than behind a media query — a `pointer: coarse` scope would
+  leave touchscreen laptops misaligned — so this is the one change in this batch worth
+  eyeballing on a desktop browser.
+- tests: 269 total (+6: four pinch cases in `tests/view.test.ts`, plus three
+  source/CSS guards in `tests/web-ui.test.ts` for the pinch wiring, the hidden ruler
+  and the thumb lift). Build verified: `Math.hypot`, `pointercancel`,
+  `setPointerCapture` and `touchAction` all present in the shipped bundle, and the
+  mobile `timeline-scale{display:none}` rule ships in the CSS.
+
 ## Verification (re-run before trusting anything)
 
 
@@ -725,8 +756,10 @@ on-land anchors** (this batch)
 
 
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 263 passed (19 files)
+    npx vitest run            # 269 passed (19 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

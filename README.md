@@ -99,11 +99,18 @@ Each round: drop a pin where the word came from, place the year window on the
 timeline, lock it in.
 
 **The map** zooms and pans: scroll to zoom (toward the cursor), drag to pan,
-double-click to zoom in, and `+` / `−` / `Reset` sit in the map's corner. A drag is
-never mistaken for a pin drop — the gesture is only a click if the pointer stayed
-within a few pixels — and the pin markers are counter-scaled so they stay a
-readable size at any zoom. Pins cannot be dragged off screen: panning is clamped to
-the map's own edges.
+double-click to zoom in, **two fingers to pinch** on a touch screen, and
+`+` / `−` / `Reset` sit in the map's corner. A drag is never mistaken for a pin drop
+— the gesture is only a click if the pointer stayed within a few pixels, and a pinch
+never places a pin at all — and the pin markers are counter-scaled so they stay a
+readable size at any zoom. Pins cannot be dragged off screen: panning and pinching
+are clamped to the map's own edges.
+
+On a narrow screen (< 640px) the era ruler under the slider is hidden, because four
+absolutely positioned labels do not fit; the period names are still spelled out above
+the slider (`1450 – 1550 · Middle English · Early Modern`). The tablet thumb is
+lifted by half its height (`--thumb-lift`) so it sits on the timeline rather than
+hanging below it, which is what touch browsers otherwise do with a custom thumb.
 
 **The timeline** asks for a **100-year window**, not a single year: the handle is a
 tablet spanning exactly 100 years and it moves in 25-year steps (arrow keys work).
