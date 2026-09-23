@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 246/246 tests passing, typecheck clean, static build green. The bank is
+`main`): 251/251 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -529,12 +529,55 @@ so the period labels change exactly where the handle crosses them.
   verified to fail when the rule is broken.
 - tests: 246 total.
 
+**Session 6 — the source skipped a language, so `coyote` asked about Spain**
+(this batch)
+
+- Reported from play: pinning Mexico for `coyote` highlighted Spain and scored ~0,
+  while the blurb said "Mexican Spanish from Nahuatl". Traced to the data: the
+  4.2M rows record `English coyote --borrowed_from--> Spanish` and
+  `Spanish coyote --derived_from--> Proto-Nahuan`, and **no
+  `Spanish -> Nahuatl` edge exists at all**. Since Proto-Nahuan is a reconstruction
+  with no place on a map, the deepest *placeable* hop was Spanish, so the answer
+  became Spain (ES) and a Mexico pin fell outside MAX_RELEVANCE_KM of every hop:
+  map 0, round 50, credit "none". The pipeline did what it was designed to; the
+  source has a hole.
+- Fixed with a new curated input, `curated/edge-overrides.csv` (same schema and
+  direction as the filtered edges), merged into the donor edges before the walk:
+  `Spanish,coyote,borrowed_from,Classical Nahuatl,coyōtl`. `build:bank` applies the
+  file by default, prints `override edges: N applied from <path>`, ignores rows that
+  repeat a recorded edge, accepts `--extra-edges <file>` and `--no-overrides`.
+- Re-curated `coyote:noun` to `origin: Classical Nahuatl` (with the new hop, the
+  recorded origins list is just Nahuatl, so the old value was refused — the audit
+  caught the stale entry with `origin "Spanish" is not among the recorded origins
+  (Classical Nahuatl)` and skipped it, which is exactly why the build reports
+  skipped entries instead of quietly shipping stale puzzles).
+- Verified before/after on the player's own scenario, scoring a pin at Mexico City
+  against the old and new banks: **before** answer=Spanish/ES, map **0**, round 50,
+  credit none; **after** answer=Classical Nahuatl/MX, map **100**, round **100**,
+  credit country. `masterSequence` ids are in the SAME order in both banks, so day
+  mapping never shifted. Route now reads `Classical Nahuatl → Spanish → English`.
+- Scanned the rest of the bank for the same shape (blurb naming a language the
+  chain does not contain): 34 of 100 entries, but nearly all benign — the other
+  recorded branch, or prose naming the parent language. The one genuine near-miss
+  is `geyser` (blurb says Icelandic; the source records Icelandic only as
+  `etymologically_related_to`, which this pipeline drops, while Old Norse is the
+  recorded donor) — and it is harmless because Old Norse already anchors to Iceland,
+  so a pin at Geysir still scores.
+- tests: 251 total (+5) for the override mechanism: the fixture reproduces the
+  coyote shape, asserts the shallow answer without an override, the missing language
+  becoming the answer (with its country and point) with one, the stale-curation
+  refusal, and that a duplicate override row is ignored. Negative cases build with
+  `assembleBank: false`, because a skipped word leaves its tier empty and a bank
+  cannot be assembled from that.
+
 ## Verification (re-run before trusting anything)
 
 
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 246 passed (18 files)
+    npx vitest run            # 251 passed (18 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -582,6 +625,12 @@ so the period labels change exactly where the handle crosses them.
 
 ## Gotchas learned (do not re-fight)
 
+- A source that skips a real, locatable language silently moves a puzzle's answer to
+  a shallower one. `coyote` had no `Spanish -> Nahuatl` edge at all, so the answer
+  became Spain and a correct pin scored zero. Check the *chain*, not just the year:
+  the blurb naming a placeable language the chain lacks is the tell.
+- `buildWordBank` refuses a bank with an empty tier, so a test whose fixture drops a
+  word by design must pass `assembleBank: false` and assert on the report instead.
 - A native range input's thumb is a pseudo-element of the input: nothing inside the
   input paints above it. To put something "in front of the thumb" it must be a
   sibling with a higher z-index, and both need explicit z-indices so the result does

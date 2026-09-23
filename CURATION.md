@@ -244,6 +244,63 @@ Two details worth knowing:
 `npm run curate -- --mode next` prints each sense with its origin, and the admin
 app gives each sense its own card (with a live "files as" key preview).
 
+## When the recorded chain is wrong
+
+The chain comes from a faithful *parse* of Wiktionary, not a checked dataset. One
+failure mode is invisible but changes the answer: **the source can skip a real,
+locatable language**, so the walk never reaches it and the puzzle anchors to a
+shallower one.
+
+The case that surfaced it (`coyote`, reported from play): Wiktionary records
+
+    English coyote --borrowed_from--> Spanish coyote
+    Spanish coyote --derived_from--> Proto-Nahuan *koyootl
+
+There is no `Spanish -> Nahuatl` edge anywhere in the 4.2M rows. Since
+Proto-Nahuan is a reconstruction with no place on a map, the deepest *placeable*
+hop was Spanish, so the puzzle asked about **Spain**. A player pinning Mexico, the
+actual answer, scored zero.
+
+### Fixing it: curated edge overrides
+
+Add the missing hop to `curated/edge-overrides.csv`, in the same schema as the
+filtered edges (and the same direction: `lang,term <reltype> related_lang,related_term`
+means lang's term came from related_lang's term):
+
+    lang,term,reltype,related_lang,related_term
+    Spanish,coyote,borrowed_from,Classical Nahuatl,coyōtl
+
+`npm run build:bank` picks that file up automatically (default path
+`curated/edge-overrides.csv`) and prints how many edges it applied. Use
+`--extra-edges <file>` for a different file, `--no-overrides` to ignore it
+entirely. An override that repeats an edge the source already has is ignored, so
+the file is safe to keep as a record of what the source gets wrong.
+
+Then **rebuild and re-read the `origins` column** of the work list, because the
+new branch changes the answer. The audit makes this hard to miss: an entry whose
+`origin` names the old answer is refused with
+`origin "Spanish" is not among the recorded origins (Classical Nahuatl)`, and the
+build reports it as skipped rather than shipping a stale puzzle. Update the
+entry's `origin` (and its `pos` if the word is a homograph) and rebuild.
+
+Rules of thumb:
+
+- One override should restore a hop the source *omits*, not invent a derivation.
+  If a reference genuinely disagrees with the source, the entry's blurb is the
+  place to say so.
+- Overrides are the curator's assertion, so entries that depend on one stay
+  `unverified` until a human checks the chain as well as the year.
+- Prefer an override over a different answer: the alternative is picking a
+  shallower origin, which puts the puzzle somewhere the word never came from.
+
+Known shape to watch for (a blurb that names a language the chain does not
+contain). Most such mentions are benign prose — the other recorded branch, or the
+parent language — but a mention of a *placeable* language that is the true donor
+means the source skipped a hop. `geyser` is the deliberate contrast: its blurb
+mentions Icelandic, but Icelandic is recorded only as `etymologically_related_to`
+(a relation this pipeline drops), Old Norse *is* the recorded donor, and Old Norse
+already anchors to Iceland, so a player pinning Geysir still scores.
+
 ## The timeline window (700–2025)
 
 The slider spans `ANSWER_YEAR_MIN`–`ANSWER_YEAR_MAX` from `src/timeline.ts`, which

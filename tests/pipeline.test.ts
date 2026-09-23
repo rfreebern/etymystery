@@ -69,6 +69,96 @@ function build() {
   });
 }
 
+describe("curated edge overrides", () => {
+  // The shape that surfaced this (from the real `coyote`): the source records a loan
+  // through Spanish, then jumps straight to a RECONSTRUCTION. Nahuatl, the answer a
+  // player would give, is nowhere in the chain, so the puzzle anchored to Spain and a
+  // pin in Mexico scored zero.
+  const FILLER = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india"];
+  const EDGES = [
+    "lang,term,reltype,related_lang,related_term",
+    ...FILLER.map((word, i) => `English,${word},borrowed_from,Lang${i + 1},${word}`),
+    "English,coyote,borrowed_from,Spanish,coyote",
+    "Spanish,coyote,derived_from,Proto-Nahuan,*koyootl",
+  ].join("\n");
+  const LANGS = [
+    "code\tname\tcountries\tregion\tcontinent\tlat\tlng",
+    "en\tEnglish\tGB\tNorthern Europe\tEurope\t54\t-2",
+    ...FILLER.map((_, i) => `l${i + 1}\tLang${i + 1}\tFR\tWestern Europe\tEurope\t47\t2`),
+    "es\tSpanish\tES\tSouthern Europe\tEurope\t40\t-4",
+    "nci\tClassical Nahuatl\tMX\tNorth America\tAmericas\t19.4\t-99.1",
+  ].join("\n");
+  const OVERRIDE = [
+    "lang,term,reltype,related_lang,related_term",
+    "Spanish,coyote,borrowed_from,Classical Nahuatl,coyōtl",
+  ].join("\n");
+  const tiers = () => {
+    const curation: Record<string, { year: number; tier: number; pos?: string; origin?: string }> = {};
+    FILLER.forEach((word, i) => (curation[word] = { year: 1500, tier: i + 1 }));
+    return curation;
+  };
+  const build = (options: {
+    override?: string;
+    coyoteOrigin: string;
+    /** Off when the case expects coyote to be skipped: an empty tier cannot build. */
+    assemble?: boolean;
+  }): ReturnType<typeof buildBankFromInputs> =>
+    buildBankFromInputs({
+      edgesText: EDGES,
+      overrideEdgesText: options.override,
+      languagesText: LANGS,
+      curation: {
+        ...tiers(),
+        "coyote:noun": { year: 1759, tier: 10, pos: "noun", origin: options.coyoteOrigin },
+      },
+      version: 1,
+      epochStartDay: 0,
+      assembleBank: options.assemble ?? true,
+    });
+
+  it("without an override the answer is the shallow language", () => {
+    const { bank, report } = build({ coyoteOrigin: "Spanish" });
+    const entry = bank!.masterSequence.find((e) => e.word === "coyote")!;
+    expect(report.overrideEdges).toBe(0);
+    expect(entry.originLanguage).toBe("Spanish");
+    expect(entry.countries).toEqual(["ES"]);
+  });
+
+  it("cannot name a language the walk never reaches", () => {
+    // The player-facing bug: naming Nahuatl is refused, because the only recorded
+    // origin is Spanish.
+    const { report } = build({ coyoteOrigin: "Classical Nahuatl", assemble: false });
+    expect(report.skippedEntries).toBe(1);
+    expect(report.warnings.join(" ")).toContain("not among the recorded origins (Spanish)");
+  });
+
+  it("with a curator-supplied edge, the answer is the missing language and its country", () => {
+    const { bank, report } = build({ override: OVERRIDE, coyoteOrigin: "Classical Nahuatl" });
+    const entry = bank!.masterSequence.find((e) => e.word === "coyote")!;
+    expect(report.overrideEdges).toBe(1);
+    expect(entry.originChain).toEqual(["Spanish", "Classical Nahuatl"]);
+    expect(entry.originLanguage).toBe("Classical Nahuatl");
+    expect(entry.countries).toEqual(["MX"]);
+    expect(entry.point).toEqual({ lat: 19.4, lng: -99.1 });
+  });
+
+  it("catches curation left pointing at the old answer", () => {
+    // Exactly what happened when the edge went in: the stale `origin` is refused
+    // loudly rather than silently anchoring the puzzle to Spain.
+    const { report } = build({ override: OVERRIDE, coyoteOrigin: "Spanish", assemble: false });
+    expect(report.skippedEntries).toBe(1);
+    expect(report.warnings.join(" ")).toContain("not among the recorded origins (Classical Nahuatl)");
+  });
+
+  it("ignores an override that repeats an edge the source already has", () => {
+    const { report } = build({
+      override: "lang,term,reltype,related_lang,related_term\nEnglish,coyote,borrowed_from,Spanish,coyote",
+      coyoteOrigin: "Spanish",
+    });
+    expect(report.overrideEdges).toBe(0);
+  });
+});
+
 describe("parseCsv / extractEdges", () => {
   it("parses quoted fields with commas", () => {
     const csv = parseCsv('a,b,c\n"x, y",2,3');

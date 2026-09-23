@@ -58,7 +58,8 @@ file host serves the whole game.
       languages.tsv         seed language table (22 languages, bank v1)
       curation.json         seed words: attested year + tier + blurb
       seed-edges.csv        seed etymology edges (etymology-db schema)
-    tests/          vitest suites (118 tests)
+      edge-overrides.csv    donor edges the source omits (see CURATION.md)
+    tests/          vitest suites (251 tests)
 
 ## Commands
 
@@ -88,6 +89,7 @@ file host serves the whole game.
       --version 2 [--epoch-start 2026-09-21] [--english-code en] [--max-depth 3] \
       [--deepest-attested] [--frequency data/en-frequency.txt] \
       [--exclude-origin en,ang,enm] [--worklist-only] \
+      [--extra-edges curated/edge-overrides.csv] [--no-overrides] \
       [--worklist data/curation-worklist.tsv]
 
 ## Playing it
@@ -200,6 +202,17 @@ source language we can place on the map plus donor relations only, and prints
 the languages that block the most English words. On the 2023-12 release it
 reduces **4,222,599 rows to 771,573** (143 MB -> 9.1 MB) in ~20 s, and reports
 that 96.9% of English donor rows are covered by the generated language table.
+
+### Correcting the source
+
+The parse is faithful, not checked: it sometimes *skips a real, locatable
+language*, which silently moves a puzzle's answer elsewhere (`coyote` reached
+English via Spanish but the source jumps from Spanish straight to the
+reconstruction Proto-Nahuan, so Nahuatl was unreachable and the answer became
+Spain — a pin in Mexico scored zero). `curated/edge-overrides.csv` supplies the
+missing hops; `build:bank` applies it by default and reports how many edges were
+used. The full story, the rules for using it, and the follow-up step of re-reading
+the `origins` column are in [CURATION.md](CURATION.md).
 
 ### Curation order
 

@@ -1722,17 +1722,17 @@
         "tier": 9,
         "originChain": [
           "Spanish",
-          "Proto-Nahuan"
+          "Classical Nahuatl"
         ],
-        "originLanguage": "Spanish",
+        "originLanguage": "Classical Nahuatl",
         "countries": [
-          "ES"
+          "MX"
         ],
         "point": {
-          "lat": 40,
-          "lng": -4
+          "lat": 19.4,
+          "lng": -99.1
         },
-        "blurb": "From Mexican Spanish, from Nahuatl coyotl."
+        "blurb": "From Mexican Spanish, then Nahuatl coyotl."
       },
       {
         "id": "ketchup:noun",
@@ -6642,17 +6642,17 @@
       "tier": 9,
       "originChain": [
         "Spanish",
-        "Proto-Nahuan"
+        "Classical Nahuatl"
       ],
-      "originLanguage": "Spanish",
+      "originLanguage": "Classical Nahuatl",
       "countries": [
-        "ES"
+        "MX"
       ],
       "point": {
-        "lat": 40,
-        "lng": -4
+        "lat": 19.4,
+        "lng": -99.1
       },
-      "blurb": "From Mexican Spanish, from Nahuatl coyotl."
+      "blurb": "From Mexican Spanish, then Nahuatl coyotl."
     },
     {
       "id": "kiosk:noun",

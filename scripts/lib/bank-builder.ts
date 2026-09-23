@@ -20,6 +20,17 @@ export type CurationEntry = CurationEntryInput & { year: number };
 
 export interface BuildBankOptions {
   edgesText: string;
+  /**
+   * Extra donor edges to merge in before walking, same CSV schema as `edgesText`.
+   *
+   * The source is a faithful parse of Wiktionary, not a checked dataset: it
+   * sometimes skips a real, locatable language entirely. `coyote` is the example
+   * that surfaced the need — Wiktionary records English borrowed it from Spanish
+   * and Spanish derived it from the *reconstruction* Proto-Nahuan, so Nahuatl (the
+   * answer a player would give) was unreachable, and the puzzle anchored to Spain.
+   * A curator-supplied edge restores the missing hop.
+   */
+  overrideEdgesText?: string;
   languagesText: string;
   curation: Record<string, CurationEntry>;
   version: number;
@@ -73,6 +84,11 @@ export interface BuildBankReport {
    * own trustworthiness.
    */
   unverifiedEntries: number;
+  /**
+   * Curator-supplied donor edges merged in from `overrideEdgesText` (new edges
+   * only; a row that repeats a recorded edge is ignored).
+   */
+  overrideEdges: number;
   /** Words dropped because their answer origin language was excluded. */
   excludedByOrigin: number;
   warnings: string[];
@@ -101,6 +117,32 @@ export interface UncuratedCandidate {
 
 const DONOR_RELTYPES: ReadonlySet<string> = new Set(Object.keys(DONOR_RELATION_PRIORITY));
 
+/** Stable identity of an edge, for de-duplicating overrides against the source. */
+function edgeKey(edge: EtymEdge): string {
+  return [edge.lang, edge.term, edge.reltype, edge.relatedLang ?? "", edge.relatedTerm ?? ""].join("\u0000");
+}
+
+/**
+ * Merge curator-supplied edges into the source edges, keeping only genuinely new
+ * ones (an override that repeats a recorded edge is ignored rather than duplicated).
+ */
+function mergeOverrideEdges(
+  base: EtymEdge[],
+  overrides: EtymEdge[],
+): { edges: EtymEdge[]; applied: number } {
+  const seen = new Set(base.map(edgeKey));
+  const edges = [...base];
+  let applied = 0;
+  for (const edge of overrides) {
+    const key = edgeKey(edge);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    edges.push(edge);
+    applied += 1;
+  }
+  return { edges, applied };
+}
+
 function autoBlurb(chainNames: string[]): string {
   const immediate = chainNames[0]!;
   const deepest = chainNames[chainNames.length - 1]!;
@@ -124,11 +166,16 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     ambiguousWords: 0,
     ambiguousWithoutOrigin: 0,
     unverifiedEntries: 0,
+    overrideEdges: 0,
     excludedByOrigin: 0,
     warnings: [],
   };
 
-  const donorEdges = extractEdges(options.edgesText, DONOR_RELTYPES);
+  const { edges: donorEdges, applied: overrideEdgesApplied } = mergeOverrideEdges(
+    extractEdges(options.edgesText, DONOR_RELTYPES),
+    options.overrideEdgesText ? extractEdges(options.overrideEdgesText, DONOR_RELTYPES) : [],
+  );
+  report.overrideEdges = overrideEdgesApplied;
   const byCode = parseLanguageTsv(options.languagesText);
 
   // etymology-db stores language NAMES ("Ancient Greek"); our language table is

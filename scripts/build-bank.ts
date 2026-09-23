@@ -11,7 +11,7 @@
  *     --version 1 \
  *     [--epoch-start 2026-01-01] [--english-code en] [--max-depth 3]
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { gunzipSync } from "node:zlib";
@@ -31,6 +31,16 @@ const { values } = parseArgs({
     "max-depth": { type: "string", default: "3" },
     frequency: { type: "string" },
     "exclude-origin": { type: "string" },
+    /**
+     * Curated donor edges to merge in (default: curated/edge-overrides.csv when it
+     * exists). The source is a faithful parse of Wiktionary, not a checked dataset:
+     * it sometimes skips a real, locatable language, which silently anchors a puzzle
+     * to the wrong place (`coyote` reached English via Spanish but the source jumps
+     * straight from Spanish to the reconstruction Proto-Nahuan, so Nahuatl was
+     * unreachable and the answer became Spain).
+     */
+    "extra-edges": { type: "string" },
+    "no-overrides": { type: "boolean", default: false },
     "worklist-only": { type: "boolean", default: false },
     worklist: { type: "string" },
   },
@@ -77,9 +87,24 @@ try {
           .filter(Boolean),
       )
     : undefined;
-  const worklist: Array<{ rank: number; line: string }> = [];
+  const DEFAULT_OVERRIDES = "curated/edge-overrides.csv";
+const overridePath = values["no-overrides"]
+  ? null
+  : values["extra-edges"] ?? DEFAULT_OVERRIDES;
+let overrideEdgesText: string | undefined;
+if (overridePath) {
+  if (existsSync(overridePath)) {
+    overrideEdgesText = readMaybeGzip(overridePath);
+  } else if (values["extra-edges"]) {
+    // An explicitly named file must exist; a missing default is simply "no overrides".
+    fail(`--extra-edges ${overridePath} does not exist`);
+  }
+}
+
+const worklist: Array<{ rank: number; line: string }> = [];
   const { bank, report } = buildBankFromInputs({
     edgesText: readMaybeGzip(values.edges!),
+    overrideEdgesText,
     languagesText: readMaybeGzip(values.languages!),
     curation,
     version,
@@ -115,6 +140,15 @@ try {
       `${report.skippedEntries} skipped as invalid`,
   );
   console.log(`tier counts: ${report.tierCounts.join(", ")}`);
+  if (overridePath) {
+    console.log(
+      report.overrideEdges > 0
+        ? `override edges: ${report.overrideEdges} applied from ${overridePath}`
+        : `override edges: none new in ${overridePath} (already recorded, or the file is empty)`,
+    );
+  } else {
+    console.log("override edges: disabled (--no-overrides)");
+  }
   if (report.ambiguousWords) {
     console.log(
       `        ${report.ambiguousWords} candidates have more than one recorded origin (homographs: ` +
