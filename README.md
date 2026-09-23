@@ -44,9 +44,11 @@ file host serves the whole game.
       bootstrap-languages.ts CLI for the above
     web/            static client (Vite + d3-geo, no backend)
       index.html
-      src/main.ts           round flow, timeline slider, reveal, summary
+      src/main.ts           round flow, timeline, reveal, summary
       src/game.ts           session state machine (pure, injectable storage)
-      src/map.ts            SVG world map: pin drops + reveal highlighting
+      src/map.ts            SVG world map: zoom/pan, pin drops, reveal highlighting
+      src/view.ts           zoom/pan maths (pure: clamp, zoom-at-cursor, inverse)
+      src/slider.ts         timeline geometry (pure: tablet width, era slices)
       src/geo-context.ts    GeocodeContext over Natural Earth + country table
       src/countries.json    generated country table (ISO2 -> ccn3/region)
       public/word-bank.json         the bank, served as a static file
@@ -91,12 +93,33 @@ file host serves the whole game.
 ## Playing it
 
 `npm run dev` serves the game. Ten rounds a day, one per difficulty tier.
-Each round: drop a pin where the word came from, drag the year slider, lock it
-in. The timeline spans **700–2025** with era markers (Old English · Middle
-English · Early Modern · Modern), so medieval loanwords are playable; that window
-lives in `src/timeline.ts` and is shared with the curation tooling, so the tools
-can never disagree with what the game scores. The reveal shows the two score
-components separately plus the full origin route, and progress is kept in
+Each round: drop a pin where the word came from, place the year window on the
+timeline, lock it in.
+
+**The map** zooms and pans: scroll to zoom (toward the cursor), drag to pan,
+double-click to zoom in, and `+` / `−` / `Reset` sit in the map's corner. A drag is
+never mistaken for a pin drop — the gesture is only a click if the pointer stayed
+within a few pixels — and the pin markers are counter-scaled so they stay a
+readable size at any zoom. Pins cannot be dragged off screen: panning is clamped to
+the map's own edges.
+
+**The timeline** asks for a **100-year window**, not a single year: the handle is a
+tablet spanning exactly 100 years and it moves in 25-year steps (arrow keys work).
+Any answer inside the window is a **perfect** temporal score; outside, the score
+decays by how far out it fell. Above the slider the window reads as a range
+(`1450 – 1550`) with every period it touches (`Middle English · Early Modern`) —
+naming one period would be wrong a third of the time, since a 100-year window often
+straddles a boundary. Both the tablet's width and the era scale below it are
+derived from the same mapping (`web/src/slider.ts`), so the labels change exactly
+when the handle crosses a period, not near it.
+
+The timeline spans **700–2025** — a window position is the first year of the
+player's 100 years, so the slider's last position is 1925 — with era markers
+(Old English · Middle English · Early Modern · Modern), so medieval loanwords are
+playable; that window lives in `src/timeline.ts` and is shared with the curation
+tooling, so the tools can never disagree with what the game scores. The reveal
+shows the two score components separately, whether the window caught the year, and
+the full origin route; progress is kept in
 `localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
 resumes and a finished day is never re-scored. `npm run build:web` emits a fully
 static `web/dist/` — any file host serves it.
@@ -199,9 +222,12 @@ etymology-db's exact column schema). Together with the 22-language
 
 ## Scoring
 
-- **Temporal** (0-100): full credit within +/-50 years of the attested
-  year (answers are century-granular), then exponential decay with a
-  100-year half-life scale.
+- **Temporal** (0-100): the player places a **100-year window**; any answer inside
+  it scores 100 (answer years are century-granular, so demanding a tighter hit
+  would be luck). Outside, the score decays as `exp(-years_out/100)`: one year out
+  is 99, a century out is 37, two centuries out is 14. The slider's geometry lives
+  in `src/scoring.ts` (`GUESS_SPAN_YEARS`, `GUESS_STEP_YEARS`) and the client's
+  alignment maths in `web/src/slider.ts`.
 - **Geographic** (0-100), hop-aware and deliberately lenient. The answer is
   anchored to the word's DEEPEST origin (e.g. Arabic for a word that went
   Arabic -> French -> English):

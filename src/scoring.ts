@@ -1,9 +1,9 @@
 /**
  * Scoring: temporal + geographic proximity, both normalized to 0..100.
  *
- * Temporal: distance between the guessed year and the attested year, with a
- * scoring window so that "same century" guesses score well (answers are
- * century-granular).
+ * Temporal: the player positions a 100-year window on the timeline, so any answer
+ * that falls INSIDE the guessed range is a perfect score; outside it the score
+ * decays with how far out the answer fell.
  *
  * Geographic: hop-aware and country-aware. The answer is anchored to the
  * word's DEEPEST origin (the last entry of originChain); intermediate hops
@@ -16,15 +16,17 @@
  * country > far away = zero.
  */
 
-import type { BankEntry, LanguageInfo, LatLng, RoundScore } from "./types";
+import type { BankEntry, LanguageInfo, LatLng, RoundGuess, RoundScore } from "./types";
 import { haversineKm } from "./geo-utils";
 
 export { haversineKm };
 
 
-/** Full temporal credit within this many years of the answer. */
-export const SCORING_WINDOW_YEARS = 50;
-/** Years over which temporal score decays beyond the scoring window. */
+/** Width of the window of years a player chooses on the timeline. */
+export const GUESS_SPAN_YEARS = 100;
+/** The slider moves in these increments — 4 placements per window width. */
+export const GUESS_STEP_YEARS = 25;
+/** Years over which temporal score decays beyond the guessed window. */
 export const TEMPORAL_DECAY_YEARS = 100;
 /** Distance over which geographic score decays beyond the answer border. */
 export const GEO_DECAY_KM = 1500;
@@ -71,10 +73,17 @@ export interface GeographicDetail {
   distanceKm: number | null;
 }
 
-/** Temporal proximity on 0..100. */
-export function scoreTemporal(year: number, guess: number): number {
-  const diff = Math.abs(year - guess);
-  const over = Math.max(0, diff - SCORING_WINDOW_YEARS);
+/**
+ * Temporal proximity on 0..100 for a guessed RANGE of years. The player picks a
+ * 100-year window; an answer anywhere inside it scores 100 (the answer years are
+ * century-granular, so demanding a tighter hit would be luck, not knowledge).
+ * An answer outside decays with its distance from the nearer edge.
+ */
+export function scoreTemporalRange(answerYear: number, from: number, to: number): number {
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+  const over =
+    answerYear < start ? start - answerYear : answerYear > end ? answerYear - end : 0;
   return Math.round(100 * Math.exp(-over / TEMPORAL_DECAY_YEARS));
 }
 
@@ -179,10 +188,10 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
 /** Score a full round. */
 export function scoreRound(
   entry: BankEntry,
-  guess: { year: number; point?: LatLng | null },
+  guess: RoundGuess,
   ctx: GeocodeContext,
 ): RoundScore {
-  const temporal = scoreTemporal(entry.year, guess.year);
+  const temporal = scoreTemporalRange(entry.year, guess.yearStart, guess.yearEnd);
   const geo = guess.point
     ? scoreGeographic(entry, guess.point, ctx)
     : ({ score: 0, credit: "none", matchedCountry: null, distanceKm: null } as GeographicDetail);

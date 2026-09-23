@@ -75,8 +75,10 @@ export interface WordBank {
 
 /** A player's guess for one round. */
 export interface RoundGuess {
-  /** Guessed year (timeline selector). */
-  year: number;
+  /** First year of the guessed window (the timeline slider's value). */
+  yearStart: number;
+  /** Last year of the guessed window, inclusive; inside it is a perfect score. */
+  yearEnd: number;
   /** Guessed point on the map (null if the player skipped pinning). */
   point?: LatLng | null;
 }

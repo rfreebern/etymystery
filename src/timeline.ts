@@ -9,7 +9,7 @@
  * Greek) curatable instead of unusable, while leaving difficulty to the tiers.
  */
 
-import { scoreTemporal } from "./scoring";
+import { GUESS_SPAN_YEARS, GUESS_STEP_YEARS, scoreTemporalRange } from "./scoring";
 
 export const ANSWER_YEAR_MIN = 700;
 export const ANSWER_YEAR_MAX = 2025;
@@ -33,19 +33,46 @@ export function eraOf(year: number): Era {
   return ERAS.find((era) => year >= era.from && year <= era.to) ?? ERAS[ERAS.length - 1]!;
 }
 
+/** Every period a window of years touches — a 100-year window can straddle two. */
+export function erasSpanned(from: number, to: number): Era[] {
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+  const spanned = ERAS.filter((era) => era.to >= start && era.from <= end);
+  return spanned.length > 0 ? spanned : [eraOf(start)];
+}
+
+/**
+ * The range of values the timeline slider can take: its position is the FIRST
+ * year of the player's window, and the window must stay inside the answer window,
+ * so the last legal position is `ceiling - span`.
+ */
+export function sliderStartBounds(
+  floor: number = ANSWER_YEAR_MIN,
+  ceiling: number = ANSWER_YEAR_MAX,
+): { min: number; max: number; step: number; span: number } {
+  return {
+    min: floor,
+    max: Math.max(floor, ceiling - GUESS_SPAN_YEARS),
+    step: GUESS_STEP_YEARS,
+    span: GUESS_SPAN_YEARS,
+  };
+}
+
 /**
  * The best temporal score a player could possibly get for an answer year, given
- * the window the slider can express. Delegates to the real scorer — the maximum
- * is achieved by guessing exactly `clamp(year)` — so this can never drift from
- * what the game actually awards.
+ * the window the slider can express. Delegates to the real scorer — the best
+ * window is the legal one closest to the answer (centred on it where possible) —
+ * so this can never drift from what the game actually awards.
  */
 export function bestPossibleTemporal(
   year: number,
   floor: number = ANSWER_YEAR_MIN,
   ceiling: number = ANSWER_YEAR_MAX,
 ): number {
-  const nearest = Math.min(Math.max(year, floor), ceiling);
-  return scoreTemporal(year, nearest);
+  const { min, max, span } = sliderStartBounds(floor, ceiling);
+  const centred = year - span / 2;
+  const start = Math.min(Math.max(centred, min), max);
+  return scoreTemporalRange(year, start, start + span);
 }
 
 /** Is this year playable on the timeline at all? */

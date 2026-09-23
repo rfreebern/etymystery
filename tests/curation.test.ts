@@ -11,7 +11,7 @@ import {
   type Curation,
 } from "../scripts/lib/curation";
 import { bestPossibleTemporal } from "../src/timeline";
-import { scoreTemporal } from "../src/scoring";
+import { scoreTemporalRange } from "../src/scoring";
 
 const WORKLIST = [
   "word\torigin\tsense\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
@@ -151,7 +151,9 @@ describe("auditCuration", () => {
     expect(audit.unplayableOnSlider).toEqual(["just"]);
     const problems = new Map<string, string[]>();
     for (const issue of audit.issues) problems.set(issue.word, [...(problems.get(issue.word) ?? []), issue.problem]);
-    expect(problems.get("just")!.join(" | ")).toContain("~61/100");
+    // 1400 with a floor of 1500: the earliest legal window still misses it by
+    // 100 years, which the audit quantifies with the real scorer (~37/100).
+    expect(problems.get("just")!.join(" | ")).toContain("~37/100");
     expect(problems.get("money")!.join(" | ")).toContain("missing year");
     expect(problems.get("must")!.join(" | ")).toContain("tier 11");
     expect(problems.get("must")!.join(" | ")).toContain("blurb is present but empty");
@@ -197,11 +199,12 @@ describe("auditCuration", () => {
   });
 
   it("agrees with the real scorer about how bad an out-of-range year is", () => {
-    // 'they' (1200) in the shipped bank can never score above 8/100.
-    expect(bestPossibleTemporal(1200, 1500, 2025)).toBe(scoreTemporal(1200, 1500));
-    expect(bestPossibleTemporal(1200, 1500, 2025)).toBe(8);
-    expect(bestPossibleTemporal(1225, 1500, 2025)).toBe(11);
-    expect(bestPossibleTemporal(1300, 1500, 2025)).toBe(22);
+    // A year below the floor can only be caught by the earliest window, and the
+    // damage is quantified by the real scorer, not a mirrored formula.
+    expect(bestPossibleTemporal(1200, 1500, 2025)).toBe(scoreTemporalRange(1200, 1500, 1600));
+    expect(bestPossibleTemporal(1200, 1500, 2025)).toBe(5); // 300 years below the floor
+    expect(bestPossibleTemporal(1225, 1500, 2025)).toBe(6); // 275 years below
+    expect(bestPossibleTemporal(1300, 1500, 2025)).toBe(14); // 200 years below
   });
 });
 

@@ -4,6 +4,7 @@ import { dayNumberForDate } from "../src/daily";
 import { createGeocodeContext, type CountryFeature } from "../web/src/geo-context";
 import {
   currentRoundIndex,
+  guessRange,
   isComplete,
   loadSession,
   storageKey,
@@ -53,6 +54,32 @@ function makeStorage(): StorageLike {
   };
 }
 
+describe("guessRange", () => {
+  it("reads the window from a current guess", () => {
+    expect(guessRange({ yearStart: 1450, yearEnd: 1550, point: null })).toEqual({
+      start: 1450,
+      end: 1550,
+    });
+  });
+
+  it("tolerates a session saved before the timeline became a window", () => {
+    // A resumed day must keep the score it already earned: an old single-year
+    // guess becomes a zero-width window, not a 100-year one.
+    expect(guessRange({ year: 1400, point: null })).toEqual({ start: 1400, end: 1400 });
+  });
+
+  it("degrades safely on nonsense", () => {
+    expect(guessRange({ yearStart: Number.NaN, yearEnd: 1000, point: null })).toEqual({
+      start: 0,
+      end: 0,
+    });
+    expect(guessRange({ yearStart: 1400, yearEnd: Number.NaN, point: null })).toEqual({
+      start: 1400,
+      end: 1400,
+    });
+  });
+});
+
 describe("game session", () => {
   const bank = makeBank();
   const ctx = createGeocodeContext({ features: makeFeatures(), languages: LANGUAGES });
@@ -64,7 +91,7 @@ describe("game session", () => {
     expect(session.rounds).toHaveLength(10);
     expect(currentRoundIndex(session)).toBe(0);
 
-    submitGuess(bank, session, 0, { year: 1800, point: { lat: 47, lng: 2 } }, ctx, storage);
+    submitGuess(bank, session, 0, { yearStart: 1800, yearEnd: 1900, point: { lat: 47, lng: 2 } }, ctx, storage);
     // Reload from the SAME storage to prove persistence:
     const reloadedSame = loadSession(bank, utcMs, storage);
     expect(reloadedSame.rounds[0]).not.toBeNull();
@@ -74,15 +101,15 @@ describe("game session", () => {
   it("rejects double-playing a round", () => {
     const storage = makeStorage();
     const session = loadSession(bank, utcMs, storage);
-    submitGuess(bank, session, 0, { year: 1800, point: null }, ctx, storage);
-    expect(() => submitGuess(bank, session, 0, { year: 1900, point: null }, ctx, storage)).toThrow(/already played/);
+    submitGuess(bank, session, 0, { yearStart: 1800, yearEnd: 1900, point: null }, ctx, storage);
+    expect(() => submitGuess(bank, session, 0, { yearStart: 1900, yearEnd: 2000, point: null }, ctx, storage)).toThrow(/already played/);
   });
 
   it("completes after 10 rounds and summarizes", () => {
     const storage = makeStorage();
     const session = loadSession(bank, utcMs, storage);
     for (let i = 0; i < 10; i++) {
-      submitGuess(bank, session, i, { year: 1800, point: { lat: 47, lng: 2 } }, ctx, storage);
+      submitGuess(bank, session, i, { yearStart: 1800, yearEnd: 1900, point: { lat: 47, lng: 2 } }, ctx, storage);
     }
     expect(isComplete(session)).toBe(true);
     expect(currentRoundIndex(session)).toBeNull();
@@ -98,7 +125,7 @@ describe("game session", () => {
     const a = loadSession(bank, utcMs, makeStorage());
     const b = loadSession(bank, nextDayMs, makeStorage());
     expect(storageKey(a.bankVersion, a.dayIndex)).not.toBe(storageKey(b.bankVersion, b.dayIndex));
-    submitGuess(bank, a, 0, { year: 1800, point: null }, ctx, makeStorage());
+    submitGuess(bank, a, 0, { yearStart: 1800, yearEnd: 1900, point: null }, ctx, makeStorage());
     expect(b.rounds[0]).toBeNull();
   });
 

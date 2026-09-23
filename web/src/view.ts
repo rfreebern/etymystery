@@ -1,0 +1,79 @@
+/**
+ * Map view transform: the zoom/pan state and the maths that keeps it sane.
+ * Pure (no DOM), so the invariants that make the map feel right — the point under
+ * the cursor stays put, the map cannot be dragged off screen, screen->map is the
+ * exact inverse of the transform — are unit-testable.
+ *
+ * The transform is `translate(tx, ty) scale(k)` applied to an SVG `<g>`, in the
+ * SVG's own user units (viewBox coordinates), with y down.
+ */
+
+export interface View {
+  /** Scale factor, 1 = fitted to the viewBox. */
+  k: number;
+  tx: number;
+  ty: number;
+}
+
+export const MIN_ZOOM = 1;
+export const MAX_ZOOM = 8;
+/** Multiplier per wheel notch / button press. */
+export const ZOOM_STEP = 1.4;
+
+export const IDENTITY: View = { k: 1, tx: 0, ty: 0 };
+
+function clamp(value: number, lo: number, hi: number): number {
+  return Math.min(Math.max(value, lo), hi);
+}
+
+export function clampZoom(k: number): number {
+  return clamp(Number.isFinite(k) ? k : 1, MIN_ZOOM, MAX_ZOOM);
+}
+
+/**
+ * Keep the scaled map overlapping the viewBox: at k=1 it must be exactly in
+ * place, and when zoomed the translation may only reveal up to the map's own
+ * edges (a standard map clamp — no panning into empty space).
+ */
+export function clampView(view: View, width: number, height: number): View {
+  const k = clampZoom(view.k);
+  return {
+    k,
+    tx: clamp(view.tx, width * (1 - k), 0),
+    ty: clamp(view.ty, height * (1 - k), 0),
+  };
+}
+
+/** Zoom by `factor`, keeping the map point under (cx, cy) fixed. */
+export function zoomAt(
+  view: View,
+  factor: number,
+  cx: number,
+  cy: number,
+  width: number,
+  height: number,
+): View {
+  const k = clampZoom(view.k * factor);
+  const ratio = k / view.k;
+  return clampView(
+    { k, tx: cx - (cx - view.tx) * ratio, ty: cy - (cy - view.ty) * ratio },
+    width,
+    height,
+  );
+}
+
+/** Drag the map by a screen delta. */
+export function panBy(view: View, dx: number, dy: number, width: number, height: number): View {
+  return clampView({ ...view, tx: view.tx + dx, ty: view.ty + dy }, width, height);
+}
+
+/** Screen (viewBox) point -> map coordinates, undoing the zoom and pan. */
+export function toMapPoint(view: View, x: number, y: number): { x: number; y: number } {
+  const k = view.k || 1;
+  return { x: (x - view.tx) / k, y: (y - view.ty) / k };
+}
+
+/** The SVG transform string for the given view. */
+export function viewTransform(view: View): string {
+  return `translate(${view.tx} ${view.ty}) scale(${view.k})`;
+}

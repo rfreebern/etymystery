@@ -10,8 +10,32 @@ import { scoreRound, type GeocodeContext } from "../../src/scoring";
 import type { LatLng, RoundScore, WordBank } from "../../src/types";
 
 export interface StoredGuess {
-  year: number;
+  /** First year of the guessed window. */
+  yearStart: number;
+  /** Last year of the guessed window, inclusive. */
+  yearEnd: number;
   point: LatLng | null;
+}
+
+/**
+ * A guess as it may exist in storage. Sessions saved before the timeline became a
+ * 100-year window hold a single `year`; those must not break a resumed day.
+ */
+export type StoredGuessLike = StoredGuess | { year: number; point?: LatLng | null };
+
+/**
+ * Read a stored guess's year window, tolerating pre-window sessions. An old
+ * single-year guess becomes a zero-width window, so a day in progress keeps the
+ * score it already earned rather than being re-scored under the new rule.
+ */
+export function guessRange(guess: StoredGuessLike): { start: number; end: number } {
+  const windowed = guess as Partial<StoredGuess>;
+  if (Number.isFinite(windowed.yearStart)) {
+    const start = windowed.yearStart as number;
+    return { start, end: Number.isFinite(windowed.yearEnd) ? (windowed.yearEnd as number) : start };
+  }
+  const legacy = (guess as { year?: number }).year;
+  return Number.isFinite(legacy) ? { start: legacy as number, end: legacy as number } : { start: 0, end: 0 };
 }
 
 export interface StoredRound {
@@ -88,7 +112,7 @@ export function submitGuess(
     throw new Error(`round ${roundIndex} already played`);
   }
   const entry = entries[roundIndex]!;
-  const score: RoundScore = scoreRound(entry, { year: guess.year, point: guess.point }, ctx);
+  const score: RoundScore = scoreRound(entry, guess, ctx);
   const stored: StoredRound = {
     wordId: entry.id,
     guess: { ...guess },

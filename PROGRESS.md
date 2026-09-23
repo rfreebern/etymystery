@@ -4,18 +4,17 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 4)
+## Status (as of 2026-09-21, session 5)
 
-Engine + pipeline + web client COMPLETE, and the site is **published and playable**
-at <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 191/191 tests passing, typecheck clean, static build green. The real
-4.2M-row etymology dataset is ingested (41,985 candidate words / 62,469 candidate
-senses), and curation has begun: **119 curated words → 110 banked entries → 10
-days of puzzles** (was 30 words / 3 days). Every curated entry is flagged
-`unverified` until a human checks it against a reference, because the first batch
-was model-drafted with the fact marked rather than hidden. `npm run curate` has
-`next | merge | check | tier` (tier balancing sets days of play), and
-`npm run admin` is the word-plus-references UI for checking the drafts.
+Engine + pipeline + web client COMPLETE, published at
+<https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
+`main`): 213/213 tests passing, typecheck clean, static build green. The bank is
+110 entries / 10 days from 119 curated words, all flagged `unverified` until a
+human checks the dates against a reference. Session 5 reworked the two inputs: the
+map now zooms and pans, and the timeline asks for a **100-year window** (tablet
+handle, 25-year steps, answer inside the window = perfect temporal score) instead
+of a single year — with the slider/era-scale geometry now derived from one mapping
+so the period labels change exactly where the handle crosses them.
 
 ## Done
 
@@ -386,11 +385,51 @@ was model-drafted with the fact marked rather than hidden. `npm run curate` has
 - tests: 191 total (+2) for the provenance round-trip and the duplicate-puzzle
   invariant (plus two rewritten for word-level queueing).
 
+**Session 5 — map zoom/pan and a 100-year timeline window** (this batch)
 
+- `web/src/view.ts` (new, DOM-free): zoom/pan maths — zoom-at-cursor, pan,
+  clamping (at zoom 1 panning is a no-op; when zoomed you can only pan within the
+  scaled map, so the map can never be dragged off screen) and the screen->map
+  inverse. 9 tests pin those invariants, including that a zero zoom cannot produce
+  NaN.
+- `web/src/map.ts`: layers wrapped in a transformed `<g>`; wheel zoom toward the
+  cursor, double-click zoom, pointer drag pan with a 4px slop so a drag is never
+  mistaken for a pin drop, `touch-action: none` so touch drag pans instead of
+  scrolling, and pin markers counter-scaled by 1/k so they stay readable at 8x.
+  `+` / `−` / `Reset` buttons live in the map corner.
+- **The timeline now asks for a 100-year window**, not a year: the handle is a
+  tablet spanning exactly 100 years, moving in 25-year steps (arrows work), and
+  `scoreTemporalRange` gives 100 for any answer inside it, decaying outside
+  (`exp(-out/100)`: 1 year out = 99, 100 out = 37, 200 out = 14).
+  `SCORING_WINDOW_YEARS` is gone; `RoundGuess` carries `yearStart`/`yearEnd`, and
+  `guessRange` tolerates a session stored by the pre-window client (an old
+  single-year guess becomes a zero-width window, so a resumed day keeps the score
+  it already earned).
+- **The label/era alignment bug is fixed by geometry, not by eye.** Two causes: the
+  era scale spanned the full track while a native range thumb travels
+  `track - thumbWidth` (so boundaries drifted further from their years the further
+  right you went), and the label sat beside the slider so its text width resized
+  the track mid-drag. Now `web/src/slider.ts` derives the tablet width
+  (`track * span / windowYears`), which makes the thumb's leading edge equal the
+  year's position on a full-window scale — verified numerically at every era
+  boundary (306.3px == 306.3px on a 900px track) and pinned by a test that also
+  shows a wrongly-sized tablet breaking the identity. The layout became three rows
+  (label / slider / scale) so text can never reflow the slider, and the period
+  labels are absolutely positioned from the same fractions.
+- Era slices are partitioned at each period's START year: inclusive
+  `to - from + 1` counts made the slices sum to 100.075% of a 1325-year axis.
+- A 100-year window straddles a period boundary often, so the label names every
+  period it touches (`1450 – 1550`, `Middle English · Early Modern`) via
+  `erasSpanned`, and the reveal says plainly whether the window caught the year.
+- tests: 213 total (+22) — `tests/view.test.ts`, `tests/slider.test.ts`, range
+  scoring (inside/edges/outside/zero-width/reversed/BCE/monotonic), slider bounds,
+  `erasSpanned`, and `guessRange`'s legacy tolerance.
+
+## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 191 passed (14 files)
-    npx vite build web        # 59.9 kB js (20 kB gzip), 2.6 kB css
+    npx vitest run            # 213 passed (16 files)
+    npx vite build web        # 64.8 kB js / 4.2 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
     npx tsx scripts/filter-edges.ts --edges data/etymology-db.csv.gz \
@@ -436,6 +475,20 @@ was model-drafted with the fact marked rather than hidden. `npm run curate` has
    readout on reveal, keyboard + screen-reader pass over slider and map.
 
 ## Gotchas learned (do not re-fight)
+
+- When inserting a section before an existing heading, put the heading in the
+  replacement text: replacing `## Verification` with a new block deletes the
+  heading and orphans everything under it (it happened here in session 4).
+- A native range input's thumb travels `track - thumbWidth`, not the full track.
+  Any scale drawn beneath it must use the same denominator or the labels drift
+  progressively; deriving the thumb width from the span makes the two identical.
+- Anything that resizes a control mid-interaction (a label whose text length
+  changes the track) will feel broken while dragging. Give the text its own row.
+- Inclusive year counts (`to - from + 1`) and a year *continuum* (`ceiling - floor`)
+  differ by one: mixing them made era slices total 100.075%. Partition on period
+  start years.
+- Never name a variable `window` in client code — it shadows the global, which is
+  where `localStorage` lives.
 
 - A model-drafted fact is a claim, not a fact. Keep the provenance flag on it and
   make the tooling report the count; do not quietly mix it with verified data.

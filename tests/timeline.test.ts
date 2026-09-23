@@ -5,9 +5,11 @@ import {
   ERAS,
   bestPossibleTemporal,
   eraOf,
+  erasSpanned,
   isPlayableYear,
+  sliderStartBounds,
 } from "../src/timeline";
-import { scoreTemporal } from "../src/scoring";
+import { scoreTemporalRange } from "../src/scoring";
 
 describe("answer window", () => {
   it("spans the English written record to the present", () => {
@@ -37,14 +39,38 @@ describe("answer window", () => {
   });
 
   it("never drifts from the real scorer", () => {
-    // best possible = guess clamped into the window, scored by the real scorer
+    // Best possible = the legal window that sits closest to the answer, scored by
+    // the real scorer. Inside the window that is a centred window = 100.
+    const { min, max, span } = sliderStartBounds();
     for (const year of [700, 900, 1200, 1650, 2025]) {
-      expect(bestPossibleTemporal(year)).toBe(scoreTemporal(year, year));
+      const start = Math.min(Math.max(year - span / 2, min), max);
+      expect(bestPossibleTemporal(year)).toBe(scoreTemporalRange(year, start, start + span));
       expect(bestPossibleTemporal(year)).toBe(100);
     }
-    expect(bestPossibleTemporal(400)).toBe(scoreTemporal(400, ANSWER_YEAR_MIN));
+    // Below the floor the best window is the earliest one, and it is not enough.
+    expect(bestPossibleTemporal(400)).toBe(scoreTemporalRange(400, min, min + span));
     expect(bestPossibleTemporal(400)).toBeLessThan(100);
-    expect(bestPossibleTemporal(2400)).toBe(scoreTemporal(2400, ANSWER_YEAR_MAX));
+    expect(bestPossibleTemporal(400)).toBe(5);
+  });
+
+  it("bounds the slider to windows that stay inside the answer window", () => {
+    const { min, max, step, span } = sliderStartBounds();
+    expect({ min, max, step, span }).toEqual({ min: 700, max: 1925, step: 25, span: 100 });
+    // Every position on the slider yields a window inside the window we can score:
+    expect(max + span).toBe(ANSWER_YEAR_MAX);
+    for (let start = min; start <= max; start += step) {
+      for (const year of [start, start + 50, start + span]) {
+        expect(isPlayableYear(year)).toBe(true);
+      }
+    }
+  });
+
+  it("names every period a window touches", () => {
+    // A 100-year window straddles a boundary a third of the time, so naming one
+    // period would be wrong: 1450-1550 is both.
+    expect(erasSpanned(1450, 1550).map((era) => era.label)).toEqual(["Middle English", "Early Modern"]);
+    expect(erasSpanned(800, 900).map((era) => era.label)).toEqual(["Old English"]);
+    expect(erasSpanned(1700, 1800).map((era) => era.label)).toEqual(["Early Modern", "Modern"]);
   });
 
   it("flags years the slider cannot express", () => {

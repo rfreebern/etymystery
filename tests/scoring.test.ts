@@ -3,7 +3,7 @@ import {
   haversineKm,
   scoreGeographic,
   scoreRound,
-  scoreTemporal,
+  scoreTemporalRange,
   type GeocodeContext,
 } from "../src/scoring";
 import type { BankEntry, LatLng } from "../src/types";
@@ -122,30 +122,45 @@ describe("haversineKm", () => {
   });
 });
 
-describe("scoreTemporal", () => {
-  it("gives full credit within the scoring window", () => {
-    for (const guess of [1600, 1551, 1550, 1649, 1650]) {
-      expect(scoreTemporal(1600, guess)).toBe(100);
+describe("scoreTemporalRange", () => {
+  it("gives full credit for any answer inside the guessed window", () => {
+    // The window is 1550-1650: every year in it is a perfect score, including
+    // both edges, because answers are century-granular.
+    for (const answer of [1550, 1551, 1600, 1649, 1650]) {
+      expect(scoreTemporalRange(answer, 1550, 1650)).toBe(100);
     }
   });
 
-  it("decays exponentially beyond the window", () => {
-    expect(scoreTemporal(1600, 1651)).toBe(99);
-    expect(scoreTemporal(1600, 1750)).toBe(37);
+  it("decays with the distance outside the window", () => {
+    expect(scoreTemporalRange(1551, 1550, 1650)).toBe(100); // inside
+    expect(scoreTemporalRange(1549, 1550, 1650)).toBe(99); // one year out
+    expect(scoreTemporalRange(1651, 1550, 1650)).toBe(99); // either side
+    expect(scoreTemporalRange(1450, 1550, 1650)).toBe(37); // 100 years out
+    expect(scoreTemporalRange(1850, 1550, 1650)).toBe(14); // 200 years out
+  });
+
+  it("treats a zero-width window as a point guess", () => {
+    expect(scoreTemporalRange(1600, 1600, 1600)).toBe(100);
+    expect(scoreTemporalRange(1600, 1650, 1650)).toBe(61);
+  });
+
+  it("does not care which end is given first", () => {
+    expect(scoreTemporalRange(1600, 1650, 1550)).toBe(100);
+    expect(scoreTemporalRange(1450, 1650, 1550)).toBe(37);
   });
 
   it("is monotonically non-increasing with distance", () => {
     let prev = Infinity;
-    for (let guess = 1600; guess <= 2100; guess += 10) {
-      const s = scoreTemporal(1600, guess);
+    for (let start = 1600; start <= 2100; start += 10) {
+      const s = scoreTemporalRange(1600, start, start + 100);
       expect(s).toBeLessThanOrEqual(prev);
       prev = s;
     }
   });
 
   it("handles BCE years (negative)", () => {
-    expect(scoreTemporal(-500, -450)).toBe(100);
-    expect(scoreTemporal(-500, -300)).toBeLessThan(100);
+    expect(scoreTemporalRange(-500, -550, -450)).toBe(100);
+    expect(scoreTemporalRange(-500, -300, -200)).toBeLessThan(100);
   });
 });
 
@@ -226,20 +241,34 @@ describe("scoreRound", () => {
   const ctx = makeContext();
 
   it("combines both axes with equal weight", () => {
-    const perfect = scoreRound(norwegianWord, { year: 1225, point: { lat: 61, lng: 9 } }, ctx);
+    const perfect = scoreRound(
+      norwegianWord,
+      { yearStart: 1175, yearEnd: 1275, point: { lat: 61, lng: 9 } },
+      ctx,
+    );
     expect(perfect).toMatchObject({ temporal: 100, geographic: 100, total: 100, credit: "country" });
 
-    const yearOnly = scoreRound(norwegianWord, { year: 1225, point: null }, ctx);
+    const yearOnly = scoreRound(norwegianWord, { yearStart: 1175, yearEnd: 1275, point: null }, ctx);
     expect(yearOnly.temporal).toBe(100);
     expect(yearOnly.geographic).toBe(0);
     expect(yearOnly.total).toBe(50);
   });
 
   it("rewards the leniency design end-to-end", () => {
-    const s = scoreRound(norwegianWord, { year: 1260, point: { lat: 59.33, lng: 18.07 } }, ctx);
+    const s = scoreRound(
+      norwegianWord,
+      { yearStart: 1225, yearEnd: 1325, point: { lat: 59.33, lng: 18.07 } },
+      ctx,
+    );
     expect(s.temporal).toBe(100);
     expect(s.geographic).toBeGreaterThan(70);
     expect(s.total).toBeGreaterThan(85);
+  });
+
+  it("loses temporal credit only when the window misses the answer", () => {
+    const missed = scoreRound(norwegianWord, { yearStart: 1625, yearEnd: 1725, point: null }, ctx);
+    expect(missed.temporal).toBeLessThan(100);
+    expect(missed.temporal).toBeGreaterThan(0);
   });
 });
 

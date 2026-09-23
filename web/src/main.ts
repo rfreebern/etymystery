@@ -5,13 +5,22 @@
 
 import { ROUNDS_PER_DAY, validateBank } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
-import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, ERAS, eraOf } from "../../src/timeline";
+import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, sliderStartBounds } from "../../src/timeline";
 import { feature } from "topojson-client";
 import type { BankEntry, WordBank } from "../../src/types";
 import { createGeocodeContext, toCountryFeatures } from "./geo-context";
 import { createWorldMap, type WorldMap } from "./map";
 import {
+  eraSegments,
+  outsideYears,
+  rangeEraLabel,
+  rangeLabel,
+  tabletWidthPx,
+} from "./slider";
+import { ZOOM_STEP } from "./view";
+import {
   currentRoundIndex,
+  guessRange,
   isComplete,
   loadSession,
   storageKey,
@@ -22,11 +31,6 @@ import {
 } from "./game";
 
 const app = document.getElementById("app")!;
-
-/** e.g. "1400 · Middle English" — the widened window needs the period too. */
-function yearLabelText(year: number): string {
-  return `${year} · ${eraOf(year).label}`;
-}
 
 function el(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
@@ -83,7 +87,8 @@ async function boot(): Promise<void> {
 
   const session = loadSession(bank, utcMs, window.localStorage);
   const worldMap = createWorldMap(app, features);
-  let guess: StoredGuess = { year: 1800, point: null };
+  // The player picks a 100-year window; 1800–1900 is an arbitrary, neutral start.
+  let guess: StoredGuess = { yearStart: 1800, yearEnd: 1900, point: null };
 
   function renderDayLabel(): void {
     document.getElementById("day-label")!.textContent =
@@ -93,7 +98,9 @@ async function boot(): Promise<void> {
   function renderRound(): void {
     const index = currentRoundIndex(session);
     worldMap.clearReveal();
-    guess = { year: 1800, point: null };
+    // A fresh window each round: keeping the previous round's placement would
+    // carry an accidental hint (or a wrong idea) into the next word.
+    guess = { yearStart: 1800, yearEnd: 1900, point: null };
     if (index === null) {
       renderSummary();
       return;
@@ -121,8 +128,22 @@ async function boot(): Promise<void> {
       ),
     );
 
-    const mapPanel = el("div", "panel");
-    mapPanel.append(worldMap.svg);
+    const mapPanel = el("div", "panel map-panel");
+    const mapTools = el("div", "map-tools");
+    const tool = (label: string, title: string, onClick: () => void): HTMLButtonElement => {
+      const button = el("button", "map-tool", label) as HTMLButtonElement;
+      button.title = title;
+      button.type = "button";
+      button.addEventListener("click", onClick);
+      return button;
+    };
+    mapTools.append(
+      tool("+", "Zoom in (or scroll / double-click the map)", () => worldMap.zoomBy(ZOOM_STEP)),
+      tool("−", "Zoom out", () => worldMap.zoomBy(1 / ZOOM_STEP)),
+      tool("Reset", "Fit the whole world again", () => worldMap.resetView()),
+      el("span", "map-hint", "scroll to zoom · drag to pan · click to pin"),
+    );
+    mapPanel.append(worldMap.svg, mapTools);
     worldMap.onPick((lngLat) => {
       guess = { ...guess, point: { lat: lngLat[1], lng: lngLat[0] } };
       worldMap.setGuessPin(guess.point);
@@ -130,25 +151,63 @@ async function boot(): Promise<void> {
     });
 
     const timeline = el("div", "panel timeline");
+    const bounds = sliderStartBounds();
     const slider = document.createElement("input");
     slider.type = "range";
-    slider.min = String(ANSWER_YEAR_MIN);
-    slider.max = String(ANSWER_YEAR_MAX);
-    slider.step = "1";
-    slider.value = String(guess.year);
-    const yearLabel = el("span", "year", yearLabelText(guess.year));
-    slider.addEventListener("input", () => {
-      guess = { ...guess, year: Number(slider.value) };
-      yearLabel.textContent = yearLabelText(guess.year);
-    });
+    slider.className = "tl-slider";
+    slider.min = String(bounds.min);
+    slider.max = String(bounds.max);
+    slider.step = String(bounds.step);
+    slider.value = String(guess.yearStart);
+    // Roving keyboard movement is native (arrows = one 25-year step).
+
+    // Three rows, deliberately: the label gets its own full-width row, so growing
+    // or shrinking text can never resize the slider mid-drag.
+    const head = el("div", "tl-head");
+    const rangeText = el("div", "tl-range", rangeLabel(guess.yearStart, guess.yearEnd));
+    const eraText = el("div", "tl-era", rangeEraLabel(guess.yearStart, guess.yearEnd));
+    head.append(rangeText, eraText);
+
+    // The era scale is drawn from the same fractions the slider's thumb uses
+    // (year / full window), absolutely positioned so it lines up exactly rather
+    // than approximately.
     const scale = el("div", "timeline-scale");
-    for (const era of ERAS) {
-      const segment = el("span", "era", era.label);
-      segment.title = `${era.label}: ${era.from}–${era.to}`;
-      segment.style.flexGrow = String(era.to - era.from + 1);
-      scale.append(segment);
+    for (const segment of eraSegments(ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)) {
+      const span = el("span", "era", segment.label);
+      span.title = `${segment.label}: ${segment.from}–${segment.to}`;
+      span.style.left = `${segment.leftPct}%`;
+      span.style.width = `${segment.widthPct}%`;
+      scale.append(span);
     }
-    timeline.append(el("label", undefined, "First used in"), slider, yearLabel, scale);
+
+    function setWindow(start: number): void {
+      guess = { ...guess, yearStart: start, yearEnd: start + bounds.span };
+      rangeText.textContent = rangeLabel(guess.yearStart, guess.yearEnd);
+      eraText.textContent = rangeEraLabel(guess.yearStart, guess.yearEnd);
+    }
+    slider.addEventListener("input", () => setWindow(Number(slider.value)));
+
+    // The tablet has to be as wide as the years it spans, so its width follows the
+    // track: `trackWidth * span / windowYears` (see slider.ts for why that is the
+    // value that keeps the thumb aligned with the scale).
+    function sizeTablet(): void {
+      const track = slider.clientWidth;
+      if (track > 0) {
+        slider.style.setProperty(
+          "--tablet-w",
+          `${tabletWidthPx(track, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)}px`,
+        );
+      }
+    }
+    window.addEventListener("resize", sizeTablet);
+
+    timeline.append(
+      el("label", undefined, `First used in this ${bounds.span}-year window`),
+      head,
+      slider,
+      scale,
+      el("div", "tl-hint", "drag, or use ← → for 25-year steps · any answer inside the window scores full marks"),
+    );
 
     const actions = el("div", "actions");
     const submitButton = el("button", undefined, "Lock it in") as HTMLButtonElement;
@@ -160,6 +219,7 @@ async function boot(): Promise<void> {
     actions.append(submitButton);
 
     app.append(wordPanel, mapPanel, timeline, actions);
+    sizeTablet();
   }
 
   function renderReveal(entry: BankEntry, stored: NonNullable<Session["rounds"][number]>): void {
@@ -178,6 +238,21 @@ async function boot(): Promise<void> {
     panel.append(scores, el("div", "credit-line", creditLabel(stored.credit)));
     panel.append(el("div", "route", `Route: English ← ${[...entry.originChain].reverse().join(" ← ")}`));
     panel.append(el("div", "route", `Answer: ${entry.originLanguage} · first used around ${entry.year}`));
+    // Say plainly whether the window caught the year — it is the whole temporal
+    // mechanic, and the only feedback that teaches where to place it.
+    const guessed = guessRange(stored.guess);
+    const missed = outsideYears(entry.year, guessed.start, guessed.end);
+    panel.append(
+      el(
+        "div",
+        "route",
+        `Your window: ${rangeLabel(guessed.start, guessed.end)} — ${
+          missed === 0
+            ? "the answer is inside it ✓"
+            : `the answer fell ${missed} year${missed === 1 ? "" : "s"} outside it`
+        }`,
+      ),
+    );
     panel.append(el("p", "prompt", entry.blurb));
 
     const actions = el("div", "actions");

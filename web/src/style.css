@@ -63,7 +63,8 @@ main {
 
 .prompt { text-align: center; color: var(--muted); margin: 0 0 4px; }
 
-.world-map { width: 100%; height: auto; display: block; border-radius: 8px; cursor: crosshair; }
+.world-map { width: 100%; height: auto; display: block; border-radius: 8px; cursor: grab; }
+.world-map.dragging { cursor: grabbing; }
 
 .country { fill: #2c3242; stroke: #454d63; stroke-width: 0.4; }
 .country-answer { fill: #3d5a3f; stroke: var(--good); stroke-width: 0.8; }
@@ -71,15 +72,62 @@ main {
 .pin-guess { fill: var(--pin); stroke: white; stroke-width: 1.2; }
 .pin-answer { fill: var(--accent); stroke: white; stroke-width: 1.2; }
 
-.timeline { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.timeline input[type="range"] { flex: 1; accent-color: var(--accent); }
-.timeline .year { min-width: 190px; text-align: center; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.timeline label { color: var(--muted); font-size: 13px; }
-.timeline-scale {
-  flex-basis: 100%; display: flex; gap: 2px; margin-top: 2px;
-  font-size: 11px; color: var(--muted); text-align: center;
+.map-panel { position: relative; padding: 6px; }
+.map-tools {
+  position: absolute; top: 12px; right: 18px;
+  display: flex; align-items: center; gap: 6px;
 }
-.timeline-scale .era { background: rgba(255, 255, 255, 0.05); border-radius: 3px; padding: 1px 4px; }
+.map-tool {
+  padding: 3px 10px; font-size: 13px; font-weight: 700;
+  background: rgba(20, 23, 31, 0.82); color: var(--ink);
+  border: 1px solid #3a4152;
+}
+.map-tool:hover { background: #2c3242; }
+.map-hint {
+  font-size: 11px; color: var(--muted);
+  background: rgba(20, 23, 31, 0.72); border-radius: 4px; padding: 2px 7px;
+}
+
+/* Timeline: three stacked rows — label, slider, era scale — so the label can
+   never resize the slider and the scale shares the slider's exact geometry. */
+.timeline { display: flex; flex-direction: column; gap: 6px; }
+.timeline > label { color: var(--muted); font-size: 13px; }
+.tl-head { text-align: center; }
+.tl-range {
+  font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px; line-height: 1.2;
+}
+.tl-era { color: var(--muted); font-size: 12px; min-height: 16px; }
+
+.tl-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 30px; margin: 0; padding: 0;
+  background: transparent; cursor: ew-resize;
+}
+.tl-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+.tl-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: #2c3242; }
+.tl-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--tablet-w, 48px); height: 26px;
+  border-radius: 7px; background: var(--accent);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
+}
+.tl-slider::-moz-range-track { height: 8px; border-radius: 4px; background: #2c3242; }
+.tl-slider::-moz-range-thumb {
+  width: var(--tablet-w, 48px); height: 26px;
+  border-radius: 7px; background: var(--accent);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.timeline-scale { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
+.timeline-scale .era {
+  position: absolute; top: 0; height: 16px; line-height: 16px;
+  overflow: hidden; white-space: nowrap; text-align: center;
+  background: rgba(255, 255, 255, 0.05); border-radius: 3px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+.tl-hint { color: var(--muted); font-size: 11px; }
 
 .actions { display: flex; gap: 12px; justify-content: center; }
 
