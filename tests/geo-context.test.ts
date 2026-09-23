@@ -76,8 +76,68 @@ describe("createGeocodeContext (fixture features)", () => {
   });
 });
 
+describe("every shipped puzzle can be won", () => {
+  // The property that matters most and was previously unguarded: clicking the exact
+  // answer point must earn full country credit. It held by luck before — a language
+  // anchored to a territory the map omits (Tahitian, Tuvaluan, Maltese, Samoan ...)
+  // would score ZERO for every possible pin, because there is no outline to measure
+  // against, and nothing in the pipeline said so.
+  const topo = JSON.parse(readFileSync("web/public/countries-50m.json", "utf8")) as Parameters<typeof feature>[0];
+  const collection = feature(
+    topo as never,
+    (topo as unknown as { objects: Record<string, never> }).objects.countries as never,
+  ) as unknown as {
+    features: Array<{ id?: string | number; properties?: { name?: string }; geometry: never }>;
+  };
+  const bank = JSON.parse(readFileSync("web/public/word-bank.json", "utf8")) as {
+    masterSequence: Array<{
+      word: string;
+      originLanguage: string;
+      countries: string[];
+      point: { lat: number; lng: number };
+      originChain: string[];
+      year: number;
+    }>;
+    languages: Record<string, LanguageInfo>;
+  };
+  const features = toCountryFeatures(collection.features);
+  const ctx = createGeocodeContext({ features, languages: bank.languages });
+
+  it("scores 100 on the answer point of every entry in the shipped bank", () => {
+    const failures: string[] = [];
+    for (const entry of bank.masterSequence) {
+      const detail = scoreGeographic(entry as never, entry.point, ctx);
+      if (detail.score !== 100 || detail.credit !== "country") {
+        failures.push(
+          `${entry.word} (${entry.originLanguage} / ${entry.countries.join(",")}): ` +
+            `${detail.score} credit ${detail.credit}`,
+        );
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("lists the answers the map cannot draw at all, so a new one is visible", () => {
+    // These rely on the representative-point fallback instead of an outline.
+    // Tuvalu and Tokelau are absent even from world-atlas 10m, so no resolution
+    // upgrade removes them; the fallback is what keeps them winnable. Pinned to an
+    // exact list: if a new language joins it, this fails and someone looks.
+    const unrepresentable = Object.entries(bank.languages)
+      .filter(([, info]) =>
+        info.countries.length > 0 &&
+        info.representativePoint &&
+        info.countries.every(
+          (code) => ctx.distanceToCountryKm(code, info.representativePoint!) === Number.POSITIVE_INFINITY,
+        ),
+      )
+      .map(([name]) => name)
+      .sort();
+    expect(unrepresentable).toEqual(["Tokelauan", "Tuvaluan"]);
+  });
+});
+
 describe("world-atlas integration", () => {
-  const topo = JSON.parse(readFileSync("web/public/countries-110m.json", "utf8")) as Parameters<typeof feature>[0];
+  const topo = JSON.parse(readFileSync("web/public/countries-50m.json", "utf8")) as Parameters<typeof feature>[0];
   const collection = feature(
     topo as never,
     (topo as unknown as { objects: Record<string, never> }).objects.countries as never,

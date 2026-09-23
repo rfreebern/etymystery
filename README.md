@@ -52,7 +52,7 @@ file host serves the whole game.
       src/geo-context.ts    GeocodeContext over Natural Earth + country table
       src/countries.json    generated country table (ISO2 -> ccn3/region)
       public/word-bank.json         the bank, served as a static file
-      public/countries-110m.json    world-atlas TopoJSON (Natural Earth)
+      public/countries-50m.json     world-atlas TopoJSON, 241 features (756 KB)
     curated/        hand-curated inputs (committed, small)
       language-geo.json     language code -> anchor countries + point overlay
       languages.tsv         seed language table (22 languages, bank v1)
@@ -274,9 +274,14 @@ etymology-db's exact column schema). Together with the 22-language
   - pin in the wrong country: proximity to the deep origin's *border* (not
     centroid), 1500 km decay scale;
   - a pin up to 25 km outside the answer's country still counts as inside
-    (`COASTAL_TOLERANCE_KM`): clicks come from a 960x500 SVG over generalized 110m
-    outlines, and Istanbul — the obvious pin for an Ottoman Turkish answer — reads
-    10.8 km *outside* Turkey as drawn. It is far too small to rescue a real miss;
+    (`COASTAL_TOLERANCE_KM`): clicks come from a 960x500 SVG over the outlines, and
+    Istanbul — the obvious pin for an Ottoman Turkish answer — sat 10.8 km outside
+    Turkey as the old 110m map drew it. It is far too small to rescue a real miss;
+  - a territory the map cannot draw at all (Tuvalu, Tokelau — absent even from
+    world-atlas 10m) is scored by distance to its **representative point** instead:
+    on the point is full marks, and near it decays like any wrong-country pin. That
+    is what keeps such an answer winnable rather than impossible, and it is the only
+    place the answer point is used for scoring;
   - region/continent matches (UN M49 subregion / continent, anchored to
     the deep origin) are shown as reveal-time labels only; they never
     add points beyond border proximity;

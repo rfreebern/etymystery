@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 255/255 tests passing, typecheck clean, static build green. The bank is
+`main`): 263/263 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -68,7 +68,7 @@ so the period labels change exactly where the handle crosses them.
   curation.json (30 words, hand-checked years + blurbs)
 - web/public/word-bank.json — seed bank v1: 10 tiers x 3 words = 30 words,
   22 languages, 3 days of puzzles, epoch 2026-09-21
-- web/public/countries-110m.json — world-atlas TopoJSON (Natural Earth)
+- web/public/countries-50m.json — world-atlas TopoJSON (Natural Earth, 241 features)
 - New tests: geo-utils.test.ts (11), geo-context.test.ts (5, incl. the real-map
   Vladivostok-beats-Utrecht case), game.test.ts (5) -> 102 total
 
@@ -660,6 +660,59 @@ so the period labels change exactly where the handle crosses them.
   `curated/edge-overrides.csv` now carries 8 edges.
 - tests: 255 total (+3).
 
+**Session 9 — small territories: a higher-resolution map, a point fallback, and
+on-land anchors** (this batch)
+
+- Reported from play: "Tahiti is really tiny and I can't actually find it on the
+  map; a click in the south Pacific near Tahiti should get a reasonable score."
+  First correction: `tattoo` no longer asks about Tahiti — it was re-anchored to
+  Dutch last session because the recorded chains only ever held Dutch and Hindi. By
+  request it stays that way: a second noun sense (`tattoo:noun:2`) would need a gloss
+  on screen to tell the senses apart, which the model has no field for (noted under
+  Remaining).
+- **The defect the report pointed at was bigger than the pin.** The shipped
+  110m Natural Earth map (174 features) drew no outline for 76 territories, and for
+  every one of them `distanceToCountryKm` returns `Infinity` — so an answer anchored
+  there scored **0 for every possible pin**. Verified for Guam, Tahiti, Samoa, Malta
+  and Singapore. 17 languages in the generated table are anchored only to such
+  places, and **33 candidate words** in the ranked work list already answer for one
+  (Samoan 10, Manx 6, Maltese 5, Tahitian 4, Tongan 3, Gilbertese 2, Dhivehi,
+  Chamorro, Marshallese 1 each). Nothing in the pipeline warned: the entry builds
+  fine and `validateBank` cannot see the map.
+- **Adopted world-atlas 50m** (756 KB, 241 features) in place of 110m (108 KB, 174).
+  It draws every previously-missing territory except Tuvalu and Tokelau (absent even
+  from 10m, 3.66 MB). Side benefits: Istanbul now reads *inside* Turkey (it was
+  10.8 km outside as 110m drew it), so `kiosk`/`yogurt` no longer lean on the coastal
+  tolerance at their answer points, and small islands are visible when zoomed.
+- **Added the point fallback**: when no hop country has a drawn outline,
+  `hopDistanceKm` measures to the hop's representative point instead. On the point is
+  a country hit (100); away from it decays like any wrong-country pin. Measured on
+  the real map with a Tahitian answer: the point **100**, 50 km **100**, 100 km
+  **95**, 250 km **86**, 1000 km **96** (French Polynesia's islands are everywhere in
+  that ocean). A genuine miss is unaffected, and the outer limit still scores 0.
+- **Fixed the anchor points**: a probe over all 312 languages found **27 whose
+  representative point sat off their own territory** by up to 243 km (Vietnamese 93,
+  Indonesian 128, Fiji Hindi 243, Hawaiian 33, Swahili 22, Hebrew 10 …). 25 were
+  nudged to the nearest on-land point inside their countries, 2 atolls (Maldives,
+  Marshall Islands) needed the country polygon's own centroid because they are
+  smaller than the search step, and 9 derived languages gained overlay entries. The 2
+  undrawable territories are now documented in the overlay with a note. Result:
+  **310 of 312 anchors land on land**, 0 unexplained. The committed seed table moved
+  with them (`sw`), so the overlay-reproduces-the-seed contract still passes.
+- **Guards**: `tests/geo-context.test.ts` now asserts the property that matters —
+  **every entry in the shipped bank scores 100 with credit `country` on its own
+  answer point** (110/110) — and pins the list of undrawable answers to exactly
+  Tokelauan and Tuvaluan so a new one is visible rather than silent.
+  `tests/map-coverage.test.ts` covers the coverage table (PF/MT/SG/GU/WS/TO drawn;
+  TV/TK not) and the real Tahiti containment. `curate --mode check` reports any
+  banked entry whose answer territory the map cannot draw, and CURATION.md gains
+  "Anchors must land on land".
+- Also regenerated both work lists: they predated the edge overrides, so the audit
+  was falsely flagging `algebra` and `coyote` as naming an origin the data does not
+  record.
+- tests: 263 total (+2). Verification: tsc clean, 263/263, vite build green (serves
+  `countries-50m.json`), subpath serve returns 200 for page, bundle, bank and map.
+
 ## Verification (re-run before trusting anything)
 
 
@@ -670,8 +723,10 @@ so the period labels change exactly where the handle crosses them.
 
 
 
+
+
     npx tsc --noEmit          # clean
-    npx vitest run            # 255 passed (18 files)
+    npx vitest run            # 263 passed (19 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -708,6 +763,11 @@ so the period labels change exactly where the handle crosses them.
    4,137 recovered. The lost words' answers would be reconstructions
    (Proto-Indo-European, Proto-Germanic, ...), which have no defensible home on a
    modern map.
+3. A word with two senses of the SAME part of speech cannot be told apart on
+   screen: `tattoo:noun` and `tattoo:noun:2` both render as "TATTOO (noun)", so the
+   player cannot know which sense is being asked about (this is why the Tahitian
+   tattoo sense was not added). A short `gloss` field shown under the prompt would
+   fix it.
 3. Chained data errors found in the real data while drafting — worth a filter:
    `seen ← Arabic` and `sent ← Estonian` are foreign-language homographs, and
    `yoga ← Chamorro` is a Wiktionary artifact. The work list's `chain` column is a

@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN } from "../src/timeline";
+import { loadDrawableCountries } from "./lib/map-coverage";
 import {
   auditCuration,
   mergeCuration,
@@ -28,6 +29,9 @@ import {
 const DEFAULT_WORKLIST = "data/curation-worklist-interesting.tsv";
 const DEFAULT_CURATION = "curated/curation.json";
 const DEFAULT_BATCH = "data/curation-batch.json";
+/** The shipped map + its country table, for the coverage check. */
+const MAP_PATH = "web/public/countries-50m.json";
+const COUNTRIES_PATH = "web/src/countries.json";
 
 const { values } = parseArgs({
   options: {
@@ -78,6 +82,20 @@ function readBankWords(path: string): Set<string> | undefined {
     return new Set(bank.tiers.flat().map((entry) => entry.word));
   } catch {
     return undefined; // no bank yet: only the work list can vouch for a word
+  }
+}
+
+/** Accepted bank entries, for checks that need their countries, not just their words. */
+function readBankEntries(
+  path: string,
+): Array<{ word: string; originLanguage: string; countries: string[] }> {
+  try {
+    const bank = readJson<{
+      tiers: Array<Array<{ word: string; originLanguage: string; countries: string[] }>>;
+    }>(path);
+    return bank.tiers.flat();
+  } catch {
+    return [];
   }
 }
 
@@ -234,6 +252,23 @@ if (mode === "next") {
       `\n${unverified.length} entries are marked "unverified" (drafted, not checked against a ` +
         `reference): ${unverified.join(", ")}`,
     );
+  }
+
+  // A puzzle whose answer territory the map cannot draw is winnable only through the
+  // representative-point fallback (see scripts/lib/map-coverage.ts), so say so rather
+  // than letting curation add one without noticing.
+  const drawable = loadDrawableCountries(MAP_PATH, COUNTRIES_PATH);
+  const undrawable = readBankEntries(values.bank!).filter(
+    (entry) => entry.countries.length > 0 && entry.countries.every((code) => !drawable.has(code)),
+  );
+  if (undrawable.length) {
+    console.log(
+      `\n${undrawable.length} entries answer for a territory the map cannot draw ` +
+        `(scored by distance to the answer point, not by country):`,
+    );
+    for (const entry of undrawable) {
+      console.log(`  ${entry.word} (${entry.originLanguage} ${entry.countries.join(",")})`);
+    }
   }
   const ambiguousWords = new Set(
     candidates.filter((candidate) => candidate.origins.length > 1).map((candidate) => candidate.word),

@@ -16,7 +16,7 @@
  * origin's country > on-the-route country > nearby wrong country > far away = zero.
  */
 
-import type { BankEntry, LanguageInfo, LatLng, RoundGuess, RoundScore } from "./types";
+import type { BankEntry, CountryCode, LanguageInfo, LatLng, RoundGuess, RoundScore } from "./types";
 import { haversineKm } from "./geo-utils";
 
 export { haversineKm };
@@ -49,12 +49,11 @@ export const INTERMEDIATE_WEIGHT = 0.7;
 export const MAX_RELEVANCE_KM = 5000;
 /**
  * How far outside a country a pin may land and still count as inside it. Pins come
- * from a click on a 960x500 SVG and country outlines are the generalized 110m
- * Natural Earth ones, so a click on a coastal city can fall a few km "at sea":
- * Istanbul, the obvious pin for an Ottoman Turkish answer, reads 10.8 km outside
- * Turkey as drawn. The tolerance keeps those clicks from being told they are in the
- * wrong country. It is tiny next to the 1500 km wrong-country decay, so it cannot
- * rescue a genuine miss.
+ * from a click on a 960x500 SVG and country outlines are the generalized 50m Natural
+ * Earth ones, so a click on a coastal city can land a few km "at sea": the answer
+ * point for `kiosk` and `yogurt` sits 4 km outside Turkey as drawn. The tolerance
+ * keeps those clicks from being told they are in the wrong country. It is tiny next
+ * to the 1500 km wrong-country decay, so it cannot rescue a genuine miss.
  */
 export const COASTAL_TOLERANCE_KM = 25;
 /** Weight of the temporal component in the round total. */
@@ -97,29 +96,58 @@ export function scoreTemporalRange(answerYear: number, from: number, to: number)
   return Math.round(100 * Math.exp(-over / TEMPORAL_DECAY_YEARS));
 }
 
+/** A place the pin can be scored against: the deep origin, or an intermediate hop. */
+interface Hop {
+  countries: CountryCode[];
+  point: LatLng;
+}
+
+interface HopDistance {
+  /** Kilometers to the hop, or 0 when the pin is inside it. */
+  km: number;
+  /** Which of the hop's countries that distance belongs to, when known. */
+  country: CountryCode | null;
+}
+
+/**
+ * Distance from the pin to a hop, in km.
+ *
+ * When the hop's territory is not drawn on the map at all, there is no outline to
+ * measure against and every pin would score zero however accurate (`Infinity`
+ * distance). The 50m Natural Earth set still omits 76 small territories — French
+ * Polynesia, Tuvalu, Tokelau, Guam, Malta, Singapore among them — so the
+ * representative point stands in for the country: exactly on it is a country hit,
+ * and away from it decays like any wrong-country pin. That keeps a Tahitian or
+ * Tuvaluan answer winnable instead of impossible.
+ */
+function hopDistanceKm(ctx: GeocodeContext, hop: Hop, pin: LatLng): HopDistance {
+  let best: HopDistance = { km: Number.POSITIVE_INFINITY, country: null };
+  for (const country of hop.countries) {
+    if (ctx.contains(country, pin)) return { km: 0, country };
+    const d = ctx.distanceToCountryKm(country, pin);
+    if (d < best.km) best = { km: d, country };
+  }
+  if (Number.isFinite(best.km)) return best;
+  return { km: haversineKm(hop.point, pin), country: hop.countries[0] ?? null };
+}
+
 /** Geographic proximity on 0..100, hop-aware and country-aware. */
 export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeContext): GeographicDetail {
-  const deep = { countries: entry.countries, point: entry.point };
-  const intermediates = entry.originChain
+  const deep: Hop = { countries: entry.countries, point: entry.point };
+  const intermediates: Hop[] = entry.originChain
     .slice(0, -1)
     .map((name) => ctx.languageOf(name))
     .filter(
       (info): info is LanguageInfo =>
         !!info && info.countries.length > 0 && !!info.representativePoint,
-    );
+    )
+    .map((info) => ({ countries: info.countries, point: info.representativePoint! }));
+
+  const deepDistance = hopDistanceKm(ctx, deep, guess);
+  const intermediateDistances = intermediates.map((hop) => hopDistanceKm(ctx, hop, guess));
 
   // Outer limit: the pin must be within MAX_RELEVANCE_KM of some hop.
-  let nearestHopKm = Number.POSITIVE_INFINITY;
-  const hops = [
-    ...intermediates.map((info) => ({ countries: info.countries, point: info.representativePoint! })),
-    deep,
-  ];
-  for (const hop of hops) {
-    for (const country of hop.countries) {
-      const d = ctx.distanceToCountryKm(country, guess);
-      if (Number.isFinite(d) && d < nearestHopKm) nearestHopKm = d;
-    }
-  }
+  const nearestHopKm = Math.min(deepDistance.km, ...intermediateDistances.map((d) => d.km));
   if (!Number.isFinite(nearestHopKm) || nearestHopKm > MAX_RELEVANCE_KM) {
     return { score: 0, credit: "none", matchedCountry: null, distanceKm: null };
   }
@@ -127,49 +155,43 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
   // 1. Direct hit on the deep origin's country: full marks, wherever in the
   //    country the pin lands. Distance inside a country is not evidence of a wrong
   //    answer (see GEO_DECAY_KM) — a pin in northern Italy is as correct for Latin
-  //    as one on Rome. A pin just off the drawn coastline still counts (see
-  //    COASTAL_TOLERANCE_KM).
-  for (const country of deep.countries) {
-    if (ctx.contains(country, guess) || ctx.distanceToCountryKm(country, guess) <= COASTAL_TOLERANCE_KM) {
-      return {
-        score: 100,
-        credit: "country",
-        matchedCountry: country,
-        distanceKm: Math.round(haversineKm(deep.point, guess)),
-      };
-    }
+  //    as one on Rome. A pin just off the drawn coastline still counts
+  //    (COASTAL_TOLERANCE_KM), and for a territory the map cannot draw, on the
+  //    answer point counts (see hopDistanceKm).
+  if (deepDistance.km <= COASTAL_TOLERANCE_KM) {
+    return {
+      score: 100,
+      credit: "country",
+      matchedCountry: deepDistance.country,
+      distanceKm: Math.round(haversineKm(deep.point, guess)),
+    };
   }
 
   // 2. Direct hit on an intermediate hop: partial credit, flat (Variant B — no
   //    border falloff; you must land inside the actual hop country).
-  for (const hop of intermediates) {
-    for (const country of hop.countries) {
-      if (
-        ctx.contains(country, guess) ||
-        ctx.distanceToCountryKm(country, guess) <= COASTAL_TOLERANCE_KM
-      ) {
-        return {
-          score: Math.round(100 * INTERMEDIATE_WEIGHT),
-          credit: "intermediate",
-          matchedCountry: country,
-          distanceKm: Math.round(haversineKm(hop.representativePoint!, guess)),
-        };
-      }
+  for (const [index, distance] of intermediateDistances.entries()) {
+    if (distance.km <= COASTAL_TOLERANCE_KM) {
+      return {
+        score: Math.round(100 * INTERMEDIATE_WEIGHT),
+        credit: "intermediate",
+        matchedCountry: distance.country,
+        distanceKm: Math.round(haversineKm(intermediates[index]!.point, guess)),
+      };
     }
   }
 
-  // 3. Wrong country: proximity to the deep origin's border. This is both
-  //    the floor and the ceiling for wrong-country pins: region matches
-  //    never add points beyond it.
-  let best: GeographicDetail = { score: 0, credit: "none", matchedCountry: null, distanceKm: null };
-  for (const country of deep.countries) {
-    const d = ctx.distanceToCountryKm(country, guess);
-    if (!Number.isFinite(d)) continue;
-    const score = Math.round(100 * Math.exp(-d / GEO_DECAY_KM));
-    if (score > best.score) {
-      best = { score, credit: "proximity", matchedCountry: country, distanceKm: Math.round(d) };
-    }
-  }
+  // 3. Wrong country: proximity to the deep origin's border (or, for a territory
+  //    with no outline, to its point). This is both the floor and the ceiling for
+  //    wrong-country pins: region matches never add points beyond it.
+  let best: GeographicDetail =
+    deepDistance.country === null || !Number.isFinite(deepDistance.km)
+      ? { score: 0, credit: "none", matchedCountry: null, distanceKm: null }
+      : {
+          score: Math.round(100 * Math.exp(-deepDistance.km / GEO_DECAY_KM)),
+          credit: "proximity",
+          matchedCountry: deepDistance.country,
+          distanceKm: Math.round(deepDistance.km),
+        };
 
   // 4. Region/continent matches are reveal-time labels only: they never add
   //    points beyond border proximity (score is unchanged here).

@@ -63,7 +63,7 @@ async function boot(): Promise<void> {
     // Document-relative, not "/word-bank.json": the built site is served from a
     // subdirectory on GitHub Pages, where a root-anchored path would 404.
     fetch("word-bank.json").then((r) => r.json()),
-    fetch("countries-110m.json").then((r) => r.json()),
+    fetch("countries-50m.json").then((r) => r.json()),
   ]);
   const bank = bankRaw as WordBank;
   validateBank(bank);

@@ -6,7 +6,7 @@ import {
   scoreTemporalRange,
   type GeocodeContext,
 } from "../src/scoring";
-import type { BankEntry, LatLng } from "../src/types";
+import type { BankEntry, LanguageInfo, LatLng } from "../src/types";
 
 interface Rect { lonMin: number; lonMax: number; latMin: number; latMax: number }
 
@@ -57,22 +57,33 @@ function distToRectKm(iso: string, p: LatLng): number {
   return haversineKm(p, clamped);
 }
 
+/** Languages the fixture context can resolve, keyed by name as the bank does. */
+const LANGUAGES: Record<string, LanguageInfo> = {
+  French: {
+    name: "French",
+    countries: ["FR"],
+    representativePoint: { lat: 48.85, lng: 2.35 },
+    subregion: "Western Europe",
+    continent: "Europe",
+  },
+  // A territory the map cannot draw: no rectangle, so the scorer must fall back to
+  // the representative point.
+  Tahitian: {
+    name: "Tahitian",
+    countries: ["PF"],
+    representativePoint: { lat: -17.65, lng: -149.45 },
+    subregion: "Polynesia",
+    continent: "Oceania",
+  },
+};
+
 function makeContext(): GeocodeContext {
   return {
     contains: (iso, p) => (RECTS[iso] ? inRect(RECTS[iso]!, p) : false),
     distanceToCountryKm: (iso, p) => distToRectKm(iso, p),
     allCountryCodes: () => Object.keys(RECTS),
     regionOf: (iso) => REGIONS[iso],
-    languageOf: (name) =>
-      name === "French"
-        ? {
-            name: "French",
-            countries: ["FR"],
-            representativePoint: { lat: 48.85, lng: 2.35 },
-            subregion: "Western Europe",
-            continent: "Europe",
-          }
-        : undefined,
+    languageOf: (name) => LANGUAGES[name],
   };
 }
 
@@ -201,9 +212,10 @@ describe("scoreGeographic - country-aware leniency", () => {
   });
 
   it("counts a pin just off the drawn coastline as inside", () => {
-    // A click on a coastal city can land a few km outside a generalized 110m
-    // outline (Istanbul reads 10.8 km outside Turkey as drawn), and being told you
-    // are in the wrong country for that is worse than the tolerance is generous.
+    // A click on a coastal city can land a few km outside a generalized outline (the
+    // answer point for `kiosk` sits 4 km outside Turkey as 50m draws it), and being
+    // told you are in the wrong country for that is worse than the tolerance is
+    // generous.
     const justOffshore = { lat: 57.9, lng: 9 }; // ~11 km south of the NO rect (latMin 58)
     const detail = scoreGeographic(norwegianWord, justOffshore, ctx);
     expect(ctx.contains("NO", justOffshore)).toBe(false);
@@ -314,6 +326,51 @@ describe("scoreRound", () => {
     const missed = scoreRound(norwegianWord, { yearStart: 1625, yearEnd: 1725, point: null }, ctx);
     expect(missed.temporal).toBeLessThan(100);
     expect(missed.temporal).toBeGreaterThan(0);
+  });
+});
+
+describe("scoreGeographic - territories the map cannot draw", () => {
+  const ctx = makeContext();
+  // `PF` is not in RECTS, so both `contains` and `distanceToCountryKm` behave exactly
+  // as they do for a real territory the 50m map omits: no outline at all.
+  const tahitian: BankEntry = {
+    id: "tattoo",
+    word: "tattoo",
+    year: 1769,
+    tier: 8,
+    originChain: ["Tahitian"],
+    originLanguage: "Tahitian",
+    countries: ["PF"],
+    point: { lat: -17.65, lng: -149.45 },
+    blurb: "From Tahitian tatau, recorded on Cook's voyages.",
+  };
+
+  it("REQUIREMENT: a pin on the answer point is a country hit", () => {
+    // Without the point fallback this scored 0 for every possible pin, because there
+    // was no outline to measure against (`Infinity` distance) — the puzzle was
+    // unwinnable, not merely hard.
+    const detail = scoreGeographic(tahitian, tahitian.point, ctx);
+    expect(detail.credit).toBe("country");
+    expect(detail.score).toBe(100);
+  });
+
+  it("scores a click near the point like any near miss", () => {
+    const near = scoreGeographic(tahitian, { lat: -17.65, lng: -149.45 + 0.94 }, ctx); // ~100 km
+    expect(near.credit).toBe("proximity");
+    expect(near.score).toBe(94);
+    const further = scoreGeographic(tahitian, { lat: -17.65, lng: -149.45 + 9.42 }, ctx); // ~1000 km
+    expect(further.score).toBe(51);
+  });
+
+  it("still scores nothing beyond the outer relevance limit", () => {
+    expect(scoreGeographic(tahitian, { lat: 40.7, lng: -74 }, ctx).score).toBe(0);
+  });
+
+  it("applies the same fallback to an intermediate hop", () => {
+    const viaTahitian: BankEntry = { ...tahitian, id: "transit", originChain: ["Tahitian", "Dutch"], countries: ["NL"] };
+    const atTahiti = scoreGeographic(viaTahitian, tahitian.point, ctx);
+    expect(atTahiti.credit).toBe("intermediate");
+    expect(atTahiti.score).toBe(70);
   });
 });
 

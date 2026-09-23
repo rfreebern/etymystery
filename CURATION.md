@@ -151,7 +151,21 @@ Reports how many ranked candidates have a year, the per-tier histogram, and
 exactly one word from each of the ten tiers. It also lists issues: missing years,
 tiers out of range, capitalised keys, words with no mappable chain, years the
 slider cannot express (with the score damage quantified), and the entries that
-are still marked `unverified`.
+are still marked `unverified`. Finally it reports any entry whose answer territory
+the shipped map cannot draw (see `scripts/lib/map-coverage.ts`): those puzzles are
+winnable, but only through the representative-point fallback, so a normal one is
+preferable.
+
+## 4a. Anchors must land on land
+
+An answer's representative point is where the reveal pin is drawn and, for a
+territory the map cannot draw, the target the player is scored against. So it has to
+be *inside* one of the language's anchor countries as the map draws them. The test
+suite probes every language in `data/languages.tsv`: 310 of 312 land on land, and the
+two exceptions are Tokelauan and Tuvaluan, whose territories no world-atlas
+resolution draws (documented as such in the overlay, and scored by the point
+fallback). When a new language's point lands in the sea, move it to the nearest
+on-land point inside its countries; the probe names it and says how far it missed by.
 
 ## 4b. Balance the tiers (do this before shipping)
 

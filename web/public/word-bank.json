@@ -1415,7 +1415,7 @@
         ],
         "point": {
           "lat": 40.8,
-          "lng": 14.3
+          "lng": 14.35
         },
         "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
       },
@@ -1902,8 +1902,8 @@
           "TR"
         ],
         "point": {
-          "lat": 41,
-          "lng": 29
+          "lat": 40.336,
+          "lng": 26.478
         },
         "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
       },
@@ -1945,8 +1945,8 @@
           "TR"
         ],
         "point": {
-          "lat": 41,
-          "lng": 29
+          "lat": 40.336,
+          "lng": 26.478
         },
         "blurb": "From Ottoman Turkish köşk, 'pavilion', which reached English through Italian and French."
       },
@@ -2546,7 +2546,7 @@
       ],
       "representativePoint": {
         "lat": -16,
-        "lng": 167
+        "lng": 167.2
       },
       "subregion": "Melanesia",
       "continent": "Oceania"
@@ -2695,8 +2695,8 @@
         "MP"
       ],
       "representativePoint": {
-        "lat": 14.261,
-        "lng": 145.226
+        "lat": 14.164,
+        "lng": 145.2
       },
       "subregion": "Micronesia",
       "continent": "Oceania"
@@ -2807,7 +2807,7 @@
       ],
       "representativePoint": {
         "lat": -4.583,
-        "lng": 55.667
+        "lng": 55.467
       },
       "subregion": "Eastern Africa",
       "continent": "Africa"
@@ -2895,8 +2895,8 @@
         "MV"
       ],
       "representativePoint": {
-        "lat": 3.2,
-        "lng": 73
+        "lat": 3.261,
+        "lng": 73.411
       },
       "subregion": "Southern Asia",
       "continent": "Asia"
@@ -3105,8 +3105,8 @@
         "FO"
       ],
       "representativePoint": {
-        "lat": 62,
-        "lng": -7
+        "lat": 62.05,
+        "lng": -6.913
       },
       "subregion": "Northern Europe",
       "continent": "Europe"
@@ -3290,8 +3290,8 @@
         "KI"
       ],
       "representativePoint": {
-        "lat": 1.417,
-        "lng": 173
+        "lat": 1.367,
+        "lng": 173.087
       },
       "subregion": "Micronesia",
       "continent": "Oceania"
@@ -3303,8 +3303,8 @@
         "GR"
       ],
       "representativePoint": {
-        "lat": 41,
-        "lng": 29
+        "lat": 40.336,
+        "lng": 26.478
       },
       "subregion": "Southern Europe",
       "continent": "Asia"
@@ -3453,7 +3453,7 @@
       ],
       "representativePoint": {
         "lat": 38.4,
-        "lng": 27
+        "lng": 27.05
       },
       "subregion": "Southern Europe",
       "continent": "Asia"
@@ -3543,8 +3543,8 @@
         "US"
       ],
       "representativePoint": {
-        "lat": 20.5,
-        "lng": -157
+        "lat": 20.79,
+        "lng": -156.922
       },
       "subregion": "Polynesia",
       "continent": "Oceania"
@@ -3555,8 +3555,8 @@
         "IL"
       ],
       "representativePoint": {
-        "lat": 31.5,
-        "lng": 35
+        "lat": 31.571,
+        "lng": 34.929
       },
       "subregion": "Western Asia",
       "continent": "Asia"
@@ -3567,8 +3567,8 @@
         "IL"
       ],
       "representativePoint": {
-        "lat": 31.5,
-        "lng": 35
+        "lat": 31.571,
+        "lng": 34.929
       },
       "subregion": "Western Asia",
       "continent": "Asia"
@@ -3579,8 +3579,8 @@
         "IL"
       ],
       "representativePoint": {
-        "lat": 31.5,
-        "lng": 35
+        "lat": 31.571,
+        "lng": 34.929
       },
       "subregion": "Western Asia",
       "continent": "Asia"
@@ -3604,7 +3604,7 @@
       ],
       "representativePoint": {
         "lat": -18,
-        "lng": 175
+        "lng": 177.3
       },
       "subregion": "Melanesia",
       "continent": "Oceania"
@@ -3700,8 +3700,8 @@
         "ID"
       ],
       "representativePoint": {
-        "lat": -2,
-        "lng": 118
+        "lat": -2.813,
+        "lng": 118.813
       },
       "subregion": "South-Eastern Asia",
       "continent": "Asia"
@@ -4178,7 +4178,7 @@
         "EH"
       ],
       "representativePoint": {
-        "lat": 24.5,
+        "lat": 24.45,
         "lng": -13
       },
       "subregion": "Northern Africa",
@@ -4226,8 +4226,8 @@
         "MH"
       ],
       "representativePoint": {
-        "lat": 9,
-        "lng": 168
+        "lat": 5.908,
+        "lng": 169.66
       },
       "subregion": "Micronesia",
       "continent": "Oceania"
@@ -4250,8 +4250,8 @@
         "CA"
       ],
       "representativePoint": {
-        "lat": 46,
-        "lng": -63
+        "lat": 46.071,
+        "lng": -62.929
       },
       "subregion": "North America",
       "continent": "Americas"
@@ -4336,8 +4336,8 @@
         "MT"
       ],
       "representativePoint": {
-        "lat": 35.833,
-        "lng": 14.583
+        "lat": 35.868,
+        "lng": 14.548
       },
       "subregion": "Southern Europe",
       "continent": "Europe"
@@ -4410,7 +4410,7 @@
       ],
       "representativePoint": {
         "lat": 40.8,
-        "lng": 14.3
+        "lng": 14.35
       },
       "subregion": "Southern Europe",
       "continent": "Europe"
@@ -4766,8 +4766,8 @@
         "TR"
       ],
       "representativePoint": {
-        "lat": 41,
-        "lng": 29
+        "lat": 40.336,
+        "lng": 26.478
       },
       "subregion": "Western Asia",
       "continent": "Asia"
@@ -4828,7 +4828,7 @@
       ],
       "representativePoint": {
         "lat": 7.5,
-        "lng": 134.5
+        "lng": 134.55
       },
       "subregion": "Micronesia",
       "continent": "Oceania"
@@ -4878,7 +4878,7 @@
       ],
       "representativePoint": {
         "lat": 34,
-        "lng": 35.5
+        "lng": 35.6
       },
       "subregion": "Western Asia",
       "continent": "Asia"
@@ -5332,8 +5332,8 @@
         "AS"
       ],
       "representativePoint": {
-        "lat": -13.8,
-        "lng": -172
+        "lat": -13.848,
+        "lng": -172.013
       },
       "subregion": "Polynesia",
       "continent": "Oceania"
@@ -5450,7 +5450,7 @@
       ],
       "representativePoint": {
         "lat": -6,
-        "lng": 39
+        "lng": 39.2
       },
       "subregion": "Eastern Africa",
       "continent": "Africa"
@@ -5846,8 +5846,8 @@
         "IT"
       ],
       "representativePoint": {
-        "lat": 45.4,
-        "lng": 12.3
+        "lat": 45.435,
+        "lng": 12.265
       },
       "subregion": "Southern Europe",
       "continent": "Europe"
@@ -5858,8 +5858,8 @@
         "VN"
       ],
       "representativePoint": {
-        "lat": 16,
-        "lng": 106
+        "lat": 16.601,
+        "lng": 106.601
       },
       "subregion": "South-Eastern Asia",
       "continent": "Asia"
@@ -6279,8 +6279,8 @@
         "TR"
       ],
       "point": {
-        "lat": 41,
-        "lng": 29
+        "lat": 40.336,
+        "lng": 26.478
       },
       "blurb": "From Turkish yogurt, perhaps related to yogun 'thick'."
     },
@@ -6688,8 +6688,8 @@
         "TR"
       ],
       "point": {
-        "lat": 41,
-        "lng": 29
+        "lat": 40.336,
+        "lng": 26.478
       },
       "blurb": "From Ottoman Turkish köşk, 'pavilion', which reached English through Italian and French."
     },
@@ -7661,7 +7661,7 @@
       ],
       "point": {
         "lat": 40.8,
-        "lng": 14.3
+        "lng": 14.35
       },
       "blurb": "From Italian pizza, popularized in the US by returning WWII soldiers."
     },
