@@ -115,17 +115,19 @@ describe("the answer marker on the timeline", () => {
 
 describe("the origin route line", () => {
   it("never reverses the chain for display", () => {
-    // The bug this guards: `[...originChain].reverse()` printed the route backwards
-    // ("English ← Latin ← Old French ← Middle English"), contradicting the blurb
-    // and claiming the opposite derivation. The formatting module owns the order.
+    // Two shipped bugs live here. `[...originChain].reverse()` printed the route
+    // backwards ("English ← Latin ← Old French ← Middle English"), and the arrow
+    // must match the order: oldest-first pairs with `→`. The formatting module owns
+    // both, so main.ts must not reorder or re-point anything itself.
     expect(main).not.toMatch(/originChain\]?\s*\.reverse\(\)/);
-    expect(main).toContain("routeParts(entry.originChain, entry.originLanguage)");
-    expect(main).toContain("beyondNote(entry.originLanguage, route.beyond)");
+    expect(main).toContain("routeLine(entry.originChain, entry.originLanguage)");
+    expect(main).toContain("beyondNote(entry.originLanguage, line.beyond)");
+    expect(main).toContain("document.createTextNode(ROUTE_ARROW)");
   });
 
   it("marks which hop was asked about", () => {
-    // The chain can continue past the answer, so the answer hop is picked out
-    // rather than left as whatever happens to be last.
+    // The chain can continue older than the answer, so the answer hop is picked out
+    // rather than left as whatever happens to be first.
     expect(main).toContain('el("b", "hop-answer", hop)');
     expect(css).toMatch(/\.route \.hop-answer/);
   });

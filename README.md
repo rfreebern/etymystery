@@ -126,8 +126,12 @@ green circle, so you can see at a glance how far off the window was — and when
 answer falls inside your 100 years, that circle still shows *in front of* the tablet
 rather than disappearing behind it. Zoom and pan stay live — inspecting the answer is
 what the map is for at that point. The reveal labels its components
-`Year Score` / `Map Score` / `Round Score`, says whether the window caught the year,
-and shows the full origin route; progress is kept in
+`Year Score` / `Map Score` / `Round Score` and shows the full origin route
+**oldest first**, ending at English — `Latin → Old French → Middle English → English`
+— with the hop you were asked about picked out in amber (the recorded chain can
+continue older than that, to a reconstruction that has no place on the map, which
+the reveal says so plainly rather than leaving it looking like the answer). It also
+says whether the window caught the year; progress is kept in
 `localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
 resumes and a finished day is never re-scored. `npm run build:web` emits a fully
 static `web/dist/` — any file host serves it.

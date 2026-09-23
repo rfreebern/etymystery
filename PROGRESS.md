@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 240/240 tests passing, typecheck clean, static build green. The bank is
+`main`): 242/242 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -478,10 +478,30 @@ so the period labels change exactly where the handle crosses them.
 
 
 
+**Session 5 (cont. 2) — the route reads oldest first** (this batch)
+
+- Requested after reading the fixed line: the route should run oldest → newest,
+  because English reads left to right. So the display order is now
+  `Latin → Old French → Middle English → English` — the arrow flips to `→`
+  ("became" once) because `←` in that order would claim the reverse, which is the
+  same class of error as the reversal it replaced.
+- `routeLine()` returns the stops already in display order (oldest first, English
+  last) plus the older-than-the-answer stops also oldest-first, and
+  `ROUTE_ARROW` is a constant so the glyph and the order can never drift apart.
+  `beyondNote` now reads "Older still: Proto-Italic — no anchor on a modern map, so
+  the answer is Latin, the oldest stop that can be placed."
+- Real output: `enemy` → `Latin → Old French → Middle English → English`;
+  `sugar` → `Arabic → Middle English → English`; `due` → `Latin → Old French →
+  English` plus the note about Proto-Italic.
+- tests updated to the new direction (+2): oldest hop first, immediate source beside
+  English, single hop, a chain that does not name its answer, the older-than split
+  and its ordering, the note wording, and the shipped `enemy` case. The `web-ui`
+  guard now also asserts main.ts uses `ROUTE_ARROW` rather than its own glyph.
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 240 passed (18 files)
+    npx vitest run            # 242 passed (18 files)
     npx vite build web        # 66.0 kB js (22.6 kB gzip) / 4.6 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

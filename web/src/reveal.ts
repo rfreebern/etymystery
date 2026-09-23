@@ -1,52 +1,66 @@
 /**
  * Reveal text for the origin route.
  *
- * Two facts about `originChain` shape this, and both have been misread on screen:
+ * Three facts shape this, and the first two have been got wrong on screen before:
  *
- * 1. It is ordered from the word's IMMEDIATE source outwards, so the route reads
- *    `English ← Middle English ← Old French ← Latin` — deepest at the END, which is
- *    also where the arrow points. An earlier version reversed it and printed
- *    `English ← Latin ← Old French ← Middle English`, i.e. claimed English came from
- *    Latin via Middle English. Reporting the chain backwards is worse than saying
- *    nothing: it is confidently wrong.
- * 2. The chain can continue PAST the answer. The answer is the deepest hop with a
- *    home on a modern map, so `due` is recorded as
- *    `English ← Old French ← Latin ← Proto-Italic` and the question is about Latin —
- *    Proto-Italic is a reconstruction that cannot be pinned. The route therefore
- *    stops at the answer and names what lies beyond it, instead of leaving a deeper
- *    hop looking like the answer.
+ * 1. `originChain` is ordered from the word's IMMEDIATE source outwards, but the
+ *    route is DISPLAYED oldest-first, ending at English: `Latin → Old French →
+ *    Middle English → English`. English reads left to right, so a route that starts
+ *    at the word and walks backwards asks the reader to reverse every hop — and an
+ *    earlier version reversed the array instead, which printed the derivation
+ *    inside out ("English ← Latin ← Old French ← Middle English").
+ * 2. The arrow follows the order: `→` means "became" once, with the oldest at the
+ *    left. A `←` glyph in oldest-first order would claim the opposite.
+ * 3. The chain can continue PAST the answer. The answer is the oldest hop with a
+ *    home on a modern map, so `due` is recorded as `English ← Old French ← Latin ←
+ *    Proto-Italic` and the question is about Latin — Proto-Italic is a
+ *    reconstruction that cannot be pinned. The route therefore stops at the answer
+ *    and names what lies beyond it, rather than leaving an older hop looking like
+ *    the answer.
  */
 
-export interface RouteParts {
-  /** Hops from English outward, ending at the answer hop. */
+export interface RouteLine {
+  /**
+   * Every stop in display order, oldest first, with the word itself last:
+   * `["Latin", "Old French", "Middle English", "English"]`.
+   */
   hops: string[];
-  /** Hops recorded deeper than the answer: no place on a modern map. */
+  /** Stops older than the answer: no place on a modern map. Oldest first. */
   beyond: string[];
 }
 
-export function routeParts(originChain: readonly string[], answerLanguage: string): RouteParts {
+/** How a hop reads in the route: `A → B` means A became B. */
+export const ROUTE_ARROW = " → ";
+
+export function routeLine(originChain: readonly string[], answerLanguage: string): RouteLine {
   const at = originChain.indexOf(answerLanguage);
   // A chain that does not name its own answer (should not happen: the builder
   // anchors the answer to a hop in this chain) is shown whole rather than truncated.
-  if (at < 0) return { hops: [...originChain], beyond: [] };
-  return { hops: originChain.slice(0, at + 1), beyond: originChain.slice(at + 1) };
+  const toAnswer = at < 0 ? [...originChain] : originChain.slice(0, at + 1);
+  const beyond = at < 0 ? [] : originChain.slice(at + 1);
+  return {
+    // Stored immediate-source-first; display reads left to right in time.
+    hops: [...toAnswer].reverse().concat("English"),
+    beyond: [...beyond].reverse(),
+  };
 }
 
-/** The route as one line: `English ← Middle English ← Old French ← Latin`. */
+/** The route as one line: `Latin → Old French → Middle English → English`. */
 export function routeLabel(originChain: readonly string[], answerLanguage: string): string {
-  return ["English", ...routeParts(originChain, answerLanguage).hops].join(" ← ");
+  return routeLine(originChain, answerLanguage).hops.join(ROUTE_ARROW);
 }
 
 /**
- * Explains a chain recorded deeper than the answer, or null when there is nothing
- * beyond it. Phrased as "no anchor on a modern map" rather than assuming a
- * reconstruction: today every such hop is Proto-*, but the reason it is not asked
- * about is that it cannot be located.
+ * Explains hops recorded older than the answer, or null when there are none.
+ * Phrased as "no anchor on a modern map" rather than assuming a reconstruction:
+ * today every such hop is Proto-*, but the reason it is not asked about is that it
+ * cannot be located.
  */
 export function beyondNote(answerLanguage: string, beyond: readonly string[]): string | null {
   if (beyond.length === 0) return null;
   return (
-    `Recorded deeper: ${beyond.join(" ← ")} — no anchor on a modern map, ` +
-    `so the answer is ${answerLanguage}, the deepest place this word can be pinned.`
+    `Older still: ${beyond.join(ROUTE_ARROW)} — no anchor on a modern map, ` +
+    `so the answer is ${answerLanguage}, the oldest stop that can be placed.`
   );
 }
+
