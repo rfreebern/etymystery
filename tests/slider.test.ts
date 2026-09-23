@@ -15,6 +15,7 @@ import {
   tabletWidthPx,
   windowYears,
   yearFraction,
+  yearPositionPct,
 } from "../web/src/slider";
 
 const TRACK = 800;
@@ -93,6 +94,50 @@ describe("timeline slider geometry", () => {
     expect(outsideYears(1380, 1450, 1550)).toBe(70);
     expect(outsideYears(1601, 1450, 1550)).toBe(51);
     expect(outsideYears(1380, 1550, 1450)).toBe(70); // order-agnostic
+  });
+
+  it("places the answer marker on the year's own position", () => {
+    expect(yearPositionPct(ANSWER_YEAR_MIN, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)).toBe(0);
+    expect(yearPositionPct(ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)).toBe(100);
+    // 1151 is where Middle English starts: 451 of 1325 years in.
+    expect(yearPositionPct(1151, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)).toBeCloseTo(34.0377, 3);
+    // Same value as the era boundary the label sits under, by construction.
+    const [, middle] = eraSegments(ANSWER_YEAR_MIN, ANSWER_YEAR_MAX);
+    expect(yearPositionPct(1151, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)).toBeCloseTo(middle!.leftPct, 6);
+  });
+
+  it("clamps a year outside the answer window onto the track", () => {
+    // An unplayable year (curated but predating the window) must still land on an
+    // end of the track rather than off the element.
+    expect(yearPositionPct(300, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)).toBe(0);
+    expect(yearPositionPct(2100, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)).toBe(100);
+    expect(yearPositionPct(900, 1600, 1600)).toBe(0); // degenerate window
+  });
+
+  it("REQUIREMENT: an answer inside the window lands on the tablet, so the marker must sit in front of it", () => {
+    // The tablet spans its 100 years, so a correct answer is *under* the thumb —
+    // which is exactly why the marker has to be layered above it.
+    const { min, max, span } = sliderStartBounds();
+    const tablet = tabletWidthPx(TRACK, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX);
+    const travel = TRACK - tablet;
+    const cases: Array<[start: number, answer: number]> = [
+      [1450, 1450], // left edge of the window
+      [1450, 1492], // inside
+      [1450, 1550], // right edge of the window
+      [700, 700],
+      [max, max + span],
+    ];
+    for (const [start, answer] of cases) {
+      const thumbLeft = ((start - min) / (max - min)) * travel;
+      const markerX = (yearPositionPct(answer, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX) / 100) * TRACK;
+      expect(markerX).toBeGreaterThanOrEqual(thumbLeft - 0.001);
+      expect(markerX).toBeLessThanOrEqual(thumbLeft + tablet + 0.001);
+    }
+    // And a miss genuinely falls outside the tablet, so the marker is visible on
+    // the bare track instead.
+    const thumbLeft = ((1450 - min) / (max - min)) * travel;
+    const missed = (yearPositionPct(1700, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX) / 100) * TRACK;
+    expect(missed).toBeGreaterThan(thumbLeft + tablet);
   });
 
   it("degrades safely on a degenerate track or window", () => {

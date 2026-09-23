@@ -75,6 +75,44 @@ describe("scored rounds are frozen", () => {
   });
 });
 
+describe("the answer marker on the timeline", () => {
+  it("is only drawn by the reveal, never during the round", () => {
+    // It marks the answer: calling it while the player is still guessing would give
+    // the round away, so the round-building code must never call it.
+    expect(functionBody(main, "renderRound")).not.toContain("markAnswerYear(");
+    expect(functionBody(main, "renderRound")).not.toContain("tl-answer");
+    expect(functionBody(main, "markAnswerYear")).toContain('"tl-answer"');
+    expect(functionBody(main, "renderReveal")).toContain("markAnswerYear(entry.year)");
+  });
+
+  it("is positioned with the same mapping the thumb uses", () => {
+    const marker = functionBody(main, "markAnswerYear");
+    expect(marker).toContain("yearPositionPct(year, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)");
+    // Percentage of the track, so it survives a resize without recomputation.
+    expect(marker).toMatch(/style\.left = `\$\{yearPositionPct\([^)]*\)\}%`/);
+    // And it is appended to the track that wraps the slider — the same box the
+    // tablet's geometry is measured against.
+    expect(marker).toContain("timelineNodes.track.append(marker)");
+    expect(functionBody(main, "renderRound")).toContain("track.append(slider)");
+  });
+
+  it("is layered in front of the thumb, which needs explicit stacking", () => {
+    // A native range thumb paints with its input, so the marker must be a sibling
+    // with a higher z-index; both get explicit z-indices so the order is not left
+    // to paint order.
+    expect(css).toMatch(/\.tl-track\s*\{[^}]*position: relative/);
+    expect(css).toMatch(/\.tl-track \.tl-slider\s*\{[^}]*z-index: 1/);
+    const marker = /\.tl-answer\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    expect(marker).toContain("z-index: 2");
+    expect(marker).toContain("position: absolute");
+    expect(marker).toContain("var(--good)"); // green
+    expect(marker).toContain("border-radius: 50%");
+    // It sits over the thumb when the answer is inside the window, so it must not
+    // intercept the drag.
+    expect(marker).toContain("pointer-events: none");
+  });
+});
+
 describe("score labels", () => {
   it("names the three components in full", () => {
     expect(main).toContain('["Year Score", stored.temporal]');

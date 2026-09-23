@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 221/221 tests passing, typecheck clean, static build green. The bank is
+`main`): 227/227 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -434,15 +434,26 @@ so the period labels change exactly where the handle crosses them.
   freezing does NOT touch `zoomBy`/`resetView`, that the lock happens before the
   reveal, and that the round re-enables picking. Verified to fail when the slider
   freeze or the labels are reverted.
-- tests: 221 total (+30 this session: 22 for the range/zoom work, 8 UI-contract
-  checks) — `tests/view.test.ts`, `tests/slider.test.ts`, range scoring
-  (inside/edges/outside/zero-width/reversed/BCE/monotonic), slider bounds,
+- The reveal marks the answer year on the timeline with a green circle
+  (`markAnswerYear` + `yearPositionPct`, the same mapping the thumb uses). It is a
+  *sibling* of the slider inside a `.tl-track` wrapper with explicit z-indices
+  (slider 1, marker 2), because a native range's thumb is a pseudo-element painted
+  with its input — nothing inside the input can paint above it. `pointer-events:
+  none` keeps it from eating a drag, and a test asserts the geometry: when the
+  answer is inside the window its marker position falls within the tablet's pixel
+  span (that is the case the layering exists for), and a miss falls outside it.
+  Another test asserts `renderRound` never calls `markAnswerYear` — showing the
+  answer early would give the round away — and both were verified to fail when
+  broken.
+- tests: 227 total (+36 this session: 22 for the range/zoom work, 6 for the marker,
+  8 UI-contract checks) — `tests/view.test.ts`, `tests/slider.test.ts`, range
+  scoring (inside/edges/outside/zero-width/reversed/BCE/monotonic), slider bounds,
   `erasSpanned`, `guessRange`'s legacy tolerance.
 
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 221 passed (17 files)
+    npx vitest run            # 227 passed (17 files)
     npx vite build web        # 64.8 kB js / 4.2 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -490,6 +501,10 @@ so the period labels change exactly where the handle crosses them.
 
 ## Gotchas learned (do not re-fight)
 
+- A native range input's thumb is a pseudo-element of the input: nothing inside the
+  input paints above it. To put something "in front of the thumb" it must be a
+  sibling with a higher z-index, and both need explicit z-indices so the result does
+  not depend on paint order.
 - When inserting a section before an existing heading, put the heading in the
   replacement text: replacing `## Verification` with a new block deletes the
   heading and orphans everything under it (it happened here in session 4).

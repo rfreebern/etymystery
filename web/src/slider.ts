@@ -47,6 +47,17 @@ export function yearFraction(year: number, floor: number, ceiling: number): numb
   return (year - floor) / years;
 }
 
+/**
+ * A year's position along the track as a percentage, clamped to the track so a
+ * year outside the answer window still lands on an end rather than off-screen.
+ * This is the same mapping the slider's thumb uses, so a marker placed with it
+ * sits exactly on the year it names.
+ */
+export function yearPositionPct(year: number, floor: number, ceiling: number): number {
+  const fraction = yearFraction(year, floor, ceiling);
+  return Math.min(Math.max(fraction, 0), 1) * 100;
+}
+
 /** An era's slice of the scale: percentages of the track, ready for CSS. */
 export interface EraSegment {
   label: string;

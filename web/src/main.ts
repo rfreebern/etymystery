@@ -16,6 +16,7 @@ import {
   rangeEraLabel,
   rangeLabel,
   tabletWidthPx,
+  yearPositionPct,
 } from "./slider";
 import { ZOOM_STEP } from "./view";
 import {
@@ -93,6 +94,21 @@ async function boot(): Promise<void> {
   function renderDayLabel(): void {
     document.getElementById("day-label")!.textContent =
       `Puzzle ${dayIndex + 1} of bank v${bank.version} — ${dateLabel(utcMs)} UTC`;
+  }
+
+  /** Timeline nodes for the round on screen, so the reveal can mark the answer. */
+  let timelineNodes: { track: HTMLElement } | null = null;
+
+  /**
+   * Mark the answer year on the timeline. Called from the reveal ONLY: the marker
+   * is the answer, so showing it any earlier would give the round away.
+   */
+  function markAnswerYear(year: number): void {
+    if (!timelineNodes) return;
+    const marker = el("div", "tl-answer");
+    marker.style.left = `${yearPositionPct(year, ANSWER_YEAR_MIN, ANSWER_YEAR_MAX)}%`;
+    marker.title = `${year} — the year English first used it`;
+    timelineNodes.track.append(marker);
   }
 
   function renderRound(): void {
@@ -208,6 +224,9 @@ async function boot(): Promise<void> {
     }
     window.addEventListener("resize", sizeTablet);
 
+    const track = el("div", "tl-track");
+    track.append(slider);
+
     const hint = el(
       "div",
       "tl-hint",
@@ -216,10 +235,12 @@ async function boot(): Promise<void> {
     timeline.append(
       el("label", undefined, `First used in this ${bounds.span}-year window`),
       head,
-      slider,
+      track,
       scale,
       hint,
     );
+    // The reveal needs to reach the track to mark the answer year on it.
+    timelineNodes = { track };
 
     const actions = el("div", "actions");
     const submitButton = el("button", undefined, "Lock it in") as HTMLButtonElement;
@@ -287,6 +308,9 @@ async function boot(): Promise<void> {
       ),
     );
     panel.append(el("p", "prompt", entry.blurb));
+    // The answer's own year, on the timeline the player just used — the clearest
+    // possible statement of how close the window was.
+    markAnswerYear(entry.year);
 
     const actions = el("div", "actions");
     const next = el("button", undefined, isComplete(session) ? "See results" : "Next word");

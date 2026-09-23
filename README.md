@@ -121,8 +121,11 @@ tooling, so the tools can never disagree with what the game scores.
 
 **Once you lock it in, the round is frozen for input**: the pin cannot be moved and
 the window cannot be dragged, because the score is already persisted and a movable
-guess would misrepresent it. Zoom and pan stay live — inspecting the answer is what
-the map is for at that point. The reveal labels its components
+guess would misrepresent it. The answer's year is then marked on the timeline with a
+green circle, so you can see at a glance how far off the window was — and when the
+answer falls inside your 100 years, that circle still shows *in front of* the tablet
+rather than disappearing behind it. Zoom and pan stay live — inspecting the answer is
+what the map is for at that point. The reveal labels its components
 `Year Score` / `Map Score` / `Round Score`, says whether the window caught the year,
 and shows the full origin route; progress is kept in
 `localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
