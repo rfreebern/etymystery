@@ -8,7 +8,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 213/213 tests passing, typecheck clean, static build green. The bank is
+`main`): 221/221 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference. Session 5 reworked the two inputs: the
 map now zooms and pans, and the timeline asks for a **100-year window** (tablet
@@ -421,14 +421,28 @@ so the period labels change exactly where the handle crosses them.
 - A 100-year window straddles a period boundary often, so the label names every
   period it touches (`1450 – 1550`, `Middle English · Early Modern`) via
   `erasSpanned`, and the reveal says plainly whether the window caught the year.
-- tests: 213 total (+22) — `tests/view.test.ts`, `tests/slider.test.ts`, range
-  scoring (inside/edges/outside/zero-width/reversed/BCE/monotonic), slider bounds,
-  `erasSpanned`, and `guessRange`'s legacy tolerance.
+- **A scored round is frozen for input**: `lockRound()` disables the slider, stops
+  pin drops (`worldMap.allowPicking(false)`, a gate separate from the zoom/pan
+  handlers so exploration still works) and disables the Lock button, all before the
+  reveal renders. The pin handler also checks the flag, so a click that arrives
+  after locking cannot quietly move a pin that no longer affects the score. The
+  next round re-enables picking, and the hint text switches to what is still
+  possible ("zoom and pan the map").
+- The reveal's chips are named in full: `Year Score` / `Map Score` / `Round Score`.
+- `tests/web-ui.test.ts` guards this: those modules build DOM and there is no jsdom
+  here, so (like the admin client) they are checked as source — including that
+  freezing does NOT touch `zoomBy`/`resetView`, that the lock happens before the
+  reveal, and that the round re-enables picking. Verified to fail when the slider
+  freeze or the labels are reverted.
+- tests: 221 total (+30 this session: 22 for the range/zoom work, 8 UI-contract
+  checks) — `tests/view.test.ts`, `tests/slider.test.ts`, range scoring
+  (inside/edges/outside/zero-width/reversed/BCE/monotonic), slider bounds,
+  `erasSpanned`, `guessRange`'s legacy tolerance.
 
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 213 passed (16 files)
+    npx vitest run            # 221 passed (17 files)
     npx vite build web        # 64.8 kB js / 4.2 kB css
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

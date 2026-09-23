@@ -98,6 +98,8 @@ async function boot(): Promise<void> {
   function renderRound(): void {
     const index = currentRoundIndex(session);
     worldMap.clearReveal();
+    // The previous round's lock must not leak into this one.
+    worldMap.allowPicking(true);
     // A fresh window each round: keeping the previous round's placement would
     // carry an accidental hint (or a wrong idea) into the next word.
     guess = { yearStart: 1800, yearEnd: 1900, point: null };
@@ -106,6 +108,8 @@ async function boot(): Promise<void> {
       return;
     }
     const entry = rounds[index]!;
+    /** Set once this round is scored: its inputs stop responding (zoom/pan do not). */
+    let locked = false;
     app.replaceChildren();
 
     const meta = el("div", "round-meta");
@@ -145,6 +149,9 @@ async function boot(): Promise<void> {
     );
     mapPanel.append(worldMap.svg, mapTools);
     worldMap.onPick((lngLat) => {
+      // Once the round is scored, moving the pin would misrepresent the score it
+      // already earned — and the score is the thing being shown.
+      if (locked) return;
       guess = { ...guess, point: { lat: lngLat[1], lng: lngLat[0] } };
       worldMap.setGuessPin(guess.point);
       submitButton.disabled = false;
@@ -201,19 +208,41 @@ async function boot(): Promise<void> {
     }
     window.addEventListener("resize", sizeTablet);
 
+    const hint = el(
+      "div",
+      "tl-hint",
+      "drag, or use ← → for 25-year steps · any answer inside the window scores full marks",
+    );
     timeline.append(
       el("label", undefined, `First used in this ${bounds.span}-year window`),
       head,
       slider,
       scale,
-      el("div", "tl-hint", "drag, or use ← → for 25-year steps · any answer inside the window scores full marks"),
+      hint,
     );
 
     const actions = el("div", "actions");
     const submitButton = el("button", undefined, "Lock it in") as HTMLButtonElement;
     submitButton.disabled = true; // requires a pin
+
+    /**
+     * Freeze the round's inputs once it is scored. The score is already persisted,
+     * so letting the pin or the window move afterwards would misrepresent it.
+     * Zoom and pan stay live: inspecting the answer is the point of the reveal.
+     */
+    function lockRound(): void {
+      locked = true;
+      slider.disabled = true;
+      worldMap.allowPicking(false);
+      submitButton.disabled = true;
+      submitButton.textContent = "Locked in";
+      hint.textContent = "Locked in — zoom and pan the map to inspect the answer.";
+    }
+
     submitButton.addEventListener("click", () => {
+      if (locked) return;
       const stored = submitGuess(bank, session, index, guess, ctx, window.localStorage);
+      lockRound();
       renderReveal(entry, stored);
     });
     actions.append(submitButton);
@@ -229,7 +258,11 @@ async function boot(): Promise<void> {
     panel.append(el("div", "word", entry.pos ? `${entry.word.toUpperCase()} (${entry.pos})` : entry.word.toUpperCase()));
 
     const scores = el("div", "scores");
-    const chips: Array<[string, number]> = [["Year", stored.temporal], ["Map", stored.geographic], ["Round", stored.total]];
+    const chips: Array<[string, number]> = [
+      ["Year Score", stored.temporal],
+      ["Map Score", stored.geographic],
+      ["Round Score", stored.total],
+    ];
     for (const [label, value] of chips) {
       const chip = el("div", "score-chip");
       chip.append(el("div", "value", String(value)), el("div", "label", label));

@@ -105,6 +105,9 @@ main {
   background: transparent; cursor: ew-resize;
 }
 .tl-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+/* A scored round: the window is frozen, so say so rather than looking draggable. */
+.tl-slider:disabled { cursor: default; opacity: 0.85; }
+.tl-slider:disabled::-webkit-slider-thumb { box-shadow: none; }
 .tl-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: #2c3242; }
 .tl-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -145,7 +148,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 button.secondary { background: #2c3242; color: var(--ink); }
 
 .scores { display: flex; gap: 12px; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
-.score-chip { border-radius: 8px; padding: 8px 16px; background: #262c3b; text-align: center; min-width: 110px; }
+.score-chip { border-radius: 8px; padding: 8px 16px; background: #262c3b; text-align: center; min-width: 124px; }
 .score-chip .value { font-size: 26px; font-weight: 700; }
 .score-chip .label { font-size: 12px; color: var(--muted); }
 

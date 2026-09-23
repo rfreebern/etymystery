@@ -26,6 +26,11 @@ export interface WorldMap {
   setGuessPin(point: LatLng | null): void;
   revealAnswer(entry: BankEntry, guess: LatLng | null): void;
   clearReveal(): void;
+  /**
+   * Whether clicking the map drops a pin. Turning it off must NOT affect zoom and
+   * pan: a scored round is frozen for pinning, but still explorable.
+   */
+  allowPicking(enabled: boolean): void;
   /** Multiply the zoom by `factor`, keeping the map centre fixed. */
   zoomBy(factor: number): void;
   resetView(): void;
@@ -65,6 +70,7 @@ export function createWorldMap(container: HTMLElement, features: CountryFeature[
 
   let view: View = { ...IDENTITY };
   let pickHandler: ((lngLat: [number, number]) => void) | null = null;
+  let picking = true;
   let draggedRecently = false;
   // What is currently drawn, so markers can be redrawn (counter-scaled) whenever
   // the zoom changes.
@@ -159,7 +165,7 @@ export function createWorldMap(container: HTMLElement, features: CountryFeature[
 
   // ---- pin drop -------------------------------------------------------------
   svg.addEventListener("click", (event: MouseEvent) => {
-    if (!pickHandler) return;
+    if (!pickHandler || !picking) return;
     // A drag ends with a click event too; that gesture was a pan, not a pin.
     if (draggedRecently) return;
     const { x, y } = toViewBox(event);
@@ -204,6 +210,9 @@ export function createWorldMap(container: HTMLElement, features: CountryFeature[
       guessPoint = null;
       layerHighlight.replaceChildren();
       layerMarkers.replaceChildren();
+    },
+    allowPicking(enabled) {
+      picking = enabled;
     },
     zoomBy(factor) {
       view = zoomAt(view, factor, WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT);

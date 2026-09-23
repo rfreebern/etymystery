@@ -117,9 +117,14 @@ The timeline spans **700–2025** — a window position is the first year of the
 player's 100 years, so the slider's last position is 1925 — with era markers
 (Old English · Middle English · Early Modern · Modern), so medieval loanwords are
 playable; that window lives in `src/timeline.ts` and is shared with the curation
-tooling, so the tools can never disagree with what the game scores. The reveal
-shows the two score components separately, whether the window caught the year, and
-the full origin route; progress is kept in
+tooling, so the tools can never disagree with what the game scores.
+
+**Once you lock it in, the round is frozen for input**: the pin cannot be moved and
+the window cannot be dragged, because the score is already persisted and a movable
+guess would misrepresent it. Zoom and pan stay live — inspecting the answer is what
+the map is for at that point. The reveal labels its components
+`Year Score` / `Map Score` / `Round Score`, says whether the window caught the year,
+and shows the full origin route; progress is kept in
 `localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
 resumes and a finished day is never re-scored. `npm run build:web` emits a fully
 static `web/dist/` — any file host serves it.
