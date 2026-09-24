@@ -372,21 +372,38 @@ The included workflow (`.github/workflows/pages.yml`) publishes it to GitHub
 Pages on every push to `main`: it runs the typecheck and the test suite first, so
 a red build cannot deploy.
 
-Project sites are served from a subdirectory
-(`https://<user>.github.io/<repo>/`), which is why `web/vite.config.ts` sets
-`base: "./"` and the client fetches its data with document-relative paths
-(`word-bank.json`, not `/word-bank.json`). Root-anchored URLs work locally and
-404 on Pages, so keep both rules in mind when adding assets.
+The site is served at **<https://etymystery.com/>**, and
+`rfreebern.github.io/etymystery/` redirects there. Both halves of that live in
+this repository, so a fresh checkout reproduces them:
 
-One-time setup, once per repository: **Settings → Pages → Source: GitHub
-Actions.** Until that is set the deploy step fails with a permissions error
-(a push cannot grant it). Pages on a private repository requires GitHub Pro or
-Team; on any free plan the repository has to be public, or point the same build
-output at another static host.
+- `web/public/CNAME` names the domain. Vite copies `web/public/*` into `web/dist`,
+  so the file lands at the root of the deployed artifact, which is how a
+  GitHub-Actions deployment declares its custom domain.
+- The domain's DNS points at GitHub Pages: four `A` records on the apex
+  (`185.199.108.153` .. `185.199.111.153`), the four matching `AAAA` records
+  (`2606:50c0:8000::153` .. `2606:50c0:8003::153`) and `www` as a `CNAME` to
+  `rfreebern.github.io`. A registrar's parking record on the apex keeps the domain
+  off Pages no matter what the repository says, which is what it looked like
+  before those records existed. GitHub issues the certificate once they resolve,
+  and Settings -> Pages -> Enforce HTTPS can be ticked after that.
 
-The published site serves whatever `web/public/word-bank.json` contains — today
-bank v3: 620 entries, 37 days, 139 curated entries flagged `unverified` until a
-human checks it against a reference (see [CURATION.md](CURATION.md)).
+Both the domain root and a subdirectory are in play, which is why
+`web/vite.config.ts` sets `base: "./"` and the client fetches its data with
+document-relative paths (`word-bank.json`, not `/word-bank.json`): the built
+assets have to work under `rfreebern.github.io/etymystery/` as well as at the
+root of the custom domain.
+
+One-time setup, once per repository: **Settings -> Pages -> Source: GitHub
+Actions**, and the custom domain in the same panel (the CNAME file above keeps it
+set through later deploys). Until the source is set the deploy step fails with a
+permissions error, because a push cannot grant it. Pages on a private repository
+requires GitHub Pro or Team; on any free plan the repository has to be public, or
+point the same build output at another static host.
+
+The published site serves whatever `web/public/word-bank.json` contains - today
+bank v5: 450 entries, 90 days of five rounds, 139 curated entries flagged
+`unverified` until a human checks them against a reference (see
+[CURATION.md](CURATION.md)).
 
 ## Licensing
 

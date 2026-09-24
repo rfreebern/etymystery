@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-24, session 20)
+## Status (as of 2026-09-24, session 21)
 
-Engine + pipeline + web client COMPLETE, published at
-<https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 358/358 tests passing, typecheck clean, static build green. The priced-in work
+Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
+(GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
+URL redirects there): 362/362 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -1076,10 +1076,34 @@ on-land anchors** (this batch)
   is a bank-FORMAT change, unlike the append-only rebuilds before it.
 - tests: 358 total (+1: the thin-group cap).
 
+**Session 21 - the custom domain, and a design pass on the solution footer** (this batch)
+
+- Reported: the site had to move to a newly bought domain, and the live URL had
+  stopped working. It showed a parking lander because GitHub Pages was ALREADY
+  configured for the custom domain while the domain's DNS was still the registrar's
+  parking records: every `rfreebern.github.io/etymystery/...` URL 301'd to a domain
+  that answered with a parked page. A fetch of the word bank returning HTML is what a
+  broken custom domain looks like from outside, and the deploy itself was green.
+- The DNS is set through Namecheap's API (the domain is on the registrar's BasicDNS,
+  so `namecheap.domains.dns.setHosts` manages the zone): the apex gets GitHub's four
+  `A` records and the four matching `AAAA` records, `www` a `CNAME` to
+  `rfreebern.github.io`. The zone held no records at all, so nothing had to be
+  preserved. Verified against the authoritative servers, a public resolver and end to
+  end: GitHub Pages answers `http://etymystery.com/` with the app, its assets and the
+  bank. HTTPS waits on the certificate GitHub issues once the records resolve.
+- `web/public/CNAME` now names the domain, so the deployed artifact declares it
+  rather than the setting living only in a panel.
+- The same session restyled the solution footer to the design mock: the answer as the
+  headline, the scores as a podium (round score above the two it is made of), each of
+  those carrying the note that explains it, and the route last with the answer hop in
+  the accent colour. Checked against a real headless-Chrome run of a round (the DOM it
+  produced and a screenshot of the footer), not only against the stylesheet.
+- tests: 362 total (+4 for the footer's structure and layout).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 358 passed (23 files)
+    npx vitest run            # 362 passed (23 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
@@ -1152,6 +1176,16 @@ on-land anchors** (this batch)
 
 ## Gotchas learned (do not re-fight)
 
+- A custom domain on GitHub Pages turns the `*.github.io/<repo>` URL into a 301 to
+  that domain, so a domain with broken DNS presents as a parking lander or a redirect
+  into nowhere rather than as the old site. The deploy was green throughout: check the
+  domain's records, not the workflow, and remember the subdirectory URL is gone the
+  moment the custom domain is set (which is why `base: "./"` matters).
+- `namecheap.domains.dns.setHosts` answers OK even when the zone it writes is not the
+  one being served, and `getHosts` can report no host records while `getInfo` reports
+  a `HostCount` and the zone is in fact live. Verify DNS against the authoritative
+  nameservers (`dig @dns1.registrar-servers.com`) and the public resolvers, never
+  against the API's own echo of its writes.
 - The tier count IS the day length: a day deals one word per tier, so `ROUNDS_PER_DAY` has to
   equal `TIER_COUNT` (it is defined from it) and "make the day five rounds" means a new bank
   version, not a config change. Every hardcoded ten then becomes a silent break, not an
