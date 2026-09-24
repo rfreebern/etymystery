@@ -238,6 +238,57 @@ export function parseEnglishSenses(wikitext: string): WiktionarySense[] {
       donors,
     });
   }
+  // Still nothing: the parts of speech are nested under something else entirely, so
+  // fall back to reading the page in order.
+  return senses.length > 0 ? senses : linearSenses(english);
+}
+
+/**
+ * Last-resort reader: walk the English section in document order and use only the
+ * ORDER of headers, ignoring their levels.
+ *
+ * Two shapes defeat the level-based readers above, and both are common: `abstract`
+ * puts its parts of speech under `===Pronunciation 1===` rather than directly under
+ * the etymology, and `money` has them as level-3 siblings of it. In document order the
+ * information is unambiguous - donors come from the most recent etymology header,
+ * senses from every part-of-speech header after it - so read the page linearly rather
+ * than guessing at its levels.
+ */
+function linearSenses(english: string): WiktionarySense[] {
+  const header = /^(={2,6})\s*([^=]+?)\s*\1\s*$/;
+  const senses: WiktionarySense[] = [];
+  let etymology = "";
+  let donors: string[] = [];
+  let previous: { label: string; isPos: boolean; isEtymology: boolean } | null = null;
+  let buffer: string[] = [];
+
+  const flush = (): void => {
+    if (!previous) return;
+    if (previous.isEtymology) donors = donorCodes(buffer.join("\n"));
+    else if (previous.isPos) {
+      senses.push({
+        etymology,
+        pos: normalisePos(previous.label),
+        gloss: firstGloss(buffer.join("\n")),
+        donors,
+      });
+    }
+  };
+
+  for (const line of english.split("\n")) {
+    const match = header.exec(line);
+    if (match) {
+      flush();
+      const label = (match[2] ?? "").trim();
+      const isEtymology = /^etymolog/i.test(label);
+      if (isEtymology) etymology = label;
+      previous = { label, isPos: isPos(label), isEtymology };
+      buffer = [];
+      continue;
+    }
+    buffer.push(line);
+  }
+  flush();
   return senses;
 }
 

@@ -344,6 +344,33 @@ describe("a year that contradicts its own chain", () => {
   });
 });
 
+describe("a year the printed record contradicts", () => {
+  // A hit means the word was already in print, so it cannot have entered English
+  // later. A word the sample never saw says NOTHING: the sample is a fraction of the
+  // record, and treating absence as evidence would flag hundreds of correct entries.
+  const base = {
+    knownWords: new Set(["algebra", "coffee"]),
+    attestedByWord: new Map([["algebra", { firstYear: 1587, texts: 3 }]]),
+    yearFloor: 700,
+    yearCeiling: 2025,
+  };
+
+  it("flags a curated year later than an attestation", () => {
+    const late = auditCuration({ algebra: { year: 1650 } }, base);
+    expect(late.issues[0]!.problem).toContain("later than the printed record");
+    expect(late.issues[0]!.problem).toContain("earliest 1587");
+    // The report says what a string match can be, because it is not always the sense.
+    expect(late.issues[0]!.problem).toContain("Latin word");
+  });
+
+  it("accepts an earlier year, and silence", () => {
+    // Earlier than the record is consistent: the record shows a later bound only.
+    expect(auditCuration({ algebra: { year: 1550 } }, base).issues).toEqual([]);
+    // `coffee` is not in the attestations at all, which is not a finding.
+    expect(auditCuration({ coffee: { year: 1590 } }, base).issues).toEqual([]);
+  });
+});
+
 });
 
 

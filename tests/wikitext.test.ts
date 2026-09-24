@@ -78,6 +78,28 @@ describe("reading donors from an etymology", () => {
   });
 });
 
+
+// `abstract` nests its parts of speech under pronunciation sections, so the etymology
+// chunk contains none of them. Document order still says which donors apply.
+const ABSTRACT = `==English==
+
+===Etymology===
+From {{der|en|la|abstractus}}.
+
+===Pronunciation 1===
+{{IPA|en|/ˈæb.strækt/}}
+
+====Noun====
+# An abridgement or summary.
+
+====Adjective====
+# Derived; extracted.
+
+===Pronunciation 2===
+====Verb====
+# To separate; to disengage.
+`;
+
 describe("reading the senses of an English word", () => {
   it("returns one sense per (etymology, part of speech), with gloss and donors", () => {
     const senses = parseEnglishSenses(BACK);
@@ -105,6 +127,22 @@ describe("reading the senses of an English word", () => {
     // The etymology above them applies to both, which is how the donor is known.
     expect(senses[0]!.donors).toEqual(["enm", "xno", "la"]);
     expect(senses[0]!.gloss).toBe("A generally accepted means of exchange.");
+  });
+
+
+  it("reads parts of speech nested under pronunciation sections", () => {
+    // Reported by the fetcher: four words came back with no senses at all, and two of
+    // them (`abstract`, `incense`) plainly have an English page. The parts of speech
+    // were nested one level deeper than the etymology, which the level-based readers
+    // could not see.
+    const senses = parseEnglishSenses(ABSTRACT);
+    expect(senses.map((sense) => [sense.pos, sense.donors])).toEqual([
+      ["noun", ["la"]],
+      ["adjective", ["la"]],
+      ["verb", ["la"]],
+    ]);
+    expect(senses[0]!.gloss).toBe("An abridgement or summary.");
+    expect(senses[2]!.gloss).toBe("To separate; to disengage.");
   });
 
   it("returns nothing for a page with no English section", () => {

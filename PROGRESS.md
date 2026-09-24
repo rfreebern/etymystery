@@ -4,21 +4,19 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 14)
+## Status (as of 2026-09-21, session 15)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 322/322 tests passing, typecheck clean, static build green. The bank is
-110 entries / 10 days from 119 curated words, all flagged `unverified` until a
-human checks the dates against a reference; a derived batch of 490 more is waiting
-for a chain check (see session 13), which takes the same curation to 600 entries and
-36 days. Session 13 automated the dates no reference has. Session 12 made an answer a **span**:
-words no source dates past a period ("recorded in Old English", "in use by 1150")
-are curated as `year` + `yearTo` and scored by overlap, instead of forcing a
-fabricated year that would decide the player's score by coin flip. Earlier
-sessions: the map zooms/pans, the timeline asks for a **100-year window** (tablet
-handle, 25-year steps), and the curation loop, admin app and scoring leniency were
-each rebuilt around what the *record* can actually support.
+`main`): 331/331 tests passing, typecheck clean, static build green. The priced-in work
+of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
+`year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
+chain names an English period (490 drafted with no research), the admin app shows each
+sense's part of speech, gloss and donors (so a click picks the sense and its route),
+and a dated EEBO-TCP sample can contradict a year a reference gave. The bank itself is
+still 110 entries / 10 days from 119 curated words, all `unverified` until a human
+checks them; the 490 derived words are sitting in the batch and take it to 600 entries
+and 36 days once their chains are checked.
 
 ## Done
 
@@ -811,6 +809,32 @@ on-land anchors** (this batch)
 - tests: 299 total (+21).
 
 
+**Session 15 - a dated corpus checks the years a reference has to give** (this batch)
+
+- Lever B, the last of the three. After `--mode derive` cleared the inherited layer, the
+  remaining manual work is borrowed words, whose first use is a real reference lookup.
+  What a corpus can do is *contradict* a year, so `scripts/attest-scan.ts` scans a dated
+  sample of Early English Books.
+- The corpus: EEBO-TCP, **CC0**, 1475-1700, one GitHub repo per text, plus an index of
+  61,315 dated texts (`data/TCP.csv`, from textcreationpartnership/Texts). Chosen after
+  checking what is actually reachable: TCP's own bulk-download page 404s, and the texts
+  are per-text repos, so the tool samples instead (an even spread by date, 400 texts by
+  default, ~0.4 s each).
+- `scripts/lib/eebo.ts` reads the index (a real CSV reader: titles contain commas and
+  quotes), samples inside the corpus's own period, takes the date from each
+  transcript's own header, and matches whole words only ("to-day" hits both, "sugary"
+  is not "sugar").
+- The audit uses it one-directionally: a hit means the word was already in print, so a
+  curated year later than it is impossible. A miss is silence and is never reported.
+  First run: hits for 59 of 119 curated words by text 50 of 400 (coffee and sugar by
+  1697, cited).
+- Also fixed: pages that nest their parts of speech under `===Pronunciation N===`
+  returned no senses at all (`abstract`, `incense`). A document-order fallback now
+  reads those, so 513 of 515 fetched words have senses. The other two (`bandon`,
+  `bendel`) have no English section on Wiktionary at all - Middle English entries -
+  which is the honest answer rather than a parser gap.
+- tests: 331 total (+9).
+
 ## Verification (re-run before trusting anything)
 
 
@@ -828,7 +852,7 @@ on-land anchors** (this batch)
 
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 322 passed (21 files)
+    npx vitest run            # 331 passed (22 files)
     npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -840,6 +864,11 @@ on-land anchors** (this batch)
       --out data/word-bank.json --version 2 --epoch-start 2026-09-21 \
       --worklist data/curation-worklist.tsv
                                  # 41,985 candidates, 17 bankable, 37,211 uncurated
+    npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
+                                 # 515 words -> 513 with senses (POS + gloss + donors)
+    npx tsx scripts/attest-scan.ts --from-curation curated/curation.json \
+      --sample 400               # EEBO-TCP attestations -> data/attest.json
+
     # ranked curation order (add --frequency data/en-frequency.txt):
     npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
       --languages data/languages.tsv --curation curated/curation.json \
@@ -1167,6 +1196,13 @@ on-land anchors** (this batch)
   second argument is a REPLACER, so a key list there whitelists those names at every
   level and silently empties the data. The fetcher's output file came out almost
   empty and said nothing. Sort into a new object and pass `null`.
+- A shell pattern can match the tool that runs it: `pkill -f 'git clone'` killed the
+  command's own shell, because the pattern appears in the shell's own command line.
+  Use the bracket trick (`pkill -f '[g]it clone'`) and expect a stray exit code.
+- Not every source that advertises a bulk download still has one: TCP's downloads page
+  returns 404 while its FAQ still links it, and the OTA route needs an account. Check
+  reachability before designing around a corpus, and prefer the shape that is really
+  there (per-text repos + a dated index) over the one the documentation promises.
 - Wiktionary's page shape is not uniform: with `===Etymology N===` sections the parts
   of speech are level-4 children, but pages like `money` have a single `===Etymology===`
   with the parts of speech as level-3 siblings. A reader that only knows the first

@@ -25,6 +25,7 @@ generated bank: it keeps the share-alike obligation satisfied.
 | FrequencyWords (hermitdave) | CC BY-SA 4.0 (code MIT) | English word-frequency ranks for the curation order; derived from the **OpenSubtitles 2018** corpus (attribution required to OpenSubtitles) |
 | world-countries | MIT (ODbL for the data) | Country metadata: ISO codes, subregion/continent, coordinates |
 | Wiktionary API (en.wiktionary.org/w/api.php) | CC BY-SA 4.0 (dual GFDL) | Part-of-speech, glosses and per-etymology donors for the words a curator is working on, fetched per word by `scripts/fetch-senses.ts` (not bulk-dumped; the same source as etymology-db) |
+| EEBO-TCP (Text Creation Partnership) | CC0 1.0 (public domain dedication) | Early English Books transcripts 1475-1700, fetched per text by `scripts/attest-scan.ts` as a dated attestation check; the corpus index (`data/TCP.csv`, 61,315 dated texts) comes from github.com/textcreationpartnership/Texts |
 | wiktionary_codes.csv (from etymology-db) | CC BY-SA 3.0 | Language code -> name, so a reconstruction's donor reads as a name rather than a code |
 
 **Share-alike obligation:** because the word bank is derived from CC BY-SA

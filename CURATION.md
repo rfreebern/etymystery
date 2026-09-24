@@ -167,6 +167,50 @@ Two things to know:
 
 
 
+## 1e. Check a date against the printed record (EEBO-TCP)
+
+A borrowed word has no English stage in its chain, so its first use is a real lookup, the one thing the derived spans could not do. What a corpus *can* do is contradict a year: if the word is in print by 1587, it did not enter English in 1650.
+
+    # one-time: the dated index of the whole corpus (61,315 texts, CC0)
+    git clone --depth 1 https://github.com/textcreationpartnership/Texts /tmp/tcp-texts
+    cp /tmp/tcp-texts/TCP.csv data/TCP.csv
+
+    npx tsx scripts/attest-scan.ts --from-curation curated/curation.json --sample 400
+    # -> data/attest.json, ~0.4 s per text, progress every 50
+
+Then `npm run curate -- --mode check` reports any curated year the record contradicts:
+
+    banked: year 1650 is later than the printed record already shows it:
+      found in 3 sampled text(s), earliest 1587
+
+**What a hit does and does not mean.** The first full run reported 8 of 119 curated
+years as contradicted, and two of those were not really the word at all:
+
+- `video:noun` (curated 1935) appears in a 1587 text because EEBO is **not
+  English-only**: `video` is Latin for "I see".
+- `guy:noun` (curated 1806, the Guy Fawkes effigy) appears from 1473 because `Guy` is
+  a person's name.
+
+The genuine-looking ones (`ballet` 1587, `chili` 1641, `mission` 1578, `tea` 1502) are
+worth opening the citation for: the tool prints the text id, year and title, and the
+rule is to change the year only after reading it. Raising `--sample` makes a hit
+earlier, never a miss.
+
+Three things decide how to read that report:
+
+- **A hit is a citation.** The tool records the text id, its year and its title, so the
+  claim can be looked up (text A60932, 1697). That is firmer footing than a model's
+  memory of a dictionary date.
+- **A miss is silence, not evidence.** The scan reads a *sample*: 400 of 61,315 texts,
+  spread evenly by date, so a rare word is simply not seen. The check therefore only
+  fires on a hit; treating absence as a finding would flag hundreds of correct entries.
+  To look harder, raise `--sample`.
+- **EEBO ends at 1700.** It dates the Renaissance loanword layer well and says nothing
+  about the 18th century onward.
+
+The index carries a few hundred rows whose date column is junk (`1`, or a non-year), so
+the sampler keeps to the corpus's own period (1450-1800).
+
 ## 2. Research each word
 
 For every word in the batch:
@@ -262,6 +306,9 @@ the file already uses, and lists anything that needs attention. An unfinished
 batch is safe: nothing without a year is written.
 
 ## 4. Check progress
+
+`check` also reports the two automated contradictions it can see: a year after the period the word's own chain records, and a year the printed record (see 1e) already contradicts. Both are one-directional by design, and neither treats silence as a finding.
+
 
 ```bash
 npm run curate -- --mode check

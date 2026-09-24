@@ -344,6 +344,13 @@ export function auditCuration(
      * curated for. The entry's own `origin` picks which route applies.
      */
     routesByWord?: ReadonlyMap<string, ReadonlyArray<{ origin: string; chain: readonly string[] }>>;
+    /**
+     * Earliest printed attestation per word, from a dated corpus sample
+     * (`scripts/attest-scan.ts`). A positive hit means the word was already in use
+     * then, so a curated year LATER than it is impossible. A word missing from the
+     * sample says nothing: the sample is a fraction of the record.
+     */
+    attestedByWord?: ReadonlyMap<string, { firstYear: number; texts: number }>;
     yearFloor: number;
     yearCeiling: number;
   },
@@ -420,6 +427,21 @@ export function auditCuration(
           `year ${entry.year}${entry.yearTo !== undefined ? `..${entry.yearTo}` : ""} is after the ` +
           `${era.label} period its own chain records (ends ${era.to}): the chain says the word ` +
           `was already in English by then, so the year or the chain is wrong`,
+      });
+    }
+    // A dated corpus can contradict a year in the same one-directional way: a positive
+    // hit means the word was already in print, so it cannot have entered English
+    // later. A word the sample never saw says nothing at all — the sample is a
+    // fraction of the record — so only hits are reported.
+    const attested = options.attestedByWord?.get(sense.word);
+    if (attested && entry.year > attested.firstYear) {
+      issues.push({
+        word,
+        problem:
+          `year ${entry.year} is later than the printed record already shows it: found in ` +
+          `${attested.texts} sampled text(s), earliest ${attested.firstYear}. Check the citation: ` +
+          `a string match can be another sense, a Latin word (EEBO is not English-only) or an ` +
+          `OCR variant`, // eslint-disable-line
       });
     }
     if (entry.year < options.yearFloor || entry.year > options.yearCeiling) {

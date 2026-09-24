@@ -121,6 +121,20 @@ function collectRoutes(
   return routes;
 }
 
+/** Earliest printed attestation per word, when scripts/attest-scan.ts has been run. */
+function readAttestations(path: string): Map<string, { firstYear: number; texts: number }> {
+  const map = new Map<string, { firstYear: number; texts: number }>();
+  try {
+    const file = readJson<{ words?: Record<string, { firstYear: number; texts: number }> }>(path);
+    for (const [word, attestation] of Object.entries(file.words ?? {})) {
+      map.set(word, { firstYear: attestation.firstYear, texts: attestation.texts });
+    }
+  } catch {
+    // No scan yet: nothing to check against, and that is not an error.
+  }
+  return map;
+}
+
 function readSkip(path: string | undefined): Set<string> {
   if (!path) return new Set();
   return new Set(
@@ -233,6 +247,7 @@ if (mode === "next") {
     bankWords: readBankWords(values.bank!),
     originsByWord: new Map(candidates.map((candidate) => [candidate.word, candidate.origins])),
     routesByWord: collectRoutes(candidates, readBankEntries(values.bank!)),
+    attestedByWord: readAttestations("data/attest.json"),
     yearFloor,
     yearCeiling,
   });
@@ -298,6 +313,7 @@ if (mode === "next") {
     bankWords: readBankWords(values.bank!),
     originsByWord: new Map(candidates.map((candidate) => [candidate.word, candidate.origins])),
     routesByWord: collectRoutes(candidates, readBankEntries(values.bank!)),
+    attestedByWord: readAttestations("data/attest.json"),
     yearFloor,
     yearCeiling,
   });

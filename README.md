@@ -75,6 +75,8 @@ file host serves the whole game.
     npm run admin          # local curation UI: word on the left, references on the right
     npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
                            # Wiktionary senses (POS + gloss + donors) for the batch
+    npx tsx scripts/attest-scan.ts --from-curation curated/curation.json --sample 400
+                           # EEBO-TCP attestations; check reads data/attest.json
     npm run bootstrap:languages -- \
       --codes data/wiktionary_codes.csv \
       --overlay curated/language-geo.json \
@@ -263,6 +265,13 @@ route when the same word has a fuller recorded chain beneath it (that is how
 that names a language the route cannot credit — a player follows the prose, pins
 that country, and is told they are wrong. `tests/reveal.test.ts` now enforces the
 blurb rule over the shipped bank.
+Curation is mostly automated now: `--mode derive` writes the answer span for every word
+whose etymology names an English period (one word in six), `scripts/fetch-senses.ts`
+supplies the part of speech, gloss and donors per sense from the Wiktionary API (one
+click in the app takes the sense and its route), and `scripts/attest-scan.ts` checks a
+curated year against a dated sample of EEBO-TCP. What is left for a human is checking
+chains, which is what the admin app is for.
+
 The step-by-step loop lives in [CURATION.md](CURATION.md), and `npm run admin`
 opens a local page that puts the word and its reference pages side by side for
 exactly this step.
