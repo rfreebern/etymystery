@@ -52,6 +52,23 @@ export interface BuildBankOptions {
    */
   excludeOriginCodes?: ReadonlySet<string>;
   /**
+   * Admit native-answer words to the bank anyway, up to this FRACTION of the entries
+   * (0 disables, and is the default).
+   *
+   * The reason they are kept out at all: a word whose answer is English is won by
+   * always pinning Britain and always guessing the earliest window, which is not the
+   * knowledge the game is about. Excluding all of them, though, throws away the most
+   * common vocabulary in the language - and a curated entry nobody can see is wasted
+   * work. A small quota keeps a few easy rounds (tiers 1-2, where a warmed-up player
+   * wants them) without the answer becoming a strategy: at 0.1 with 600 entries, 60 of
+   * them are native and 540 still ask a real question.
+   */
+  nativeQuota?: number;
+  /** Origins that count as native. Defaults to `excludeOriginCodes`. */
+  nativeOriginCodes?: ReadonlySet<string>;
+  /** Tiers the native words are pinned to (default [1, 2]). */
+  nativeTiers?: readonly number[];
+  /**
    * Build the WordBank itself (default true). Set false to generate only the
    * report and work list: curation rounds can then be inspected without the
    * bank being shippable yet (e.g. while a filter leaves a tier empty).
@@ -89,8 +106,12 @@ export interface BuildBankReport {
    * only; a row that repeats a recorded edge is ignored).
    */
   overrideEdges: number;
-  /** Words dropped because their answer origin language was excluded. */
+  /** Candidates dropped from the work list because their answer language was excluded. */
   excludedByOrigin: number;
+  /** Native-answer entries admitted to the bank under the quota. */
+  nativeAdmitted: number;
+  /** Native-answer entries left out because the quota was already filled. */
+  nativeDropped: number;
   warnings: string[];
 }
 
@@ -168,6 +189,8 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     unverifiedEntries: 0,
     overrideEdges: 0,
     excludedByOrigin: 0,
+    nativeAdmitted: 0,
+    nativeDropped: 0,
     warnings: [],
   };
 
@@ -274,6 +297,10 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     return [...byOrigin].map(([origin, variant]) => ({ origin, variant }));
   };
 
+  // Native-answer entries, held back until every entry is built: how many may enter
+  // depends on how many there are in total (see `nativeQuota`).
+  const pendingNative: Array<{ entry: BankEntry; rank: number | undefined }> = [];
+
   const warnIntermediates = (langs: readonly string[]): void => {
     for (const code of langs.slice(0, -1)) {
       const info = byCode[code];
@@ -342,7 +369,9 @@ export function buildBankFromInputs(options: BuildBankOptions): {
           `"${key}": the entry's "pos" (${curated.pos}) does not match its sense key; the key wins`,
         );
       }
-      if (options.excludeOriginCodes?.has(deepestCode)) {
+      const nativeCodes = options.nativeOriginCodes ?? options.excludeOriginCodes;
+      const isNative = nativeCodes?.has(deepestCode) ?? false;
+      if (isNative && !(options.nativeQuota && options.nativeQuota > 0)) {
         report.excludedByOrigin += 1;
         continue;
       }
@@ -370,6 +399,10 @@ export function buildBankFromInputs(options: BuildBankOptions): {
       } catch (err) {
         report.skippedEntries += 1;
         report.warnings.push(err instanceof Error ? err.message : String(err));
+        continue;
+      }
+      if (isNative) {
+        pendingNative.push({ entry, rank: frequencyRank });
         continue;
       }
       entries.push(entry);
@@ -400,6 +433,27 @@ export function buildBankFromInputs(options: BuildBankOptions): {
       });
     }
   }
+  // Native-answer words enter up to the quota, most common first: those are the ones
+  // a player meets early, so they are the ones worth spending an easy round on. Their
+  // tier is FORCED, so `--mode tier` cannot scatter them out of the easy tiers.
+  const nativeTotal = entries.length + pendingNative.length;
+  const quota = Math.round((options.nativeQuota ?? 0) * nativeTotal);
+  const nativeTiers = (options.nativeTiers ?? [1, 2]).filter((tier) => tier >= 1 && tier <= 10);
+  const tiersForNatives = nativeTiers.length > 0 ? nativeTiers : [1, 2];
+  pendingNative
+    .sort((a, b) => {
+      const rankA = a.rank ?? Number.POSITIVE_INFINITY;
+      const rankB = b.rank ?? Number.POSITIVE_INFINITY;
+      return rankA === rankB ? a.entry.word.localeCompare(b.entry.word) : rankA - rankB;
+    })
+    .slice(0, Math.max(0, quota))
+    .forEach((pending, index) => {
+      pending.entry.tier = tiersForNatives[index % tiersForNatives.length]!;
+      entries.push(pending.entry);
+      report.tierCounts[pending.entry.tier - 1]! += 1;
+      report.nativeAdmitted += 1;
+    });
+  report.nativeDropped = pendingNative.length - report.nativeAdmitted;
   report.acceptedWords = entries.length;
 
   const bank = options.assembleBank === false

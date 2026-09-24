@@ -93,7 +93,8 @@ file host serves the whole game.
       --version 2 [--epoch-start 2026-09-21] [--english-code en] [--max-depth 3] \
       [--deepest-attested] [--frequency data/en-frequency.txt] \
       [--exclude-origin en,ang,enm] [--worklist-only] \
-      [--extra-edges curated/edge-overrides.csv] [--no-overrides] \
+      [--extra-edges curated/edge-overrides.csv] [--no-overrides]
+      [--native-quota 0.1] [--native-tiers 1,2] \
       [--worklist data/curation-worklist.tsv]
 
 ## Playing it

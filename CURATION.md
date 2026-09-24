@@ -352,6 +352,32 @@ tier 10. Same 110 entries, balanced: `10 × 10`, ten days.
 Words with no frequency rank are skipped by the slicing (they mostly cannot build
 at all) and left at tier 10. Re-run it whenever you add a batch, then rebuild.
 
+### Native answers: the 10% quota
+
+A word whose answer is English is won by always pinning Britain and always choosing
+the earliest window, so the build keeps those out by default (`--exclude-origin
+en,ang,enm`). That is right for the work list, and wrong for the bank: it threw away
+the most common vocabulary in the language, and a curated entry nobody can see is
+wasted work. So native answers are admitted up to a **fraction of the bank**, in the
+easy tiers:
+
+    --native-quota 0.1 --native-tiers 1,2
+
+- The quota is a fraction of the entries, so it scales with the bank: at 138 curated
+  entries a 0.1 quota allows 14 and only 8 exist, so all 8 got in.
+- **The tier is forced**, so `--mode tier` cannot scatter them out of the easy tiers
+  (they are the rounds a player warms up on).
+- The most **common** native words get the places first (by frequency rank), so the
+  ones that make the cut are the ones a player meets early. With no frequency list the
+  tie-break is alphabetical and stable.
+- Default is off, which reproduces the previous build exactly.
+
+Measured on the real curation: 8 native words admitted (`leave`, `may`, `mean`, `put`
+in tier 1; `long`, `must`, `mother`, `name` in tier 2), and a 0.02 quota admits 3 and
+drops 5, so the cap really caps. Their spans are `700-1150`, which is exactly the Old
+English period, so the reveal reads *"recorded in the Old English period"* rather than
+printing two numbers.
+
 ## 5. Ship it
 
 Once every tier has enough words for the days you want:

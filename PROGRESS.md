@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 15)
+## Status (as of 2026-09-21, session 16)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 331/331 tests passing, typecheck clean, static build green. The priced-in work
+`main`): 334/334 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -835,6 +835,32 @@ on-land anchors** (this batch)
   which is the honest answer rather than a parser gap.
 - tests: 331 total (+9).
 
+**Session 16 - reviewing the 25 in-progress words, and a quota for native answers**
+
+- The review (their words, checked against chains, Wiktionary senses and the corpus):
+  12 were internally sound, 8 were being **silently dropped** by the build, 5 were
+  unresearched. Fixed, all through the shared writer: `because` had `pos:
+  "conjugation"` (not a word) -> `conjunction`; `sir` had no pos -> `noun`; the eight
+  native-answer words now span `700-1150` (Old English exactly, so the reveal names the
+  period) instead of `700-1200`, and `mother`/`must` were self-contradictory (spans of
+  1500-1550 and 1275-1325 on chains that record Old English); `give`/`same` now span
+  `1151-1500`, because their answer is Old Norse and an ON loan entered English in the
+  Middle English period - the answer and the dates had been describing two different
+  words. All 25 flagged `unverified` (they were reading as verified, because the app's
+  checkbox defaults to ticked when no flag is set).
+- The silent drop was the real find: `--exclude-origin en,ang,enm` pruned not just the
+  candidate ORDER but the bank itself, so eight carefully dated native words vanished
+  into a report line that is mostly candidate words.
+- Fixed with a quota: `--native-quota 0.1 --native-tiers 1,2` admits native answers up
+  to a fraction of the bank, most common first, with their tier FORCED so `--mode tier`
+  cannot scatter them. Measured: 8 admitted (tier 1: leave, may, mean, put; tier 2:
+  long, must, mother, name), 0.02 admits 3 and drops 5, and the default (off)
+  reproduces the old build exactly. Bank: 130 accepted entries with the 25 merged.
+- Unresearched and still in the batch: `stay`, `still`, `sure`, `wait`, `wrong`.
+  `wait` is bankable once dated - its answer is Old Northern French/Frankish, not
+  English - and `still` has a Latin-derived sense as well as the native one.
+- tests: 334 total (+3).
+
 ## Verification (re-run before trusting anything)
 
 
@@ -852,7 +878,7 @@ on-land anchors** (this batch)
 
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 331 passed (22 files)
+    npx vitest run            # 334 passed (22 files)
     npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -1203,6 +1229,14 @@ on-land anchors** (this batch)
   returns 404 while its FAQ still links it, and the OTA route needs an account. Check
   reachability before designing around a corpus, and prefer the shape that is really
   there (per-text repos + a dated index) over the one the documentation promises.
+- A build flag that prunes for one reason also prunes for all the others.
+  `--exclude-origin en,ang,enm` was meant to keep the curation ORDER from being all
+  Britain; it also removed curated native words from the bank, and the only trace was a
+  count dominated by candidate words. When a flag filters, say (and test) whether it
+  filters the inputs, the outputs, or both.
+- Test fixtures need real-looking words: `isCandidateTerm` rejects anything with digits,
+  so a fixture built from `b1`, `b2`, `b3` produced a one-word build and looked like a
+  bug in the code under test rather than in the fixture.
 - Wiktionary's page shape is not uniform: with `===Etymology N===` sections the parts
   of speech are level-4 children, but pages like `money` have a single `===Etymology===`
   with the parts of speech as level-3 siblings. A reader that only knows the first

@@ -351,3 +351,82 @@ describe("a coarse answer reaches the bank as a span", () => {
   });
 });
 
+describe("native-answer words and the quota", () => {
+  // A word whose answer is English is won by always pinning Britain and always
+  // guessing the earliest window, so the build keeps them out by default. Excluding
+  // ALL of them throws away the most common vocabulary in the language, so a small
+  // quota lets a few in as easy rounds - pinned to the easy tiers, at most the
+  // fraction asked for.
+  // Real-looking words: `isCandidateTerm` rejects anything with digits (it filters
+  // Wiktionary prefix stubs), which silently made this fixture one word long.
+  const FILLER = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet"];
+  const EDGES = [
+    "lang,term,reltype,related_lang,related_term",
+    ...FILLER.map((word, i) => `English,${word},borrowed_from,Lang${i + 1},${word}`),
+    "English,go,inherited_from,Old English,gān",
+    "English,craft,inherited_from,Old English,cræft",
+    "English,take,borrowed_from,Old Norse,taka",
+  ].join("\n");
+  const LANGS = [
+    "code\tname\tcountries\tregion\tcontinent\tlat\tlng",
+    "en\tEnglish\tGB\tNorthern Europe\tEurope\t54\t-2",
+    "ang\tOld English\tGB\tNorthern Europe\tEurope\t54\t-2",
+    ...FILLER.map((_, i) => `l${i + 1}\tLang${i + 1}\tFR\tWestern Europe\tEurope\t47\t2`),
+    "non\tOld Norse\tNO\tNorthern Europe\tEurope\t61\t9",
+  ].join("\n");
+  const curation = () => {
+    const entries: Record<string, { year: number; yearTo?: number; tier?: number; origin?: string }> = {};
+    FILLER.forEach((word, i) => (entries[word] = { year: 1500, tier: i + 1 }));
+    entries.go = { year: 700, yearTo: 1150, tier: 5, origin: "Old English" };
+    entries.craft = { year: 700, yearTo: 1150, tier: 5, origin: "Old English" };
+    entries.take = { year: 1151, yearTo: 1500, tier: 5, origin: "Old Norse" };
+    return entries;
+  };
+  const build = (options: { quota?: number; tiers?: number[] } = {}): ReturnType<typeof buildBankFromInputs> =>
+    buildBankFromInputs({
+      edgesText: EDGES,
+      languagesText: LANGS,
+      curation: curation(),
+      version: 1,
+      epochStartDay: 0,
+      // The worlds of the work list keep native answers out of the ORDER, and the
+      // quota is what relaxes that for the bank itself.
+      excludeOriginCodes: new Set(["en", "ang", "enm"]),
+      nativeQuota: options.quota,
+      nativeTiers: options.tiers,
+    });
+
+  it("drops native answers entirely when no quota is given", () => {
+    const { bank, report } = build();
+    expect(report.nativeAdmitted).toBe(0);
+    expect(report.excludedByOrigin).toBe(2);
+    const words = bank!.tiers.flat().map((entry) => entry.word);
+    expect(words).not.toContain("go");
+    expect(words).not.toContain("craft");
+  });
+
+  it("admits them up to the quota, in the easy tiers, however they were curated", () => {
+    const { bank, report } = build({ quota: 0.5, tiers: [1, 2] });
+    expect(report.nativeAdmitted).toBe(2);
+    expect(report.nativeDropped).toBe(0);
+    const go = bank!.tiers.flat().find((entry) => entry.word === "go")!;
+    // Curated tier 5, forced into the easy tiers: that is the point of the quota.
+    expect([1, 2]).toContain(go.tier);
+    expect(report.tierCounts[go.tier - 1]).toBeGreaterThan(0);
+    // A borrowed word keeps its curated tier.
+    const take = bank!.tiers.flat().find((entry) => entry.word === "take")!;
+    expect(take.tier).toBe(5);
+  });
+
+  it("caps how many get in, without a curator having to choose", () => {
+    // Two native words and a quota that admits one of them: 5% of 13 entries rounds to
+    // one, so one is dropped and the build says which kind of word it dropped.
+    const { bank, report } = build({ quota: 0.05, tiers: [1, 2] });
+    expect(report.nativeAdmitted).toBe(1);
+    expect(report.nativeDropped).toBe(1);
+    const words = bank!.tiers.flat().map((entry) => entry.word);
+    // No frequency list in this fixture, so the tie-break is alphabetical and stable.
+    expect(words).toContain("craft");
+    expect(words).not.toContain("go");
+  });
+});

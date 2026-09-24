@@ -31,6 +31,8 @@ const { values } = parseArgs({
     "max-depth": { type: "string", default: "3" },
     frequency: { type: "string" },
     "exclude-origin": { type: "string" },
+    "native-quota": { type: "string" },
+    "native-tiers": { type: "string" },
     /**
      * Curated donor edges to merge in (default: curated/edge-overrides.csv when it
      * exists). The source is a faithful parse of Wiktionary, not a checked dataset:
@@ -113,6 +115,10 @@ const worklist: Array<{ rank: number; line: string }> = [];
     maxChainDepth,
     frequency,
     excludeOriginCodes,
+    nativeQuota: values["native-quota"] ? Number.parseFloat(values["native-quota"]!) : undefined,
+    nativeTiers: values["native-tiers"]
+      ? values["native-tiers"]!.split(",").map((tier) => Number.parseInt(tier, 10))
+      : undefined,
     assembleBank: !values["worklist-only"],
     onUncurated: (candidate) => {
       worklist.push({
@@ -165,6 +171,13 @@ const worklist: Array<{ rank: number; line: string }> = [];
     console.log(
       `        ${report.unverifiedEntries} accepted entries are marked "unverified": a draft nobody has ` +
         `checked against a reference yet (listed by \`npm run curate -- --mode check\`)`,
+    );
+  }
+  if (report.nativeAdmitted > 0 || report.nativeDropped > 0) {
+    console.log(
+      `native answers: ${report.nativeAdmitted} admitted (tier ${
+        (values["native-tiers"] ?? "1,2")
+      }), ${report.nativeDropped} left out by the ${values["native-quota"]} quota`,
     );
   }
   if (report.excludedByOrigin) {
