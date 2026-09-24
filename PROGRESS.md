@@ -4,19 +4,21 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-24, session 19)
+## Status (as of 2026-09-24, session 20)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 357/357 tests passing, typecheck clean, static build green. The priced-in work
+`main`): 358/358 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
 sense's part of speech, gloss and donors (so a click picks the sense and its route),
-and a dated EEBO-TCP sample can contradict a year a reference gave. The bank is now bank v4:
-**420 entries / 42 days** from 701 curated words (139 of them `unverified` until a human
-checks them, plus this session's 81 thin-region words). Session 19 attacked the calendar's
-worst property: it was 93% Europe, with 13 of 37 days holding no non-European round at all.
+and a dated EEBO-TCP sample can contradict a year a reference gave. The bank is now bank v5: **450
+entries / 90 days** from 701 curated words (139 of them `unverified` until a human checks
+them), and a day is **five rounds** - one word per tier - instead of ten. Sessions 19 and 20
+went after the calendar's worst property: the bank was 93% Europe with 13 of 37 days holding
+no non-European round at all, and the deal now puts a non-European origin in every one of
+the 90 days it has.
 
 ## Done
 
@@ -1039,10 +1041,45 @@ on-land anchors** (this batch)
   list (15-18 were in Done, so the log read out of order). Moved back into Done.
 - tests: 357 total (+6: the dealing rules, the AU feature merge, the linear-sense fixture).
 
+**Session 20 - five rounds a day, and the deal that keeps the variety** (this batch)
+
+- Reported: five rounds would be better than ten. A day deals exactly one word per tier, so
+  the change is `TIER_COUNT = 5` with `ROUNDS_PER_DAY = TIER_COUNT`: five tiers, five rounds,
+  easiest to hardest. Days of play nearly doubled as a side effect, because each tier now
+  holds a wider slice of the same pool: **bank v5 is 450 entries / 90 days**, against v4's
+  420 / 42. The bank's shape is unchanged (a day is still `master[N*5 .. N*5+5]`); it was the
+  tier machinery and the test fixtures that assumed ten that had to move.
+- Everything that encoded the old shape now follows the constant: `assignTier` still builds
+  its ten-point difficulty score but is squeezed onto the tiers that exist (a tier outside
+  `1..TIER_COUNT` is refused by `validateEntry`, so leaving it alone would have silently
+  dropped entries), `--mode tier` cuts one slice per tier, the admin app renders its tier
+  buttons from the state payload, `--mode check` reports per-tier capacity, and the UI's
+  "Difficulty n/10" reads the constant.
+- **Shortening the day exposed how greedy the deal was.** With ten slots a day, "prefer a
+  region the day has not used yet" was enough to reach the thin continents; with five it is
+  not, because a rare origin is ALWAYS the freshest thing on offer, so the thin supply was
+  spent in the first weeks and **25 of 90 days came out all-European** - the property
+  session 19 had just taken to zero. The fix is the same fair-share arithmetic applied one
+  level up: every continent but the bank's densest one is capped as a GROUP per day
+  (`ceil(thinRemaining / daysLeft)`). Thin rounds now arrive at 1-2 a day (58 days with one,
+  32 with two) and **0 of 90 days have none**.
+- Verified on the shipped bank: 90 days, 0 without a non-European round, 2.36 continents and
+  3.84 distinct subregions per day of five rounds, every round still winnable, and the blurb
+  rule still green over all 450 entries.
+- The fixtures were where this change really bit: eleven tests built ten-tier banks to keep
+  `validateBank` happy, so they encoded a day length that no longer exists. They now size
+  themselves from `TIER_COUNT`/`ROUNDS_PER_DAY`, and the two copies of the `assignTier`
+  assertions (one in `pipeline.test.ts`, one in `frequency.test.ts`) are one copy, in the file
+  about the tier heuristic.
+- Session continuity: a stored 10-round day is discarded on load (it no longer matches
+  `ROUNDS_PER_DAY`) and days 1..90 are re-dealt, so a part-finished day restarts once. This
+  is a bank-FORMAT change, unlike the append-only rebuilds before it.
+- tests: 358 total (+1: the thin-group cap).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 357 passed (23 files)
+    npx vitest run            # 358 passed (23 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
@@ -1051,11 +1088,13 @@ on-land anchors** (this batch)
                                  # 4,222,599 rows -> 772,224 kept (~30 s)
     npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
       --languages data/languages.tsv --curation curated/curation.json \
-      --out data/word-bank.json --version 4 --epoch-start 2026-09-21 \
+      --out data/word-bank.json --version 5 --epoch-start 2026-09-21 \
       --frequency data/en-frequency.txt --exclude-origin en,ang,enm \
       --native-quota 0.1 --native-tiers 1,2
-                                 # bank v4: 420 entries / 42 days; 62,544 candidate
-                                 # senses, 701 accepted (curated), 0 skipped
+                                 # bank v5: 450 entries / 90 days (5 tiers x 5 rounds);
+                                 # 62,544 candidate senses, 701 accepted, 0 skipped
+    npm run curate -- --mode tier --frequency data/en-frequency.txt
+                                 # 470 ranked entries -> 94 per tier; capacity 94 days
     npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
                                  # 596 words -> 594 with senses (POS + gloss + donors)
     npx tsx scripts/attest-scan.ts --from-curation curated/curation.json \
@@ -1072,8 +1111,8 @@ on-land anchors** (this batch)
 
 ## Remaining (next session)
 
-1. Curate more — the loop is in CURATION.md. The bank is now bank v4: **420 entries /
-   42 days** from 701 curated words (139 drafts plus this session's 81 region words, all
+1. Curate more — the loop is in CURATION.md. The bank is now bank v5: **450 entries /
+   90 days** from 701 curated words (139 drafts plus session 19's 81 region words, all
    still `unverified`). Three jobs, in order:
    a. **Verify the drafts.** `npm run curate -- --mode check` lists them;
       `npm run admin` shows each word beside Etymonline/Wiktionary/Ngrams so the
@@ -1088,10 +1127,10 @@ on-land anchors** (this batch)
       a span (`year` = 700, `yearTo` = the bound the reference gives) using the new
       field in the admin app, rather than picking a year: `give` is the worked
       example in CURATION.md.
-   c. Keep feeding the thin regions. The last days of a calendar are always the least
-      varied (day 41 of v4 is 9 Latin rounds), because by then the thin pool is spent and
-      each tier's tail is whatever is left; only more words from thin regions move that.
-      The work list's `missingLanguage` column and the overlay are the shopping list.
+   c. Keep feeding the thin regions. Every day now carries one or two non-European rounds,
+      which is the shape the group cap can hold; more thin words is what raises the count
+      per day and keeps the cap slack as the calendar grows. The work list's
+      `missingLanguage` column and the overlay are the shopping list.
 2. Proto-language policy (unchanged, still open): default (respect "deepest
    origin") = 17 bankable / 4,141 words lost; `--deepest-attested` = 21 bankable /
    4,137 recovered. The lost words' answers would be reconstructions
@@ -1113,6 +1152,19 @@ on-land anchors** (this batch)
 
 ## Gotchas learned (do not re-fight)
 
+- The tier count IS the day length: a day deals one word per tier, so `ROUNDS_PER_DAY` has to
+  equal `TIER_COUNT` (it is defined from it) and "make the day five rounds" means a new bank
+  version, not a config change. Every hardcoded ten then becomes a silent break, not an
+  error: fixtures that build ten tiers, a heuristic that returns 1..10 (its output is
+  refused by `validateEntry`, so entries vanish), a UI string, a capacity report.
+- A day-level rule that prefers a fresh region is greedy about a thin supply, and the
+  damage is invisible until the day gets short: the same deal gave 0 all-European days at
+  ten rounds and 25 of 90 at five. Cap the GROUP as well as the continent
+  (`ceil(remaining / daysLeft)`), and measure the property on the SHIPPED bank - every
+  fixture test was green while a quarter of the calendar was single-continent.
+- Capacity trades against the tier count: days of play is the scarcest tier, so the same
+  pool went from 10 tiers x 42 days to 5 tiers x 90 days. Fewer, longer tiers are not just
+  a UI choice.
 - A country can be more than one atlas feature. `Australia` and `Ashmore and Cartier Is.`
   share ccn3 036, and a lookup keyed by ISO code silently kept whichever came last - a
   one-polygon reef 3,000 km offshore. Every pin on the mainland scored as a miss while

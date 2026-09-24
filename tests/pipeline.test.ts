@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DONOR_RELATION_PRIORITY, buildChains, extractEdges, isCandidateTerm, parseCsv } from "../scripts/lib/etymology-db";
 import { parseLanguageTsv } from "../scripts/lib/languages";
-import { assignTier } from "../scripts/lib/tiering";
 import { buildBankFromInputs } from "../scripts/lib/bank-builder";
+import { ROUNDS_PER_DAY, TIER_COUNT } from "../src/bank";
 
 const EDGES_CSV = `term_id,lang,term,reltype,related_term_id,related_lang,related_term,position,group_tag,parent_tag,parent_position
 1,en,elapse,borrowed_from,2,frm,elapser,0,,,
@@ -51,11 +51,11 @@ const CURATION: Record<string, { year: number; tier?: number; blurb?: string }> 
   samovar: { year: 1830, tier: 3 },
   elapse: { year: 1640, tier: 4, blurb: "From French, from Latin elapsus, 'to slip away'." },
   kayak: { year: 1750, tier: 5 },
-  camouflage: { year: 1890, tier: 6 },
-  tariff: { year: 1590, tier: 7 },
-  kiosk: { year: 1625, tier: 8 },
-  anorak: { year: 1920, tier: 9 },
-  juggernaut: { year: 1638, tier: 10 },
+  camouflage: { year: 1890, tier: 3 },
+  tariff: { year: 1590, tier: 4 },
+  kiosk: { year: 1625, tier: 5 },
+  anorak: { year: 1920, tier: 2 },
+  juggernaut: { year: 1638, tier: 5 },
   tsunami: { year: 1880 },
 };
 
@@ -94,7 +94,7 @@ describe("curated edge overrides", () => {
   ].join("\n");
   const tiers = () => {
     const curation: Record<string, { year: number; tier: number; pos?: string; origin?: string }> = {};
-    FILLER.forEach((word, i) => (curation[word] = { year: 1500, tier: i + 1 }));
+    FILLER.forEach((word, i) => (curation[word] = { year: 1500, tier: (i % TIER_COUNT) + 1 }));
     return curation;
   };
   const build = (options: {
@@ -109,7 +109,7 @@ describe("curated edge overrides", () => {
       languagesText: LANGS,
       curation: {
         ...tiers(),
-        "coyote:noun": { year: 1759, tier: 10, pos: "noun", origin: options.coyoteOrigin },
+        "coyote:noun": { year: 1759, tier: TIER_COUNT, pos: "noun", origin: options.coyoteOrigin },
       },
       version: 1,
       epochStartDay: 0,
@@ -241,31 +241,18 @@ describe("parseLanguageTsv", () => {
   });
 });
 
-describe("assignTier", () => {
-  it("rises with chain depth", () => {
-    expect(assignTier({ chainDepth: 1 })).toBe(2);
-    expect(assignTier({ chainDepth: 2 })).toBe(4);
-    expect(assignTier({ chainDepth: 3 })).toBe(6);
-    expect(assignTier({ chainDepth: 9 })).toBe(8); // capped
-  });
-
-  it("adjusts for frequency and clamps to 1..10", () => {
-    expect(assignTier({ chainDepth: 1, frequencyRank: 100 })).toBe(1);
-    expect(assignTier({ chainDepth: 4, frequencyRank: 200_000 })).toBe(10);
-  });
-});
-
 describe("buildBankFromInputs", () => {
   const { bank: assembledBank, report } = build();
   const bank = assembledBank!;
 
   it("produces a valid bank (validation runs inside)", () => {
     expect(bank.version).toBe(1);
-    expect(bank.masterSequence.length).toBe(10); // min tier count is 1
+    // Days of play is the scarcest tier, so the sequence is that many days long.
+    expect(bank.masterSequence.length).toBe(Math.min(...report.tierCounts) * ROUNDS_PER_DAY);
   });
 
   it("curates years/tiers/blurbs and auto-fills the rest", () => {
-    const elapse = bank.masterSequence.find((e) => e.word === "elapse")!;
+    const elapse = bank.tiers.flat().find((e) => e.word === "elapse")!;
     expect(elapse.originLanguage).toBe("Latin"); // answer anchored to the deep origin
     expect(elapse.originChain).toEqual(["Middle French", "Latin"]);
     expect(elapse.countries).toEqual(["IT"]);
@@ -278,7 +265,7 @@ describe("buildBankFromInputs", () => {
     expect(coffee.tier).toBe(2);
     expect(coffee.blurb).toBe("From Arabic.");
 
-    const camouflage = bank.masterSequence.find((e) => e.word === "camouflage")!;
+    const camouflage = bank.tiers.flat().find((e) => e.word === "camouflage")!;
     expect(camouflage.originLanguage).toBe("Italian");
     expect(camouflage.countries).toEqual(["IT"]);
     expect(camouflage.originChain).toEqual(["French", "Italian"]);
@@ -289,7 +276,11 @@ describe("buildBankFromInputs", () => {
     expect(report.candidateWords).toBe(13);
     expect(report.acceptedWords).toBe(11);
     expect(report.missingYear).toBe(2); // zombie (no year), alpha (not curated)
-    expect(report.tierCounts).toEqual([1, 2, 1, 1, 1, 1, 1, 1, 1, 1]);
+    // Every tier holds a word (an empty tier cannot build) and the curated entries all
+    // landed somewhere: the exact split is `--mode tier`'s business, not the builder's.
+    expect(report.tierCounts).toHaveLength(TIER_COUNT);
+    expect(report.tierCounts.reduce((a, b) => a + b, 0)).toBe(report.acceptedWords);
+    expect(Math.min(...report.tierCounts)).toBeGreaterThan(0);
     expect(report.missingLanguage).toEqual({});
   });
 
@@ -369,7 +360,7 @@ describe("the reveal blurb for an automatically dated word", () => {
   ].join("\n");
   const build = (entry: { year: number; yearTo?: number; tier: number }) => {
     const curation: Record<string, { year: number; yearTo?: number; tier: number }> = {};
-    FILLER.forEach((word, i) => (curation[word] = { year: 1500, tier: i + 1 }));
+    FILLER.forEach((word, i) => (curation[word] = { year: 1500, tier: (i % TIER_COUNT) + 1 }));
     curation.helmet = entry;
     return buildBankFromInputs({ edgesText: EDGES, languagesText: LANGS, curation, version: 1, epochStartDay: 0 });
   };
@@ -412,7 +403,7 @@ describe("native-answer words and the quota", () => {
   ].join("\n");
   const curation = () => {
     const entries: Record<string, { year: number; yearTo?: number; tier?: number; origin?: string }> = {};
-    FILLER.forEach((word, i) => (entries[word] = { year: 1500, tier: i + 1 }));
+    FILLER.forEach((word, i) => (entries[word] = { year: 1500, tier: (i % TIER_COUNT) + 1 }));
     entries.go = { year: 700, yearTo: 1150, tier: 5, origin: "Old English" };
     entries.craft = { year: 700, yearTo: 1150, tier: 5, origin: "Old English" };
     entries.take = { year: 1151, yearTo: 1500, tier: 5, origin: "Old Norse" };

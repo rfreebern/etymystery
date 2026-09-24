@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PuzzleRangeError, dayIndexFor, dayNumberForDate, getDailyPuzzle, getDailyPuzzleForTimestamp, totalPuzzles } from "../src/daily";
-import { buildWordBank } from "../src/bank";
+import { ROUNDS_PER_DAY, buildWordBank } from "../src/bank";
 import { makeEntry } from "./helpers";
 
 const EPOCH = dayNumberForDate("2026-01-01");
@@ -12,7 +12,7 @@ function makeTestBank() {
   return buildWordBank({
     version: 1,
     epochStartDay: EPOCH,
-    entries: Array.from({ length: 30 }, () => makeEntry()), // 3 per tier
+    entries: Array.from({ length: 30 }, () => makeEntry()), // 6 per tier
     languages: LANGUAGES,
   });
 }
@@ -41,10 +41,10 @@ describe("day math", () => {
 });
 
 describe("getDailyPuzzle", () => {
-  it("returns 10 rounds with ascending difficulty", () => {
+  it("returns one round per tier, in ascending difficulty", () => {
     const bank = makeTestBank();
     const rounds = getDailyPuzzle(bank, 0);
-    expect(rounds).toHaveLength(10);
+    expect(rounds).toHaveLength(ROUNDS_PER_DAY);
     rounds.forEach((entry, i) => expect(entry.tier).toBe(i + 1));
   });
 
@@ -58,7 +58,7 @@ describe("getDailyPuzzle", () => {
   it("never repeats words within the bank's capacity", () => {
     const bank = makeTestBank();
     const capacity = totalPuzzles(bank);
-    expect(capacity).toBe(3);
+    expect(capacity).toBe(6); // 30 entries, 6 per tier
     const seen = new Set<string>();
     for (let day = 0; day < capacity; day++) {
       for (const entry of getDailyPuzzle(bank, day)) {

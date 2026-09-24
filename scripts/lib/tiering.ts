@@ -5,6 +5,8 @@
  * Signal: deeper borrowing chains and rarer words are harder.
  */
 
+import { TIER_COUNT } from "../../src/bank";
+
 export interface TierInput {
   /** Number of languages in the origin chain (immediate donor counts as 1). */
   chainDepth: number;
@@ -13,11 +15,15 @@ export interface TierInput {
 }
 
 export function assignTier({ chainDepth, frequencyRank }: TierInput): number {
-  let tier = 2 + 2 * (Math.max(1, Math.min(4, chainDepth)) - 1); // depth 1..4+ -> 2, 4, 6, 8
+  // The signal is built on a ten-point scale (it predates the bank's tier count), then
+  // squeezed onto the tiers that exist: a tier outside 1..TIER_COUNT is rejected by
+  // `validateEntry`, so this has to track the bank rather than assume ten.
+  let raw = 2 + 2 * (Math.max(1, Math.min(4, chainDepth)) - 1); // depth 1..4+ -> 2, 4, 6, 8
   if (frequencyRank !== undefined) {
-    if (frequencyRank <= 3_000) tier -= 2;
-    else if (frequencyRank <= 20_000) tier -= 1;
-    else if (frequencyRank >= 150_000) tier += 2;
+    if (frequencyRank <= 3_000) raw -= 2;
+    else if (frequencyRank <= 20_000) raw -= 1;
+    else if (frequencyRank >= 150_000) raw += 2;
   }
-  return Math.min(10, Math.max(1, tier));
+  const scaled = Math.ceil((Math.min(10, Math.max(1, raw)) * TIER_COUNT) / 10);
+  return Math.min(TIER_COUNT, Math.max(1, scaled));
 }

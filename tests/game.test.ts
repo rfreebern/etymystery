@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildWordBank } from "../src/bank";
+import { ROUNDS_PER_DAY, TIER_COUNT, buildWordBank } from "../src/bank";
 import { dayNumberForDate } from "../src/daily";
 import { getDailyPuzzle } from "../src/daily";
 import { createGeocodeContext, type CountryFeature } from "../web/src/geo-context";
@@ -38,7 +38,7 @@ function makeBank() {
     id: `w${i}`,
     word: `w${i}`,
     year: 1800,
-    tier: ((i % 10) + 1),
+    tier: ((i % TIER_COUNT) + 1),
     originChain: ["French"],
     originLanguage: "French",
     countries: ["FR"],
@@ -90,7 +90,7 @@ describe("game session", () => {
   it("persists each guess and restores partial progress", () => {
     const storage = makeStorage();
     const session = loadSession(bank, utcMs, storage);
-    expect(session.rounds).toHaveLength(10);
+    expect(session.rounds).toHaveLength(ROUNDS_PER_DAY);
     expect(currentRoundIndex(session)).toBe(0);
 
     submitGuess(bank, session, 0, { yearStart: 1800, yearEnd: 1900, point: { lat: 47, lng: 2 } }, ctx, storage);
@@ -107,16 +107,16 @@ describe("game session", () => {
     expect(() => submitGuess(bank, session, 0, { yearStart: 1900, yearEnd: 2000, point: null }, ctx, storage)).toThrow(/already played/);
   });
 
-  it("completes after 10 rounds and summarizes", () => {
+  it("completes after a whole day and summarizes", () => {
     const storage = makeStorage();
     const session = loadSession(bank, utcMs, storage);
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < ROUNDS_PER_DAY; i++) {
       submitGuess(bank, session, i, { yearStart: 1800, yearEnd: 1900, point: { lat: 47, lng: 2 } }, ctx, storage);
     }
     expect(isComplete(session)).toBe(true);
     expect(currentRoundIndex(session)).toBeNull();
     const summary = summarize(session);
-    expect(summary.played).toBe(10);
+    expect(summary.played).toBe(ROUNDS_PER_DAY);
     expect(summary.temporal).toBe(100);
     expect(summary.geographic).toBe(100);
     expect(summary.total).toBe(100);
@@ -140,7 +140,7 @@ describe("game session", () => {
 
 describe("the end-of-day rows", () => {
   const ctx = createGeocodeContext({ features: makeFeatures(), languages: LANGUAGES });
-  // Inside the fixture bank's capacity (30 entries = 3 days from 2026-01-01).
+  // Inside the fixture bank's capacity (30 entries = 6 days from 2026-01-01).
   const at = dayNumberForDate("2026-01-02") * 86_400_000;
 
   it("gives the summary one row per played round, with the word it was about", () => {

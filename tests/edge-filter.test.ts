@@ -3,6 +3,7 @@ import { createCsvRowParser, forEachCsvRow, parseCsv } from "../scripts/lib/etym
 import { createEdgeFilter, formatCsvRow, quoteCsvField, MINIMAL_EDGE_HEADER } from "../scripts/lib/edge-filter";
 import { buildBankFromInputs, type UncuratedCandidate } from "../scripts/lib/bank-builder";
 import { parseFrequencyList } from "../scripts/lib/frequency";
+import { TIER_COUNT } from "../src/bank";
 
 describe("createCsvRowParser (chunk safety)", () => {
   const csv = 'a,b,c\r\n1,"quoted, comma",3\r\n4,"two\r\nlines",6\r\n7,"say ""hi""",9\n';
@@ -92,8 +93,10 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
   // seam silently produced an EMPTY bank from the real 4.2M-row file.
   const EDGES = [
     "term_id,lang,term,reltype,related_term_id,related_lang,related_term,position,group_tag,parent_tag,parent_position",
+    // One word per tier: the curated fixture below fills every tier, or the bank
+    // cannot build (an empty tier has no round to deal).
     ...Array.from(
-      { length: 10 },
+      { length: TIER_COUNT },
       (_, i) => `${i + 1},English,word${String.fromCharCode(97 + i)},borrowed_from,${100 + i},Latin,l${i + 1},0,,,`,
     ),
     "11,English,music,borrowed_from,12,Ancient Greek,μουσική,0,,,",
@@ -115,7 +118,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
   // One curated word per tier keeps validateBank happy; `music` has a curated
   // year too, so its absence/presence tracks the anchor policy.
   const CURATION = Object.fromEntries([
-    ...Array.from({ length: 10 }, (_, i) => [
+    ...Array.from({ length: TIER_COUNT }, (_, i) => [
       `word${String.fromCharCode(97 + i)}`,
       { year: 1000 + i, tier: i + 1, blurb: "From Latin." },
     ]),
@@ -139,7 +142,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
   it("normalizes names to codes and anchors each sense at its deepest placeable hop", () => {
     const { bank, report } = build();
     const words = bank.tiers.flat().map((entry) => entry.word);
-    expect(words).toHaveLength(12); // 10 tiered words + music + gift
+    expect(words).toHaveLength(TIER_COUNT + 2); // one word per tier + music + gift
     expect(words).toContain("worda");
     // `music` goes English -> Ancient Greek -> Proto-Indo-European. The
     // reconstruction has no home on a map, so the sense is answered by Greek —
@@ -174,7 +177,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
       chain: ["Latin"],
     });
     expect(uncurated[0]!.tier).toBeGreaterThanOrEqual(1);
-    expect(uncurated[0]!.tier).toBeLessThanOrEqual(10);
+    expect(uncurated[0]!.tier).toBeLessThanOrEqual(TIER_COUNT);
   });
 
   it("can exclude answer origins (a word that came from England is a dull puzzle)", () => {
@@ -188,7 +191,7 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
     });
     expect(report.excludedByOrigin).toBe(1);
     expect(bank!.tiers.flat().map((entry) => entry.word)).not.toContain("gift");
-    expect(bank!.tiers.flat()).toHaveLength(11);
+    expect(bank!.tiers.flat()).toHaveLength(TIER_COUNT + 1);
   });
 
   it("ranks tier assignment with frequency and reports unranked candidates", () => {
@@ -200,9 +203,9 @@ describe("real etymology-db shape (language NAMES, not codes)", () => {
       epochStartDay: 20717,
       frequency: parseFrequencyList("vacuum 300\ngift 5000000\n"),
     });
-    // 13 candidate senses; only vacuum and gift have a rank in that list.
-    expect(report.candidateSenses).toBe(13);
-    expect(report.withoutFrequencyRank).toBe(11);
+    // One word per tier, plus music, gift and vacuum; only vacuum and gift have a rank.
+    expect(report.candidateSenses).toBe(TIER_COUNT + 3);
+    expect(report.withoutFrequencyRank).toBe(TIER_COUNT + 1);
   });
 });
 
@@ -213,7 +216,7 @@ describe("homographs (the `back` case)", () => {
   const EDGES = [
     "term_id,lang,term,reltype,related_term_id,related_lang,related_term,position,group_tag,parent_tag,parent_position",
     ...Array.from(
-      { length: 10 },
+      { length: TIER_COUNT },
       (_, i) => `${i + 1},English,filler${String.fromCharCode(97 + i)},borrowed_from,${100 + i},French,f${i},0,,,`,
     ),
     "21,English,back,inherited_from,22,Middle English,bak,0,,,",
@@ -229,7 +232,7 @@ describe("homographs (the `back` case)", () => {
     "fr\tFrench\tFR\tWestern Europe\tEurope\t47\t2",
   ].join("\n");
   const FILLERS = Object.fromEntries(
-    Array.from({ length: 10 }, (_, i) => [
+    Array.from({ length: TIER_COUNT }, (_, i) => [
       `filler${String.fromCharCode(97 + i)}`,
       { year: 1800, tier: i + 1, blurb: "From French." },
     ]),

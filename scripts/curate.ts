@@ -14,6 +14,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { TIER_COUNT } from "../src/bank";
 import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, earliestEnglishEra } from "../src/timeline";
 import { loadDrawableCountries } from "./lib/map-coverage";
 import { parseFrequencyList } from "./lib/frequency";
@@ -266,11 +267,11 @@ if (mode === "next") {
   // scarcest one caps the bank. The chain-depth heuristic cannot do that (it
   // clumps most curated words into the easy tiers), so assign tiers by
   // obscurity instead: rank the curated pool by word frequency and cut it into
-  // ten equal slices. Rarest first-class entries land in tier 10.
+  // one slice per tier. Rarest first-class entries land in the hardest tier.
   const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
   // Rank from the frequency list when there is one: a curated word has LEFT the work
   // list, so the work list cannot rank the very entries being tiered (they all fell
-  // to tier 10 as "unranked", which capped the bank at whatever the work list had).
+  // to the hardest tier as "unranked", which capped the bank at whatever the work list had).
   const rankOf = new Map(candidates.map((candidate) => [candidate.word, candidate.frequencyRank]));
   if (values.frequency && existsSync(values.frequency)) {
     const frequency = parseFrequencyList(readFileSync(values.frequency, "utf8"));
@@ -289,20 +290,22 @@ if (mode === "next") {
     const rb = rankOf.get(b.split(":")[0] ?? b)!;
     return ra === rb ? a.localeCompare(b) : ra - rb;
   });
-  const counts = new Array<number>(10).fill(0);
+  const counts = new Array<number>(TIER_COUNT).fill(0);
   ordered.forEach((key, index) => {
-    const tier = Math.min(10, Math.floor((index * 10) / ordered.length) + 1);
+    const tier = Math.min(TIER_COUNT, Math.floor((index * TIER_COUNT) / ordered.length) + 1);
     curation[key]!.tier = tier;
     counts[tier - 1]! += 1;
   });
   for (const key of keys) {
     if (ranked.includes(key)) continue;
-    curation[key]!.tier = 10; // unbankable today; tier is a placeholder
+    curation[key]!.tier = TIER_COUNT; // unbankable today; tier is a placeholder
   }
   writeFileSync(values.curation!, formatCuration(curation));
   console.log(
-    `balanced ${ordered.length} curated entries across 10 tiers by frequency rank` +
-      (keys.length > ordered.length ? ` (${keys.length - ordered.length} unranked left at tier 10)` : ""),
+    `balanced ${ordered.length} curated entries across ${TIER_COUNT} tiers by frequency rank` +
+      (keys.length > ordered.length
+        ? ` (${keys.length - ordered.length} unranked left at tier ${TIER_COUNT})`
+        : ""),
   );
   console.log(`tier counts: ${counts.join(", ")}`);
   console.log(`capacity: ${Math.min(...counts)} days of puzzles (the scarcest tier sets it)`);
@@ -318,11 +321,11 @@ if (mode === "next") {
     yearCeiling,
   });
   const suggested = new Map(candidates.map((candidate) => [candidate.word, candidate.tier]));
-  const tierCounts = new Array<number>(10).fill(0);
+  const tierCounts = new Array<number>(TIER_COUNT).fill(0);
   for (const [word, entry] of Object.entries(curation)) {
     if (!Number.isFinite(entry.year)) continue;
     const tier = entry.tier ?? suggested.get(word) ?? 1;
-    if (tier >= 1 && tier <= 10) tierCounts[tier - 1]! += 1;
+    if (tier >= 1 && tier <= TIER_COUNT) tierCounts[tier - 1]! += 1;
   }
 
   console.log(`${audit.curated} of ${candidates.length} candidate senses have a year`);

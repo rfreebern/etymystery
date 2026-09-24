@@ -5,13 +5,14 @@
  * "Curation" here means the hand-researched facts for one word:
  *   - year:  when ENGLISH first used it (not when the donor language had it)
  *   - yearTo: the upper bound, when the record only bounds the first use
- *   - tier:  optional difficulty override (1 easy .. 10 hard)
+ *   - tier:  optional difficulty override (1 = easiest, up to the bank's tier count)
  *   - blurb: optional one-line reveal text
  *
  * Words without a year never enter the bank, so this file is the bottleneck of
  * the whole project (see CURATION.md).
  */
 
+import { TIER_COUNT } from "../../src/bank";
 import { answerSpan } from "../../src/scoring";
 import { bestPossibleTemporal, earliestEnglishEra, periodOfSpan } from "../../src/timeline";
 
@@ -453,8 +454,8 @@ export function auditCuration(
       });
       unplayableOnSlider.push(word);
     }
-    if (entry.tier !== undefined && (!Number.isInteger(entry.tier) || entry.tier < 1 || entry.tier > 10)) {
-      issues.push({ word, problem: `tier ${entry.tier} must be an integer 1..10` });
+    if (entry.tier !== undefined && (!Number.isInteger(entry.tier) || entry.tier < 1 || entry.tier > TIER_COUNT)) {
+      issues.push({ word, problem: `tier ${entry.tier} must be an integer 1..${TIER_COUNT}` });
     }
     if (entry.pos !== undefined && !/^[a-z][a-z -]{1,19}$/.test(entry.pos)) {
       issues.push({ word, problem: `pos "${entry.pos}" should be a lowercase label like "noun"` });

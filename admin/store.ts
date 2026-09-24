@@ -7,6 +7,7 @@
  */
 
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { TIER_COUNT } from "../src/bank";
 import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, earliestEnglishEra } from "../src/timeline";
 import {
   auditCuration,
@@ -100,6 +101,8 @@ export interface AdminState {
   skipWords: string[];
   issues: Array<{ word: string; problem: string }>;
   audit: CurationAudit;
+  /** Rounds per day, i.e. the number of tiers the tier buttons must offer. */
+  tierCount: number;
   /** The timeline window the game can score, from src/timeline.ts. */
   yearFloor: number;
   yearCeiling: number;
@@ -240,7 +243,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       inWorklist: Boolean(candidate),
       year: entry.year ?? 0,
       yearTo: entry.yearTo ?? 0,
-      tier: entry.tier ?? candidate?.tier ?? 5,
+      tier: entry.tier ?? candidate?.tier ?? Math.ceil(TIER_COUNT / 2),
       blurb: entry.blurb ?? "",
       pos: entry.pos ?? "",
       origin: entry.origin ?? routeOrigin,
@@ -281,6 +284,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
     skipWords,
     issues: audit.issues,
     audit,
+    tierCount: TIER_COUNT,
     yearFloor: ANSWER_YEAR_MIN,
     yearCeiling: ANSWER_YEAR_MAX,
     paths,

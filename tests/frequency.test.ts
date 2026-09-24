@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normalizeWord, parseFrequencyList } from "../scripts/lib/frequency";
+import { TIER_COUNT } from "../src/bank";
 import { assignTier } from "../scripts/lib/tiering";
 
 describe("parseFrequencyList", () => {
@@ -44,11 +45,30 @@ describe("parseFrequencyList", () => {
   });
 });
 
-describe("frequency ranks feed the tier heuristic", () => {
+describe("chain depth and frequency feed the tier heuristic", () => {
+  it("rises with chain depth, squeezed onto the tiers the bank has", () => {
+    expect(assignTier({ chainDepth: 1 })).toBe(1);
+    expect(assignTier({ chainDepth: 2 })).toBe(2);
+    expect(assignTier({ chainDepth: 3 })).toBe(3);
+    expect(assignTier({ chainDepth: 4 })).toBe(4);
+    // Depth saturates at 4 and the result can never leave the bank's range: the
+    // heuristic builds a ten-point score, then maps it onto the tiers that exist.
+    for (let depth = 1; depth <= 8; depth++) {
+      const tier = assignTier({ chainDepth: depth });
+      expect(tier).toBeGreaterThanOrEqual(1);
+      expect(tier).toBeLessThanOrEqual(TIER_COUNT);
+    }
+  });
+
   it("lifts common words and demotes rare ones for the same chain depth", () => {
-    expect(assignTier({ chainDepth: 1, frequencyRank: 500 })).toBe(1);
-    expect(assignTier({ chainDepth: 1 })).toBe(2);
-    expect(assignTier({ chainDepth: 1, frequencyRank: 10_000 })).toBe(1);
-    expect(assignTier({ chainDepth: 1, frequencyRank: 200_000 })).toBe(4);
+    const middle = assignTier({ chainDepth: 3 });
+    expect(assignTier({ chainDepth: 3, frequencyRank: 500 })).toBeLessThan(middle);
+    expect(assignTier({ chainDepth: 3, frequencyRank: 10_000 })).toBeLessThanOrEqual(middle);
+    expect(assignTier({ chainDepth: 3, frequencyRank: 200_000 })).toBeGreaterThan(middle);
+  });
+
+  it("clamps to the ends of the range", () => {
+    expect(assignTier({ chainDepth: 1, frequencyRank: 1 })).toBe(1);
+    expect(assignTier({ chainDepth: 99, frequencyRank: 9_999_999 })).toBe(TIER_COUNT);
   });
 });

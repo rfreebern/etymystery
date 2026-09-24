@@ -1,10 +1,13 @@
 import type { BankEntry, LanguageInfo, WordBank } from "./types";
 import { hashString, mulberry32, shuffle } from "./prng";
 
-/** Number of difficulty tiers (one word per tier per daily puzzle). */
-export const TIER_COUNT = 10;
-/** Rounds per daily puzzle — one word per tier. */
-export const ROUNDS_PER_DAY = 10;
+/**
+ * Number of difficulty tiers. A day deals exactly one word per tier, easiest to hardest,
+ * so this is also the number of rounds in a day: five tiers, five rounds.
+ */
+export const TIER_COUNT = 5;
+/** Rounds per daily puzzle — one word per tier, so it cannot drift from TIER_COUNT. */
+export const ROUNDS_PER_DAY = TIER_COUNT;
 
 /**
  * Separator for composite region keys: a NUL cannot appear in a language or region
@@ -63,7 +66,7 @@ export function buildWordBank(input: BuildBankInput): WordBank {
  * round-robin interleave: tier1[0], tier2[0], ..., tier10[0], tier1[1], ...
  *
  * The sequence covers exactly `min(tier lengths)` days, so every served day
- * gets precisely one word per tier (10 rounds, easy to hard). Surplus entries
+ * gets precisely one word per tier (one round per tier, easy to hard). Surplus entries
  * in deeper tiers are left unconsumed for the next bank version.
  */
 /**
@@ -90,31 +93,28 @@ export interface InterleaveOptions {
 /**
  * How a candidate entry ranks for one slot, smallest wins.
  *
- * The first term is what makes the origins last: a continent may take at most its fair
- * share of a day's rounds, so a continent with 30 rounds left over 37 days gets one round
- * a day rather than nine rounds on the first day and none afterwards. Only then does the
- * rest of the vector matter, and it is about the day itself: prefer a region the day has
- * not used yet (continent, then subregion), then the rarest and least-used regions, so the
- * thin origins reach the whole calendar instead of the first week. Queue order breaks the
- * last tie, which keeps the sequence a pure function of the shuffled queues.
+ * The first term is what makes the origins last, and it caps a continent AND the thin
+ * continents together: a continent may take at most its fair share of a day's rounds, and
+ * everything other than the bank's densest continent shares one cap
+ * (`ceil(thinRemaining / daysLeft)`). The group cap is the part that was missing: the
+ * day-freshness term below is greedy by design — it takes a rare origin whenever one is on
+ * offer — so on its own it spends the thin supply in the first weeks and leaves the tail of
+ * the calendar with none. Only after the caps does the rest of the vector matter, and it is
+ * about the day itself: prefer a region the day has not used yet (continent, then
+ * subregion), then the rarest and least-used regions. Queue order breaks the last tie, which
+ * keeps the sequence a pure function of the shuffled queues.
  */
 function rankVector(
   entry: BankEntry,
   regionsOf: (entry: BankEntry) => readonly string[],
-  context: {
-    usedToday: ReadonlyMap<string, number>;
-    usedTotal: ReadonlyMap<string, number>;
-    remaining: ReadonlyMap<string, number>;
-    share: ReadonlyMap<string, number>;
-  },
+  context: DealContext,
 ): number[] {
   const regions = regionsOf(entry);
   const continent = regions[0] ?? "unknown";
-  const vector: number[] = [
-    (context.usedToday.get(`day${KEY_SEP}${continent}`) ?? 0) >= (context.share.get(continent) ?? Infinity)
-      ? 1
-      : 0,
-  ];
+  const overShare =
+    (context.usedTodayByContinent.get(continent) ?? 0) >= (context.share.get(continent) ?? Infinity);
+  const thinOver = continent !== context.majority && thinUsedToday(context) >= context.thinShare;
+  const vector: number[] = [overShare || thinOver ? 1 : 0];
   for (let level = 0; level < regions.length; level++) {
     vector.push(context.usedToday.get(regions.slice(0, level + 1).join(KEY_SEP)) ?? 0);
   }
@@ -125,6 +125,36 @@ function rankVector(
   return vector;
 }
 
+/**
+ * What the dealing knows while it fills a day: the regions that day has used, what is left
+ * in the queues, and the caps that stop a thin region from being spent too fast.
+ */
+interface DealContext {
+  /** Region paths the current day has used (continent, continent+subregion, ...). */
+  usedToday: Map<string, number>;
+  /** The same, continent only, because that is what the day's caps are spent against. */
+  usedTodayByContinent: Map<string, number>;
+  /** Region paths the whole calendar has used so far. */
+  usedTotal: Map<string, number>;
+  /** Rounds still unplayed per continent. */
+  remaining: ReadonlyMap<string, number>;
+  /** The most one day may take from a single continent. */
+  share: ReadonlyMap<string, number>;
+  /** The continent the bank is densest in; every other continent counts as thin. */
+  majority: string;
+  /** The most one day may take from all the thin continents together. */
+  thinShare: number;
+}
+
+/** Rounds the current day has already taken from the thin continents. */
+function thinUsedToday(context: DealContext): number {
+  let used = 0;
+  for (const [continent, count] of context.usedTodayByContinent) {
+    if (continent !== context.majority) used += count;
+  }
+  return used;
+}
+
 function isBetter(candidate: readonly number[], best: readonly number[]): boolean {
   for (let i = 0; i < Math.min(candidate.length, best.length); i++) {
     if (candidate[i]! !== best[i]!) return candidate[i]! < best[i]!;
@@ -132,12 +162,19 @@ function isBetter(candidate: readonly number[], best: readonly number[]): boolea
   return false;
 }
 
-/** Rounds of each continent still unplayed, and the most a day may take from it today. */
+interface ContinentBudget {
+  remaining: Map<string, number>;
+  share: Map<string, number>;
+  majority: string;
+  thinShare: number;
+}
+
+/** Rounds of each continent still unplayed, and the caps a day has to respect. */
 function continentBudget(
   queues: readonly BankEntry[][],
   regionsOf: (entry: BankEntry) => readonly string[],
   daysLeft: number,
-): { remaining: Map<string, number>; share: Map<string, number> } {
+): ContinentBudget {
   const remaining = new Map<string, number>();
   for (const queue of queues) {
     for (const entry of queue) {
@@ -146,10 +183,25 @@ function continentBudget(
     }
   }
   const share = new Map<string, number>();
+  let majority = "unknown";
+  let most = -1;
+  let thinRemaining = 0;
   for (const [continent, count] of remaining) {
     share.set(continent, Math.max(1, Math.ceil(count / Math.max(1, daysLeft))));
+    if (count > most) {
+      most = count;
+      majority = continent;
+    }
   }
-  return { remaining, share };
+  for (const [continent, count] of remaining) {
+    if (continent !== majority) thinRemaining += count;
+  }
+  return {
+    remaining,
+    share,
+    majority,
+    thinShare: Math.max(1, Math.ceil(thinRemaining / Math.max(1, daysLeft))),
+  };
 }
 
 /**
@@ -178,12 +230,18 @@ export function dealSequence(
   for (let day = 0; day < days; day++) {
     // A continent may take at most its fair share of this day (see continentBudget),
     // which is what spreads a thin origin over the calendar instead of the first week.
-    const context = {
+    const context: DealContext = {
       usedToday: new Map<string, number>(),
+      usedTodayByContinent: new Map<string, number>(),
       usedTotal,
       ...(regionsOf
         ? continentBudget(queues, regionsOf, days - day)
-        : { remaining: new Map<string, number>(), share: new Map<string, number>() }),
+        : {
+            remaining: new Map<string, number>(),
+            share: new Map<string, number>(),
+            majority: "unknown",
+            thinShare: Number.POSITIVE_INFINITY,
+          }),
     };
     for (const [tierIndex, queue] of queues.entries()) {
       let index = 0;
@@ -209,9 +267,12 @@ export function dealSequence(
           context.usedToday.set(key, (context.usedToday.get(key) ?? 0) + 1);
           context.usedTotal.set(key, (context.usedTotal.get(key) ?? 0) + 1);
         }
-        // The continent tally is what the fair share is spent against.
-        const dayKey = `day${KEY_SEP}${regions[0] ?? "unknown"}`;
-        context.usedToday.set(dayKey, (context.usedToday.get(dayKey) ?? 0) + 1);
+        // The continent tally is what the day's caps are spent against.
+        const continent = regions[0] ?? "unknown";
+        context.usedTodayByContinent.set(
+          continent,
+          (context.usedTodayByContinent.get(continent) ?? 0) + 1,
+        );
       }
     }
   }
@@ -377,7 +438,7 @@ export function validateBank(bank: WordBank): void {
   const minLen = Math.min(...bank.tiers.map((t) => t.length));
   if (minLen < 1) problems.push("every tier must contain at least one entry");
   if (bank.masterSequence.length !== minLen * ROUNDS_PER_DAY) {
-    problems.push("masterSequence length must equal minTierLength * 10");
+    problems.push(`masterSequence length must equal minTierLength * ${ROUNDS_PER_DAY}`);
   }
 
   if (bank.tiers.length === TIER_COUNT) {

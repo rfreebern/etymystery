@@ -5,7 +5,7 @@ a 620-entry bank — 37 days of puzzles — built from `curated/`, so it is play
 end to end; see [CURATION.md](CURATION.md) for what grows it.)
 
 A daily etymology puzzle game: given a word, trace **where** it came from
-(the map) and **when** it entered English (the timeline). Ten rounds a day,
+(the map) and **when** it entered English (the timeline). Five rounds a day,
 ramping from easy to hard, scored on temporal *and* geographic proximity.
 
 Non-commercial and **client-side only**: no database, no backend. The daily
@@ -14,17 +14,21 @@ file host serves the whole game.
 
 ## How the daily puzzle works (deterministic engine)
 
-- The word bank is a static JSON file: 10 tiered, pre-shuffled queues
-  (tier 1 easy .. tier 10 hard) plus a round-robin **master sequence**.
-- Day N (UTC days since the bank's epoch) serves `master[N*10 .. N*10+10]`
-  — exactly one word per tier per day, rounds ordered easy -> hard.
+- The word bank is a static JSON file: 5 tiered, pre-shuffled queues
+  (tier 1 easy .. tier 5 hard) plus a round-robin **master sequence**.
+- Day N (UTC days since the bank's epoch) serves `master[N*5 .. N*5+5]`
+  — exactly one word per tier per day, rounds ordered easy -> hard. The day is as long
+  as the tier ladder: `ROUNDS_PER_DAY` IS `TIER_COUNT` in `src/bank.ts`.
 - **No word repeats** until a tier queue is exhausted; `getDailyPuzzle`
   throws beyond capacity, signalling that a new bank version is due.
 - The deal **spreads origins**, not just tiers: within a day the scheduler prefers a
-  region the day has not used yet, gives each continent a fair share of the days
-  remaining, and never spends a thin region's handful of words on day one. Origins
-  *within* a day and the whole-calendar mix are separate properties, measured
-  separately (`dealSequence` in `src/bank.ts`, pinned by tests in `tests/bank.test.ts`).
+  region the day has not used yet, and caps each continent at its fair share of the days
+  remaining (`ceil(remaining / daysLeft)`), so a continent with 30 rounds left over 90
+  days gets 1-2 a day rather than thirty on the first day. Every continent but the bank's
+  densest one is capped **together** as well, because preferring fresh regions is greedy:
+  on its own it spends the thin supply in the first weeks and the rest of the calendar
+  goes without. Origins *within* a day and the whole-calendar mix are separate
+  properties, measured separately (`dealSequence` in `src/bank.ts`, `tests/bank.test.ts`).
 - Banks are **append-only**: new versions append to each tier queue without
   re-shuffling shipped positions, so past puzzles never change
   (verified by tests).
@@ -104,7 +108,7 @@ file host serves the whole game.
 
 ## Playing it
 
-`npm run dev` serves the game. Ten rounds a day, one per difficulty tier.
+`npm run dev` serves the game. Five rounds a day, one per difficulty tier.
 Each round: drop a pin where the word came from, place the year window on the
 timeline, lock it in.
 
@@ -261,7 +265,7 @@ English list with:
 Two measurements matter. **Coverage:** of the 41,985 candidates, 584 are in the
 top 1,000 English words, 2,380 in the top 5,000, 4,065 in the top 10,000 and
 11,349 in the top 50,000 — so curating the top 5,000 words yields ~2,380
-playable words, about 238 days at 10 rounds a day. **Ordering:** raw frequency
+playable words, about 476 days at 5 rounds a day. **Ordering:** raw frequency
 puts function words first (`you`, `the`, `to`, `that`), whose answer is always
 "England, ~900 AD"; a puzzle where pinning Britain always wins is broken.
 `--exclude-origin en,ang,enm` drops those 10,622 words and leaves 26,590
@@ -296,13 +300,13 @@ etymology-db's exact column schema). Together with the 22-language
 `web/public/word-bank.json`.
 
 **Breadth matters as much as order.** The bank was 93% Europe — 0 African, 0 Southeast
-Asian, 0 Oceanian and 11 American rounds on the calendar — and no re-sorting can make a
-ten-round day varied when the pool is not: 81 added words from 32 thin-region languages
-(Quechua, Powhatan, Maori, Malay, Kimbundu, Dharug, ...) took the days with no
-non-European round from 13 of 37 to 0 of 42, and continents per day from 1.70 to 3.36. A
-word from a thin region usually needs its language's geography first; that loop, and what
-to do when the source records the wrong donor, is "Words from thin regions" in
-[CURATION.md](CURATION.md).
+Asian, 0 Oceanian and 11 American rounds — and no re-sorting can make a day varied when
+the pool is not: 81 words from 32 thin-region languages (Quechua, Powhatan, Maori, Malay,
+Kimbundu, Dharug, ...) are what took the calendar from 13 days with no non-European round
+to none, now that a day is five rounds long as well: 90 days, 0 without a non-European
+round, 2.36 continents and 3.84 subregions a day. A word from a thin region usually needs
+its language's geography first; that loop, and what to do when the source records the
+wrong donor, is "Words from thin regions" in [CURATION.md](CURATION.md).
 
 ## Scoring
 

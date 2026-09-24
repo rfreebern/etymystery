@@ -47,7 +47,7 @@ export interface BankEntry {
    * `year`..`yearTo` scores full marks.
    */
   yearTo?: number;
-  /** Difficulty tier 1 (easiest) .. 10 (hardest). */
+  /** Difficulty tier 1 (easiest) upward; the bank deals one round per tier. */
   tier: number;
   /** Ordered origin chain from the word's immediate source outwards, e.g. ["French", "Latin"]. */
   originChain: string[];
@@ -63,7 +63,7 @@ export interface BankEntry {
 
 /**
  * Static, versioned word bank. Tiers contain pre-shuffled, append-only queues;
- * `masterSequence` is the round-robin interleave consumed 10 entries per day.
+ * `masterSequence` is the round-robin interleave consumed one round per tier each day.
  */
 export interface WordBank {
   /** Monotonic bank version; increments on every rebuild that appends words. */
@@ -72,9 +72,9 @@ export interface WordBank {
   epochStartDay: number;
   /** Seeded shuffle seed for this bank version. */
   seed: number;
-  /** Per-tier shuffled queues, index 0 = tier 1 .. index 9 = tier 10. */
+  /** Per-tier shuffled queues, index 0 = tier 1, and so on. */
   tiers: BankEntry[][];
-  /** Round-robin interleave of the tier queues; 10 entries per day. */
+  /** Round-robin interleave of the tier queues; one entry per tier per day. */
   masterSequence: BankEntry[];
   /** Language metadata referenced by bank entries. */
   languages: Record<string, LanguageInfo>;

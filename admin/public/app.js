@@ -147,7 +147,7 @@ function render() {
   const chainHtml = item.chain.length
     ? item.chain.map((hop) => `<span class="hop">${hop}</span>`).join('<span class="arrow">←</span>')
     : '<span class="muted">no chain in the work list</span>';
-  const tierButtons = Array.from({ length: 10 }, (_, i) => i + 1)
+  const tierButtons = Array.from({ length: state.tierCount }, (_, i) => i + 1)
     .map((t) => `<button data-tier="${t}" class="${t === item.tier ? "active" : ""}">${t}</button>`)
     .join("");
 

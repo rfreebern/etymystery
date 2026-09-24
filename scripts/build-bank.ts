@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { gunzipSync } from "node:zlib";
+import { ROUNDS_PER_DAY } from "../src/bank";
 import { dayNumberForDate } from "../src/daily";
 import { buildBankFromInputs, type CurationEntry } from "./lib/bank-builder";
 import { parseFrequencyList } from "./lib/frequency";
@@ -135,7 +136,7 @@ const worklist: Array<{ rank: number; line: string }> = [];
     writeFileSync(values.out!, `${JSON.stringify(bank, null, 2)}\n`);
     console.log(
       `wrote ${values.out}: bank v${bank.version}, ${bank.masterSequence.length} entries ` +
-        `(${bank.masterSequence.length / 10} days of puzzles), epoch start day ${bank.epochStartDay}`,
+        `(${bank.masterSequence.length / ROUNDS_PER_DAY} days of puzzles), epoch start day ${bank.epochStartDay}`,
     );
   } else {
     console.log(`bank not assembled (--worklist-only); nothing written to ${values.out}`);

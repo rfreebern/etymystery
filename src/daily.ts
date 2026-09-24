@@ -5,7 +5,7 @@ import { ROUNDS_PER_DAY } from "./bank";
  * Deterministic daily puzzle engine.
  *
  * The day → puzzle mapping is a pure function of (dayIndex, bank). Day 0 is
- * `bank.epochStartDay`; each subsequent UTC day consumes the next 10 entries
+ * `bank.epochStartDay`; each subsequent UTC day consumes the next ROUNDS_PER_DAY entries
  * of the bank's master sequence. No server, no state, no repetition until a
  * tier queue is exhausted.
  */
@@ -35,7 +35,7 @@ export function totalPuzzles(bank: WordBank): number {
 export class PuzzleRangeError extends Error {}
 
 /**
- * Get the 10 rounds for the day identified by `dayIndex`.
+ * Get the day's rounds (one per tier) for the day identified by `dayIndex`.
  * Throws PuzzleRangeError for negative indexes (before epoch) or days beyond
  * the bank's capacity — such days require a new bank version.
  */

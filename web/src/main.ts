@@ -3,7 +3,7 @@
  * round flow (guess year + drop pin -> reveal -> next -> summary).
  */
 
-import { ROUNDS_PER_DAY, validateBank } from "../../src/bank";
+import { ROUNDS_PER_DAY, TIER_COUNT, validateBank } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
 import { answerSpan, spanGapYears } from "../../src/scoring";
 import {
@@ -157,7 +157,7 @@ async function boot(): Promise<void> {
     const meta = el("div", "round-meta");
     meta.append(
       el("span", undefined, `Round ${index + 1} of ${ROUNDS_PER_DAY}`),
-      el("span", undefined, `Difficulty ${entry.tier}/10`),
+      el("span", undefined, `Difficulty ${entry.tier}/${TIER_COUNT}`),
     );
 
     const wordPanel = el("div", "panel");

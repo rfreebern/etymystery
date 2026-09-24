@@ -6,7 +6,7 @@
  * enter the bank (years are facts curated by hand — see PROGRESS/README).
  */
 
-import { buildWordBank, validateEntry } from "../../src/bank";
+import { TIER_COUNT, buildWordBank, validateEntry } from "../../src/bank";
 import { answerSpan } from "../../src/scoring";
 import { periodOfSpan } from "../../src/timeline";
 import type { BankEntry, LanguageInfo, WordBank } from "../../src/types";
@@ -189,7 +189,7 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     missingYear: 0,
     missingLanguage: {},
     skippedEntries: 0,
-    tierCounts: new Array<number>(10).fill(0),
+    tierCounts: new Array<number>(TIER_COUNT).fill(0),
     withoutFrequencyRank: 0,
     ambiguousWords: 0,
     ambiguousWithoutOrigin: 0,
@@ -447,7 +447,7 @@ export function buildBankFromInputs(options: BuildBankOptions): {
   // tier is FORCED, so `--mode tier` cannot scatter them out of the easy tiers.
   const nativeTotal = entries.length + pendingNative.length;
   const quota = Math.round((options.nativeQuota ?? 0) * nativeTotal);
-  const nativeTiers = (options.nativeTiers ?? [1, 2]).filter((tier) => tier >= 1 && tier <= 10);
+  const nativeTiers = (options.nativeTiers ?? [1, 2]).filter((tier) => tier >= 1 && tier <= TIER_COUNT);
   const tiersForNatives = nativeTiers.length > 0 ? nativeTiers : [1, 2];
   pendingNative
     .sort((a, b) => {

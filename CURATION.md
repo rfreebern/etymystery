@@ -230,7 +230,7 @@ For every word in the batch:
    a year at all, see "Undated words: curate the span" below.
 4. **Adjust the tier only if the suggestion is wrong.** The suggested tier comes
    from chain depth and frequency; the difficulty ladder matters more than any
-   single word. Tier 1 should be easy for a casual player, tier 10 genuinely hard.
+   single word. Tier 1 should be easy for a casual player, the hardest tier genuinely so.
 5. **Write the blurb** (optional but expected): one factual line naming the donor
    term, e.g. `"From Arabic qahwah, likely via Turkish kahve and Dutch koffie."`
    Never add colour you cannot source.
@@ -346,11 +346,13 @@ else. The chain-depth heuristic cannot balance anything — it clumps most curat
 words into the easy tiers (the first curation round produced tier counts
 `28, 25, 15, 27, 5, 1, 2, 3, 2, 2`, i.e. one day of play from 110 entries) — so
 this mode assigns tiers by **obscurity** instead: it ranks the curated pool by
-frequency and cuts it into ten equal slices, most common in tier 1, rarest in
-tier 10. Same 110 entries, balanced: `10 × 10`, ten days.
+frequency and cuts it into one slice per tier, most common in tier 1, rarest in the
+hardest tier. The slice size IS the days of play (each day deals one word per tier), so
+rebalancing today's pool gives 94 curated entries per tier, i.e. 94 days; the shipped
+bank holds 90, because the build drops entries whose language has no place on the map.
 
 Words with no frequency rank are skipped by the slicing (they mostly cannot build
-at all) and left at tier 10. Re-run it whenever you add a batch, then rebuild.
+at all) and left at the hardest tier. Re-run it whenever you add a batch, then rebuild.
 
 ### Native answers: the 10% quota
 
@@ -530,7 +532,10 @@ Spanish" promised a pin that scores nothing. Either record the hop as an overrid
 
 Then measure the property you actually want, not a proxy: rounds per continent, distinct
 subregions per day, and **days with no non-European round** (the last one is what "every
-day feels varied" means, and it is the number that improved from 13 of 37 to 0 of 42).
+day feels varied" means; it went from 13 of 37 days, to 0 of 42 at ten rounds a day, to 0
+of 90 at five). Shortening the day is what stressed it: with five slots instead of ten the
+same supply has to reach twice as many days, and the day-level preference for fresh regions
+spent it early until the thin continents were capped as a group (`dealSequence`).
 
 Two things to expect when the batch lands:
 
