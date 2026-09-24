@@ -255,12 +255,14 @@ button.secondary { background: #2c3242; color: var(--ink); }
 .summary-table .sum-missed { white-space: nowrap; }
 .squares { font-size: 15px; line-height: 1; }
 
-.share { margin-top: 18px; text-align: center; }
+/* A column, so the button sits UNDER the text: as inline siblings they flowed side by
+   side, which put the copy button to the right of the thing it copies. */
+.share { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 18px; text-align: center; }
 .share-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
 .share-text {
-  display: inline-block; text-align: left; white-space: pre; margin: 8px auto;
+  display: block; width: fit-content; text-align: left; white-space: pre; margin: 0 auto;
   padding: 10px 14px; background: #1b1b22; border: 1px solid #333; border-radius: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
   overflow-x: auto; max-width: 100%;
 }
-.share .muted { display: block; font-size: 12px; margin-top: 6px; min-height: 1em; }
+.share .muted { font-size: 12px; min-height: 1em; }

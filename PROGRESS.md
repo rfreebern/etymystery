@@ -910,6 +910,11 @@ on-land anchors** (this batch)
   share text: the period-derived words read "Middle English (1151-1500)" in the First use
   column, the point-dated ones "around 1550", and the misses read
   "60 y late · in country" / "50 y early · 1,535 km off" / "in window · no pin".
+- Follow-up from playing it: the copy button sat beside the share text, not under it. The
+  DOM order was already right; the `<pre>` was `inline-block`, so the button flowed onto the
+  same line as the block it copies. The share block is a flex column now, and the guard
+  checks both halves (order AND layout), because either alone leaves the button beside the
+  text. Verified by reverting the CSS and watching the test fail.
 - tests: 351 total (+15).
 
 ## Verification (re-run before trusting anything)

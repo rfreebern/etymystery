@@ -315,6 +315,14 @@ describe("the end-of-day summary", () => {
     expect(helper).toContain("navigator.clipboard.writeText(text)");
     expect(helper).toContain("selectNodeContents(pre)");
     expect(helper).toContain("addRange(range)");
+    // The button must be BELOW the text, which takes both an order and a layout: the
+    // pre used to be inline-block, so the button rendered beside it instead.
+    expect(summary.indexOf('el("pre", "share-text", text)')).toBeLessThan(
+      summary.indexOf('"Copy result"'),
+    );
+    expect(summary.indexOf('"Copy result"')).toBeLessThan(summary.indexOf('shareBlock.append'));
+    expect(css).toMatch(/\.share\s*\{[^}]*flex-direction: column/);
+    expect(css).toMatch(/\.share-text\s*\{[^}]*display: block/);
   });
 
   it("colours each round by the band its score falls in", () => {
@@ -325,5 +333,6 @@ describe("the end-of-day summary", () => {
     expect(summary).toContain("`squares ${band}`");
     expect(css).toMatch(/\.summary-table/);
     expect(css).toMatch(/\.share-text\s*\{[^}]*white-space: pre/);
+
   });
 });
