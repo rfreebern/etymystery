@@ -4,9 +4,11 @@ import {
   ANSWER_YEAR_MIN,
   ERAS,
   bestPossibleTemporal,
+  earliestEnglishEra,
   eraOf,
   erasSpanned,
   isPlayableYear,
+  periodOfSpan,
   sliderStartBounds,
 } from "../src/timeline";
 import { scoreTemporalRange } from "../src/scoring";
@@ -77,6 +79,28 @@ describe("answer window", () => {
     expect(isPlayableYear(699)).toBe(false);
     expect(isPlayableYear(2026)).toBe(false);
     expect(isPlayableYear(Number.NaN)).toBe(false);
+  });
+});
+
+describe("the period a chain implies", () => {
+  it("finds the oldest English stage named in a chain", () => {
+    expect(earliestEnglishEra(["Middle English", "Old French"])?.label).toBe("Middle English");
+    // A chain that reaches back to Old English is older than one stopping at ME.
+    expect(earliestEnglishEra(["Middle English", "Old English", "Old Norse"])?.label).toBe("Old English");
+    expect(earliestEnglishEra(["Old English (Anglian)"])?.label).toBe("Old English");
+    // A borrowing described only from outside English claims no English period:
+    // `just <- Latin` says nothing about when English took it up.
+    expect(earliestEnglishEra(["Latin", "Proto-Italic"])).toBeNull();
+    expect(earliestEnglishEra([])).toBeNull();
+  });
+
+  it("names the period a span covers exactly, and only then", () => {
+    // A span taken from the record is set to its period's bounds, which is how the
+    // reveal can say "recorded in Old English" instead of printing the numbers.
+    expect(periodOfSpan({ from: 700, to: 1150 })?.label).toBe("Old English");
+    expect(periodOfSpan({ from: 1151, to: 1500 })?.label).toBe("Middle English");
+    expect(periodOfSpan({ from: 700, to: 1100 })).toBeNull();
+    expect(periodOfSpan({ from: 1590, to: 1590 })).toBeNull();
   });
 });
 

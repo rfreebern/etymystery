@@ -284,5 +284,62 @@ describe("coarse answer spans", () => {
     expect(audit.issues).toEqual([]);
     expect(audit.unplayableOnSlider).toEqual([]);
   });
+
+describe("a year that contradicts its own chain", () => {
+  // The one dating check that needs no reference: a chain naming an English stage
+  // claims the word was already in English by then, so a later year refutes itself.
+  const routesByWord = new Map([
+    ["give", [{ origin: "Old English", chain: ["Middle English", "Old English"] }]],
+    [
+      "back",
+      [
+        { origin: "Middle French", chain: ["Middle French"] },
+        { origin: "Old English", chain: ["Middle English", "Old English"] },
+      ],
+    ],
+  ]);
+  const base = {
+    knownWords: new Set(["give", "back"]),
+    routesByWord,
+    yearFloor: 700,
+    yearCeiling: 2025,
+  };
+
+  it("flags a year after the period the chain records", () => {
+    const late = auditCuration({ give: { year: 1590 } }, base);
+    const problems = late.issues.map((issue) => issue.problem).join(" ");
+    expect(problems).toContain("after the Old English period");
+    expect(problems).toContain("ends 1150");
+    // A year inside the period is fine, and a span ending in it too.
+    expect(auditCuration({ give: { year: 1000 } }, base).issues).toEqual([]);
+    expect(auditCuration({ give: { year: 700, yearTo: 1150 } }, base).issues).toEqual([]);
+    // A span reaching past the period contradicts it just as a point does.
+    expect(
+      auditCuration({ give: { year: 700, yearTo: 1400 } }, base).issues[0]!.problem,
+    ).toContain("after the Old English period");
+  });
+
+  it("follows the entry's own route, because a homograph's routes are senses", () => {
+    // `back` the French loan may be late...
+    const french = auditCuration(
+      { "back:noun": { year: 1600, pos: "noun", origin: "Middle French" } },
+      base,
+    );
+    expect(french.issues).toEqual([]);
+    // ...but the native word cannot: it was in English by Old English.
+    const native = auditCuration(
+      { "back:noun": { year: 1600, pos: "noun", origin: "Old English" } },
+      base,
+    );
+    expect(native.issues.map((issue) => issue.problem).join(" ")).toContain("Old English period");
+  });
+
+  it("stays quiet when it cannot tell which route applies", () => {
+    // Several routes and none named: guessing would flag half of them wrongly.
+    const audit = auditCuration({ back: { year: 1600 } }, { ...base });
+    expect(audit.issues).toEqual([]);
+  });
+});
+
 });
 

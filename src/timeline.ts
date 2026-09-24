@@ -85,3 +85,31 @@ export function isPlayableYear(
 ): boolean {
   return Number.isFinite(year) && year >= floor && year <= ceiling;
 }
+
+/**
+ * The oldest English period named anywhere in an `originChain` (stored immediate
+ * source first), e.g. `["Middle English", "Old Norse"]` gives Middle English.
+ *
+ * A chain that names an English stage is claiming the word was already IN English
+ * by that period, which bounds its entry year: a word whose chain reaches back to
+ * Old English cannot have entered English in 1590. This is what lets the tools
+ * catch a drafted year contradicting the etymology it was drafted for, and what
+ * lets a word with no datable first use take its span from the period itself.
+ */
+export function earliestEnglishEra(chain: readonly string[]): Era | null {
+  for (const era of ERAS) {
+    if (chain.some((hop) => hop === era.label || hop.startsWith(`${era.label} `))) return era;
+  }
+  return null;
+}
+
+/**
+ * The period a span covers exactly, or null when it names specific years.
+ *
+ * A span taken from the record rather than from a date is set to its period's own
+ * bounds (`earliestEnglishEra`), so this is how the reveal says "recorded in Old
+ * English" rather than printing 700 and 1150 at the reader.
+ */
+export function periodOfSpan(span: { from: number; to: number }): Era | null {
+  return ERAS.find((era) => era.from === span.from && era.to === span.to) ?? null;
+}

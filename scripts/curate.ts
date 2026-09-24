@@ -24,6 +24,7 @@ import {
   settledSenseIds,
   type Curation,
   type CurationEntryInput,
+  type WorklistCandidate,
 } from "./lib/curation";
 
 const DEFAULT_WORKLIST = "data/curation-worklist-interesting.tsv";
@@ -85,18 +86,52 @@ function readBankWords(path: string): Set<string> | undefined {
   }
 }
 
-/** Accepted bank entries, for checks that need their countries, not just their words. */
+/**
+ * Accepted bank entries, for checks that need their chains or countries, not just
+ * their words. This is also the only source of chains for words that are ALREADY
+ * curated: curating a word removes it from the work list, so an audit of the
+ * curation file cannot otherwise see what the etymology of its own entries is.
+ */
 function readBankEntries(
   path: string,
-): Array<{ word: string; originLanguage: string; countries: string[] }> {
+): Array<{ word: string; originLanguage: string; countries: string[]; originChain: string[] }> {
   try {
     const bank = readJson<{
-      tiers: Array<Array<{ word: string; originLanguage: string; countries: string[] }>>;
+      tiers: Array<
+        Array<{ word: string; originLanguage: string; countries: string[]; originChain: string[] }>
+      >;
     }>(path);
     return bank.tiers.flat();
   } catch {
     return [];
   }
+}
+
+/** A recorded route for a word: where it came from, and the chain that shows it. */
+interface Route {
+  origin: string;
+  chain: string[];
+}
+
+/**
+ * Every route we can attribute to a word, from the work list (candidates) and the
+ * bank (already accepted). The audit matches an entry's chosen `origin` against
+ * these, because a word's other routes are different senses: `back` may be late if
+ * this entry is the French sense and early if it is the native one.
+ */
+function collectRoutes(
+  candidates: readonly WorklistCandidate[],
+  bank: Array<{ word: string; originLanguage: string; originChain: string[] }>,
+): Map<string, Route[]> {
+  const routes = new Map<string, Route[]>();
+  const add = (word: string, route: Route): void => {
+    const list = routes.get(word) ?? [];
+    if (!list.some((existing) => existing.origin === route.origin)) list.push(route);
+    routes.set(word, list);
+  };
+  for (const candidate of candidates) add(candidate.word, { origin: candidate.origin, chain: candidate.chain });
+  for (const entry of bank) add(entry.word, { origin: entry.originLanguage, chain: entry.originChain });
+  return routes;
 }
 
 function readSkip(path: string | undefined): Set<string> {
@@ -177,6 +212,7 @@ if (mode === "next") {
     knownWords,
     bankWords: readBankWords(values.bank!),
     originsByWord: new Map(candidates.map((candidate) => [candidate.word, candidate.origins])),
+    routesByWord: collectRoutes(candidates, readBankEntries(values.bank!)),
     yearFloor,
     yearCeiling,
   });
@@ -230,6 +266,7 @@ if (mode === "next") {
     knownWords: new Set(candidates.map((candidate) => candidate.word)),
     bankWords: readBankWords(values.bank!),
     originsByWord: new Map(candidates.map((candidate) => [candidate.word, candidate.origins])),
+    routesByWord: collectRoutes(candidates, readBankEntries(values.bank!)),
     yearFloor,
     yearCeiling,
   });

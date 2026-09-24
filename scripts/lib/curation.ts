@@ -12,7 +12,7 @@
  * the whole project (see CURATION.md).
  */
 
-import { bestPossibleTemporal } from "../../src/timeline";
+import { bestPossibleTemporal, earliestEnglishEra } from "../../src/timeline";
 
 export interface CurationEntryInput {
   year?: number;
@@ -247,6 +247,13 @@ export function auditCuration(
     bankWords?: ReadonlySet<string>;
     /** word -> every origin its recorded chains support (homograph detection). */
     originsByWord?: ReadonlyMap<string, string[]>;
+    /**
+     * word -> the routes its recorded chains support, each with its chain. A chain
+     * that names an English stage bounds the entry year: the word was already in
+     * English by then, so a later year contradicts the etymology the entry was
+     * curated for. The entry's own `origin` picks which route applies.
+     */
+    routesByWord?: ReadonlyMap<string, ReadonlyArray<{ origin: string; chain: readonly string[] }>>;
     yearFloor: number;
     yearCeiling: number;
   },
@@ -297,6 +304,32 @@ export function auditCuration(
       issues.push({
         word,
         problem: `yearTo ${entry.yearTo} is past the end of the timeline (${options.yearCeiling})`,
+      });
+    }
+    // A chain that names an English stage claims the word was already in English by
+    // then, so a later year contradicts the etymology the entry was curated for.
+    // This is the one dating check that needs no reference: the claim refutes
+    // itself. It matches the entry's own route, because a homograph's other routes
+    // are different senses (`back` the French loan may be late; the native word
+    // cannot).
+    const routes = options.routesByWord?.get(sense.word) ?? [];
+    const chosen =
+      entry.origin !== undefined
+        ? routes.find(
+            (route) => route.origin === entry.origin || route.chain.includes(entry.origin as string),
+          )
+        : routes.length === 1
+          ? routes[0]
+          : undefined;
+    const era = chosen ? earliestEnglishEra(chosen.chain) : null;
+    const spanEnd = entry.yearTo ?? entry.year;
+    if (era && spanEnd > era.to) {
+      issues.push({
+        word,
+        problem:
+          `year ${entry.year}${entry.yearTo !== undefined ? `..${entry.yearTo}` : ""} is after the ` +
+          `${era.label} period its own chain records (ends ${era.to}): the chain says the word ` +
+          `was already in English by then, so the year or the chain is wrong`,
       });
     }
     if (entry.year < options.yearFloor || entry.year > options.yearCeiling) {

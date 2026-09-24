@@ -147,6 +147,34 @@ function readBankWords(path: string): Set<string> {
   return new Set(bank.tiers.flat().map((entry) => entry.word ?? "").filter(Boolean));
 }
 
+/**
+ * Recorded routes per word, from the work list (candidates) and the bank (already
+ * accepted). The bank matters because curating a word removes it from the work
+ * list, so an audit of the curation file cannot see the etymology of its own
+ * entries otherwise — and the period check needs exactly that.
+ */
+function collectRoutes(
+  worklist: readonly WorklistCandidate[],
+  bankPath: string,
+): Map<string, Array<{ origin: string; chain: string[] }>> {
+  const routes = new Map<string, Array<{ origin: string; chain: string[] }>>();
+  const add = (word: string, route: { origin: string; chain: string[] }): void => {
+    const list = routes.get(word) ?? [];
+    if (!list.some((existing) => existing.origin === route.origin)) list.push(route);
+    routes.set(word, list);
+  };
+  for (const candidate of worklist) add(candidate.word, { origin: candidate.origin, chain: candidate.chain });
+  const bank = readJsonFile<{
+    tiers?: Array<Array<{ word?: string; originLanguage?: string; originChain?: string[] }>>;
+  } | null>(bankPath, null);
+  for (const entry of bank?.tiers?.flat() ?? []) {
+    if (entry.word && entry.originLanguage) {
+      add(entry.word, { origin: entry.originLanguage, chain: entry.originChain ?? [] });
+    }
+  }
+  return routes;
+}
+
 /** Join the batch (what to curate) with the work list (what we know about it). */
 export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const batch = readBatch(paths.batch);
@@ -189,6 +217,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
     knownWords: new Set(worklist.map((candidate) => candidate.word)),
     bankWords: readBankWords(paths.bank),
     originsByWord: new Map(worklist.map((candidate) => [candidate.word, candidate.origins])),
+    routesByWord: collectRoutes(worklist, paths.bank),
     yearFloor: ANSWER_YEAR_MIN,
     yearCeiling: ANSWER_YEAR_MAX,
   });
