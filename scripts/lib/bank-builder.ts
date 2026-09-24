@@ -7,6 +7,8 @@
  */
 
 import { buildWordBank, validateEntry } from "../../src/bank";
+import { answerSpan } from "../../src/scoring";
+import { periodOfSpan } from "../../src/timeline";
 import type { BankEntry, LanguageInfo, WordBank } from "../../src/types";
 import { DONOR_RELATION_PRIORITY, buildChainsWithVariants, extractEdges, type ChainVariant, type EtymEdge, type OriginChain } from "./etymology-db";
 import type { CurationEntryInput } from "./curation";
@@ -164,9 +166,14 @@ function mergeOverrideEdges(
   return { edges, applied };
 }
 
-function autoBlurb(chainNames: string[]): string {
+function autoBlurb(chainNames: string[], span: { from: number; to: number }, period: string | null): string {
   const immediate = chainNames[0]!;
   const deepest = chainNames[chainNames.length - 1]!;
+  // A word dated only by period has something worth saying that the route line cannot
+  // (the route names languages, not dates): that the date IS the period. Without this,
+  // 490 derived entries would all carry "From Middle English, ultimately from X.",
+  // which is the route line again in prose.
+  if (period && span.to > span.from) return `The sources date it to the ${period} period.`;
   return chainNames.length > 1 ? `From ${immediate}, ultimately from ${deepest}.` : `From ${immediate}.`;
 }
 
@@ -377,6 +384,8 @@ export function buildBankFromInputs(options: BuildBankOptions): {
       }
       warnIntermediates(langs);
       const chainNames = langs.map((code) => byCode[code]?.name ?? code);
+      // The span decides how the blurb reads, so compute it once.
+      const answer = answerSpan({ year: curated.year, yearTo: curated.yearTo });
       const entry: BankEntry = {
         id: key,
         word: sense.word,
@@ -392,7 +401,7 @@ export function buildBankFromInputs(options: BuildBankOptions): {
         originLanguage: meta.name,
         countries: meta.countries,
         point: meta.representativePoint!,
-        blurb: curated.blurb?.trim() || autoBlurb(chainNames),
+        blurb: curated.blurb?.trim() || autoBlurb(chainNames, answer, periodOfSpan(answer)?.label ?? null),
       };
       try {
         validateEntry(entry);

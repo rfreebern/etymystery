@@ -14,9 +14,8 @@ of sessions 13-15 was making curation stop being manual: the timeline scores a c
 chain names an English period (490 drafted with no research), the admin app shows each
 sense's part of speech, gloss and donors (so a click picks the sense and its route),
 and a dated EEBO-TCP sample can contradict a year a reference gave. The bank itself is
-still 110 entries / 10 days from 119 curated words, all `unverified` until a human
-checks them; the 490 derived words are sitting in the batch and take it to 600 entries
-and 36 days once their chains are checked.
+still 620 entries / 37 days from 629 curated words (139 of them `unverified` until a human
+checks them), shipped as bank v3 on 2026-09-21.
 
 ## Done
 
@@ -860,6 +859,31 @@ on-land anchors** (this batch)
   `wait` is bankable once dated - its answer is Old Northern French/Frankish, not
   English - and `still` has a Latin-derived sense as well as the native one.
 - tests: 334 total (+3).
+
+**Session 17 - shipping bank v3: 620 entries, 37 days** (this batch)
+
+- Merged the batch (their 25 + the 490 derived) into `curated/curation.json`: 629
+  entries, 509 of them spans, 490 period-derived. Rebalanced tiers, built with
+  `--native-quota 0.1 --native-tiers 1,2`, and shipped `web/public/word-bank.json` as
+  **bank v3: 620 entries, 37 days of puzzles** (was 110 / 10). Epoch unchanged at
+  20717, so day numbering continues.
+- Verified before shipping, not after: `validateBank` on the built bank AND on the
+  copy served from a subpath (the Pages shape); 0 entries whose answer is not a hop in
+  its own chain; 0 spans outside their chain's period; 0 whose countries disagree with
+  the language table; 0 skipped as invalid; 8 override edges applied; 8 native words
+  admitted by the quota; day 1 is one round per tier (expect, lieutenant, sugar,
+  patience, proposition, cathedral, conquest, strife, verb, fume).
+- The reveal's prose for automatically dated words now says the useful thing: 499
+  entries read "The sources date it to the Middle English period" instead of restating
+  the route line ("From Middle English, ultimately from Old French."), which is what
+  563 of them were doing.
+- Sessions are keyed by bank version (`etymystery:v3:d0`), so the version bump starts
+  players fresh rather than restoring words from the old bank.
+- What is being trusted: the 490 derived spans are the chains' own claims and their
+  chains have NOT been eyeballed, and 139 entries are marked `unverified` (drafted
+  years). Both are recorded in the data and reported by `curate --mode check`.
+- Cost: the bank file went 180 KB -> 502 KB (gzipped over the wire by Pages).
+- tests: 336 total (+2).
 
 ## Verification (re-run before trusting anything)
 

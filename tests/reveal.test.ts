@@ -88,7 +88,9 @@ describe("blurbs never name a language the puzzle cannot credit", () => {
   it("names only languages the route shows, or ones that share the answer's country", () => {
     const names = Object.keys(bank.languages).sort((a, b) => b.length - a.length);
     const offenders: string[] = [];
-    for (const entry of bank.masterSequence) {
+    // Every entry, not just the ones in the master sequence: the sequence stops at the
+  // scarcest tier, so a whole-bank check is the only one that cannot miss a word.
+  for (const entry of bank.tiers.flat()) {
       const inChain = new Set([...entry.originChain, "English"]);
       const countries = new Set(entry.countries);
       // Remove every language the route already shows, so "French" inside "Old

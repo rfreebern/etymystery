@@ -351,6 +351,42 @@ describe("a coarse answer reaches the bank as a span", () => {
   });
 });
 
+describe("the reveal blurb for an automatically dated word", () => {
+  // 563 of the curated entries have no hand-written blurb, and the old fallback just
+  // restated the route line ("From Middle English, ultimately from Old French."). A
+  // word dated only by period now says the thing the route cannot say.
+  const FILLER = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet"];
+  const EDGES = [
+    "lang,term,reltype,related_lang,related_term",
+    ...FILLER.map((word, i) => `English,${word},borrowed_from,Lang${i + 1},${word}`),
+    "English,helmet,borrowed_from,Old French,helme",
+  ].join("\n");
+  const LANGS = [
+    "code\tname\tcountries\tregion\tcontinent\tlat\tlng",
+    "en\tEnglish\tGB\tNorthern Europe\tEurope\t54\t-2",
+    ...FILLER.map((_, i) => `l${i + 1}\tLang${i + 1}\tFR\tWestern Europe\tEurope\t47\t2`),
+    "fro\tOld French\tFR\tWestern Europe\tEurope\t47\t2",
+  ].join("\n");
+  const build = (entry: { year: number; yearTo?: number; tier: number }) => {
+    const curation: Record<string, { year: number; yearTo?: number; tier: number }> = {};
+    FILLER.forEach((word, i) => (curation[word] = { year: 1500, tier: i + 1 }));
+    curation.helmet = entry;
+    return buildBankFromInputs({ edgesText: EDGES, languagesText: LANGS, curation, version: 1, epochStartDay: 0 });
+  };
+
+  it("names the period when the whole span is one", () => {
+    const { bank } = build({ year: 1151, yearTo: 1500, tier: 5 });
+    const helmet = bank!.tiers.flat().find((e) => e.word === "helmet")!;
+    expect(helmet.blurb).toBe("The sources date it to the Middle English period.");
+  });
+
+  it("falls back to the route sentence for a point date", () => {
+    const { bank } = build({ year: 1200, tier: 5 });
+    const helmet = bank!.tiers.flat().find((e) => e.word === "helmet")!;
+    expect(helmet.blurb).toBe("From Old French.");
+  });
+});
+
 describe("native-answer words and the quota", () => {
   // A word whose answer is English is won by always pinning Britain and always
   // guessing the earliest window, so the build keeps them out by default. Excluding

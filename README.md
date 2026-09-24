@@ -1,7 +1,7 @@
 # Etymystery
 
 **Play it: <https://rfreebern.github.io/etymystery/>** (the published build serves
-a 110-entry bank — 10 days of puzzles — built from `curated/`, so it is playable
+a 620-entry bank — 37 days of puzzles — built from `curated/`, so it is playable
 end to end; see [CURATION.md](CURATION.md) for what grows it.)
 
 A daily etymology puzzle game: given a word, trace **where** it came from
@@ -160,8 +160,8 @@ whether the window caught the year; progress is kept in
 resumes and a finished day is never re-scored. `npm run build:web` emits a fully
 static `web/dist/` — any file host serves it.
 
-The committed `web/public/word-bank.json` is the **bank v2**: 110 entries across
-10 balanced tiers (10 days of puzzles), 22 languages, built from
+The committed `web/public/word-bank.json` is the **bank v3**: 620 entries across
+10 balanced tiers (37 days of puzzles), built from
 `curated/curation.json`. Rebuild it after curating — see "Ship it" in
 [CURATION.md](CURATION.md); the old `npm run build:seed` path still exists as a
 30-word stand-in for bootstrapping without the 4.2M-edge download.
@@ -280,8 +280,8 @@ exactly this step.
 The repo also ships a tiny stand-in for input 1 so the client can be built
 without the 4.2M-edge download: `curated/seed-edges.csv` (32 edges, in
 etymology-db's exact column schema). Together with the 22-language
-`curated/languages.tsv` and the 30-word `curated/curation.json`,
-`npm run build:seed` regenerates the seed bank committed at
+`curated/languages.tsv` and `curated/curation.json`,
+`npm run build:seed` regenerates a minimal seed bank committed at
 `web/public/word-bank.json`.
 
 ## Scoring
@@ -361,7 +361,7 @@ Team; on any free plan the repository has to be public, or point the same build
 output at another static host.
 
 The published site serves whatever `web/public/word-bank.json` contains — today
-bank v2: 110 entries, 10 days, every curated entry flagged `unverified` until a
+bank v3: 620 entries, 37 days, 139 curated entries flagged `unverified` until a
 human checks it against a reference (see [CURATION.md](CURATION.md)).
 
 ## Licensing
@@ -376,7 +376,7 @@ LICENSES.md has the full breakdown of sources and what is deliberately unused.
 - [x] Web UI: map (world-atlas TopoJSON + d3-geo), timeline selector,
       daily flow, reveal screens
 - [~] Grow the curated bank to ~1-2k words (today: 119 curated words = 110
-      banked entries = 10 days; the drafting loop and tier balancer exist, and
+      banked entries = 37 days; the drafting loop and tier balancer exist, and
       every entry is flagged unverified until checked)
 - [x] Frequency import (FrequencyWords / OpenSubtitles 2018) for the curation
       order and tier heuristics
