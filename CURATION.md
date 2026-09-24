@@ -130,6 +130,43 @@ the bank went from **10 days of play to 36**.
 
 
 
+## 1d. Let the senses tell you which word you are curating
+
+The etymology data records relations per **word**, so `back` arrives as one pile
+holding both the inherited word and the French loan — and `bank` as one pile holding
+the money sense, the river sense and the row sense. Wiktionary writes the difference
+down, and a page is small enough to fetch per word:
+
+    npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
+    # -> data/word-senses.json (gitignored), ~1 s per word, resumable: re-run any time
+
+What it keeps per word is exactly three facts per (etymology, part of speech) pair:
+
+```
+back   Etymology 1  adjective  "At or near the rear."        donors: Middle English, Old English, Proto-West Germanic
+back   Etymology 1  noun       "The rear of the body..."     donors: Middle English, Old English, Proto-West Germanic
+back   Etymology 2  noun       "A large shallow vat..."      donors:
+bank   Etymology 1  noun       "An institution where one..." donors: Middle English, Middle French, Italian
+bank   Etymology 2  noun       "An edge of river, lake..."   donors: Middle English, Old English, Proto-West Germanic
+sole   Etymology 2  noun       "The bottom or plantar..."    donors: Middle English, Old English, Anglo-Norman
+```
+
+In the admin app each sense is a button. **Clicking one takes the part of speech** (so
+the entry files as `back:noun` rather than `back`) **and, when that sense's donor is
+one of the recorded origins, takes the route too** — which also fills in the span that
+route implies. That is the whole decision for the 11,214 words with several recorded
+origins, made from evidence instead of guesswork: `bank`'s river sense names Old
+English, so the click says "noun, Old English, 700–1150".
+
+Two things to know:
+
+- A donor that is a **reconstruction** keeps its code when neither language table
+  names it (`poz-pol` for the tattoo sense in `tattoo`). That is a feature: a
+  reconstruction cannot be pinned, so it is not a candidate answer.
+- The file is **optional** and gitignored. Without it the app simply shows no senses.
+
+
+
 ## 2. Research each word
 
 For every word in the batch:

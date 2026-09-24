@@ -24,6 +24,8 @@ generated bank: it keeps the share-alike obligation satisfied.
 | Glottolog (if used for language coords) | CC BY 4.0 | Language centroids/geoography |
 | FrequencyWords (hermitdave) | CC BY-SA 4.0 (code MIT) | English word-frequency ranks for the curation order; derived from the **OpenSubtitles 2018** corpus (attribution required to OpenSubtitles) |
 | world-countries | MIT (ODbL for the data) | Country metadata: ISO codes, subregion/continent, coordinates |
+| Wiktionary API (en.wiktionary.org/w/api.php) | CC BY-SA 4.0 (dual GFDL) | Part-of-speech, glosses and per-etymology donors for the words a curator is working on, fetched per word by `scripts/fetch-senses.ts` (not bulk-dumped; the same source as etymology-db) |
+| wiktionary_codes.csv (from etymology-db) | CC BY-SA 3.0 | Language code -> name, so a reconstruction's donor reads as a name rather than a code |
 
 **Share-alike obligation:** because the word bank is derived from CC BY-SA
 data, `word-bank.json` and the curation artifacts are distributed under

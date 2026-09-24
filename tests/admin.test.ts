@@ -25,6 +25,7 @@ function makeWorkspace(): AdminPaths {
     batch: path.join(dir, "batch.json"),
     skip: path.join(dir, "skip-words.txt"),
     bank: path.join(dir, "bank.json"),
+    senses: path.join(dir, "senses.json"),
   };
   const rows = [
     "word\torigin\tsense\tfreq_rank\ttier\tchain_depth\tdeepest_language\tchain\torigins",
@@ -37,6 +38,31 @@ function makeWorkspace(): AdminPaths {
   ];
   writeFileSync(paths.worklist, `${rows.join("\n")}\n`);
   writeFileSync(paths.curation, formatCuration({ coffee: { year: 1590, tier: 1, blurb: "From Arabic." } }));
+  // A senses file in the shape scripts/fetch-senses.ts writes. `back` deliberately has
+  // two noun senses, which is the case the curator could not tell apart before.
+  writeFileSync(
+    path.join(dir, "senses.json"),
+    JSON.stringify({
+      back: {
+        fetchedAt: "2026-09-21T00:00:00.000Z",
+        senses: [
+          {
+            pos: "noun",
+            gloss: "The rear of the body.",
+            etymology: "Etymology 1",
+            donors: ["Middle English", "Old English"],
+          },
+          { pos: "noun", gloss: "A large shallow vat.", etymology: "Etymology 2", donors: [] },
+          {
+            pos: "verb",
+            gloss: "To go in the reverse direction.",
+            etymology: "Etymology 1",
+            donors: ["Middle English", "Old English"],
+          },
+        ],
+      },
+    }),
+  );
   return paths;
 }
 
@@ -343,6 +369,32 @@ describe("coarse answer spans in the admin app", () => {
     expect(must.routes.every((route) => route.period === null)).toBe(true);
   });
 
+  it("carries the senses Wiktionary records, so one click can pick the sense", () => {
+    // The case that forced this: `back` has two NOUN senses (the rear, and a vat),
+    // and before this the curator could not tell which one the puzzle was about.
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 10);
+    const back = buildQueue(paths).queue.find((item) => item.word === "back")!;
+    expect(back.senses.map((sense) => [sense.pos, sense.gloss])).toEqual([
+      ["noun", "The rear of the body."],
+      ["noun", "A large shallow vat."],
+      ["verb", "To go in the reverse direction."],
+    ]);
+    // A sense whose donor matches a recorded route hands the origin over too.
+    const inherited = back.senses.find((sense) => sense.etymology === "Etymology 1")!;
+    expect(inherited.donors).toContain("Old English");
+    expect(back.routes.some((route) => inherited.donors.includes(route.origin))).toBe(true);
+  });
+
+  it("works without the senses file at all", () => {
+    // Optional on purpose: a fresh clone has no fetched senses, and the app must
+    // still run rather than depending on a generated file.
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 3);
+    const state = buildQueue({ ...paths, senses: undefined });
+    expect(state.queue.every((item) => item.senses.length === 0)).toBe(true);
+  });
+
   it("offers the span field in the client, with the rule that explains it", () => {
     // app.js is plain JS: nothing typechecks it, so its wiring is asserted here.
     const client = readFileSync("admin/public/app.js", "utf8");
@@ -354,6 +406,10 @@ describe("coarse answer spans in the admin app", () => {
     expect(client).toContain("routeFor(radio.value)");
     expect(client).toContain("span from the chain");
     expect(client).not.toContain("Old English\", from:");
+    // One click per sense: part of speech, and the route whose donor that sense names.
+    expect(client).toContain('querySelectorAll("button.sense")');
+    expect(client).toContain("sense.donors.includes");
+    expect(client).toContain("item.senses");
   });
 });
 

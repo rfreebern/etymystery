@@ -184,6 +184,31 @@ function render() {
     </div>`
         : ""
     }
+    ${
+      item.senses.length
+        ? `<div class="field">
+      <label>Senses (Wiktionary) — click one to take its part of speech and route</label>
+      <div class="senses">
+        ${item.senses
+          .map((sense, i) => {
+            // A sense whose donor matches a recorded route is a free answer: the click
+            // picks the origin too, which is the decision that was blocking homographs.
+            const route = item.routes.find((r) => sense.donors.includes(r.origin));
+            return `<button type="button" class="sense" data-sense="${i}">
+              <span class="sense-pos">${sense.pos}</span>
+              <span class="sense-gloss">${sense.gloss}</span>
+              <span class="sense-meta">${sense.etymology}${route ? ` · ${route.origin}` : ""}${
+                sense.donors.length ? ` · ${sense.donors.slice(0, 3).join(", ")}` : ""
+              }</span>
+            </button>`;
+          })
+          .join("")}
+      </div>
+      <div class="muted">${item.senses.length} senses on Wiktionary. Two senses of one part of
+        speech differ by etymology and gloss, which is how you tell them apart.</div>
+    </div>`
+        : ""
+    }
     <div class="field">
       <label for="year">Year English first used it</label>
       <div class="row">
@@ -287,6 +312,27 @@ function render() {
       el("year").value = route.year;
       el("year-to").value = route.yearTo;
       status(`span from the chain: ${route.period} (${route.year} – ${route.yearTo})`);
+    });
+  });
+  // One click per sense: the part of speech, and its route when the sense's own donor
+  // is one of the recorded origins. That is the decision that held up the homographs —
+  // 11,214 words with several recorded origins — and it is made from evidence rather
+  // than guessed, so it is safe to take in one click.
+  document.querySelectorAll("button.sense").forEach((button) => {
+    button.addEventListener("click", () => {
+      const sense = item.senses[Number(button.dataset.sense)];
+      if (!sense) return;
+      dirty = true;
+      el("pos").value = sense.pos;
+      el("key-preview").textContent = `${item.word}:${sense.pos}`;
+      const radio = [...document.querySelectorAll('input[name="origin"]')].find(
+        (candidate) => routeFor(candidate.value)?.origin === (item.routes.find((r) => sense.donors.includes(r.origin))?.origin ?? ""),
+      );
+      if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change"));
+      }
+      status(`sense: ${sense.pos} ${sense.etymology ? `(${sense.etymology})` : ""}`.trim());
     });
   });
   el("blurb").addEventListener("input", () => (dirty = true));

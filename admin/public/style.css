@@ -99,3 +99,14 @@ a { color: #7fb2ff; }
 #help-panel dt { white-space: nowrap; }
 #help-panel dd { margin: 0; color: #b9c0ca; }
 #help-panel p { margin: 10px 0 0; font-size: 12px; }
+
+.senses { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.sense {
+  display: grid; grid-template-columns: 84px 1fr; gap: 2px 10px;
+  text-align: left; padding: 6px 8px; background: #1b1b1f; color: inherit;
+  border: 1px solid #333; border-radius: 6px; cursor: pointer; font: inherit;
+}
+.sense:hover { border-color: #666; }
+.sense-pos { color: var(--accent, #e0a44b); font-weight: 600; }
+.sense-gloss { color: #ddd; }
+.sense-meta { grid-column: 2; font-size: 11px; opacity: 0.65; }

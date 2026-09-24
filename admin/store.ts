@@ -27,6 +27,8 @@ export interface AdminPaths {
   batch: string;
   skip: string;
   bank: string;
+  /** Wiktionary senses per word (scripts/fetch-senses.ts). Optional: absent = no panel. */
+  senses?: string;
 }
 
 export const DEFAULT_PATHS: AdminPaths = {
@@ -35,6 +37,7 @@ export const DEFAULT_PATHS: AdminPaths = {
   batch: "data/curation-batch.json",
   skip: "data/skip-words.txt",
   bank: "data/word-bank.json",
+  senses: "data/word-senses.json",
 };
 
 /** One row of the left-hand panel. */
@@ -70,6 +73,12 @@ export interface QueueItem {
   unverified: boolean;
   /** `"chain-period"` when the span comes from the chain's own period, not a lookup. */
   yearSource: string;
+  /**
+   * Senses from Wiktionary, when `scripts/fetch-senses.ts` has been run: the part of
+   * speech, a gloss to tell two senses of one part of speech apart, and the donor
+   * languages each etymology names. Empty when the file is absent.
+   */
+  senses: Array<{ pos: string; gloss: string; etymology: string; donors: string[] }>;
   /**
    * The span each recorded route implies, with the period it names. A homograph's
    * routes are different words, so they carry different spans (or none).
@@ -138,6 +147,33 @@ export function readWorklist(path: string): WorklistCandidate[] {
   return parseWorklist(readFileSync(path, "utf8"));
 }
 
+/**
+ * Wiktionary senses per word, when the file is there. Optional on purpose: the app
+ * must work without it (fresh clone), and the tests must not depend on a generated
+ * file — the panel simply does not appear.
+ */
+function readSenses(
+  path: string | undefined,
+): Map<string, Array<{ pos: string; gloss: string; etymology: string; donors: string[] }>> {
+  const map = new Map<string, Array<{ pos: string; gloss: string; etymology: string; donors: string[] }>>();
+  if (!path) return map;
+  const file = readJsonFile<
+    Record<string, { senses?: Array<{ pos: string; gloss: string; etymology?: string; donors?: string[] }> }> | null
+  >(path, null);
+  for (const [word, record] of Object.entries(file ?? {})) {
+    const senses = (record.senses ?? [])
+      .filter((sense) => sense.pos)
+      .map((sense) => ({
+        pos: sense.pos,
+        gloss: sense.gloss ?? "",
+        etymology: sense.etymology ?? "",
+        donors: sense.donors ?? [],
+      }));
+    if (senses.length > 0) map.set(word, senses);
+  }
+  return map;
+}
+
 function readBankWords(path: string): Set<string> {
   const bank = readJsonFile<{ tiers?: Array<Array<{ word?: string }>> } | null>(path, null);
   if (!bank?.tiers) return new Set();
@@ -180,6 +216,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const byWord = new Map(worklist.map((candidate) => [candidate.word, candidate]));
   // Built before the queue: every card carries the span its routes imply.
   const routesByWord = collectRoutes(worklist, paths.bank);
+  const sensesByWord = readSenses(paths.senses);
   const skipWords = readSkipWords(paths.skip);
 
   // The batch is keyed by WORD: the work list's other rows for the same word are
@@ -209,6 +246,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       origin: entry.origin ?? routeOrigin,
       unverified: Boolean(entry.unverified),
       yearSource: entry.yearSource ?? "",
+      senses: sensesByWord.get(candidate?.word ?? wordOfSenseId(sense)) ?? [],
       // The span each recorded route implies, so a curator picking the sense gets the
       // dates for free: the routes of a homograph are different words (`back` the
       // French loan vs the native word) and they do not share a period.

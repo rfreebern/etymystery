@@ -165,6 +165,7 @@ function main(): void {
       batch: { type: "string" },
       skip: { type: "string" },
       bank: { type: "string" },
+      senses: { type: "string" },
       limit: { type: "string", default: "25" },
       "no-pull": { type: "boolean", default: false },
     },
@@ -176,6 +177,8 @@ function main(): void {
     batch: values.batch ?? DEFAULT_PATHS.batch,
     skip: values.skip ?? DEFAULT_PATHS.skip,
     bank: values.bank ?? DEFAULT_PATHS.bank,
+    // The senses panel is optional: without the file the app still works.
+    senses: values.senses ?? DEFAULT_PATHS.senses,
   };
   const limit = Number.parseInt(values.limit!, 10) || 25;
 

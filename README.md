@@ -73,6 +73,8 @@ file host serves the whole game.
     npm run gen:countries  # regenerate web/src/countries.json
     npm run curate -- --mode next|derive|merge|check|tier  # see CURATION.md for the process
     npm run admin          # local curation UI: word on the left, references on the right
+    npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
+                           # Wiktionary senses (POS + gloss + donors) for the batch
     npm run bootstrap:languages -- \
       --codes data/wiktionary_codes.csv \
       --overlay curated/language-geo.json \

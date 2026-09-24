@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 13)
+## Status (as of 2026-09-21, session 14)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 313/313 tests passing, typecheck clean, static build green. The bank is
+`main`): 322/322 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
 human checks the dates against a reference; a derived batch of 490 more is waiting
 for a chain check (see session 13), which takes the same curation to 600 entries and
@@ -828,7 +828,7 @@ on-land anchors** (this batch)
 
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 313 passed (20 files)
+    npx vitest run            # 322 passed (21 files)
     npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -897,6 +897,36 @@ on-land anchors** (this batch)
       date can be confirmed in one screen. Tick "checked against a reference" to
       clear the flag. This is the highest-value work: the years are claims, and
       the whole game rests on them.
+**Session 14 — which sense is this, and what does it mean** (this batch)
+
+- Lever C, and it fixes the ambiguity that started this thread. The etymology data
+  records relations per WORD, so `back` arrived as one pile holding both the inherited
+  word and the French loan, and `bank` as one pile holding the money, river and row
+  senses. Wiktionary writes the difference down; a page is small enough to fetch per
+  word, so `scripts/fetch-senses.ts` fetches only the words a curator is working on
+  (~1 s each, resumable, cached to gitignored `data/word-senses.json`).
+- `scripts/lib/wikitext.ts` is the reader, and it keeps exactly three facts per
+  (etymology, part of speech) pair: the part of speech, the first gloss, and the donor
+  languages that etymology's templates name. Verified on real pages: `back` gives 5
+  senses (4 under Etymology 1, sharing its donors), `bank` 7 across 3 etymologies,
+  `sole` 6 across 5, `tattoo` 5 (its skin sense's donor is `poz-pol`, a
+  reconstruction: the parked Tahitian question is answered by the source itself).
+  Chosen over the kaikki/wiktextract dump: same data, 2.7 GB versus per-word fetches,
+  and the same CC BY-SA licence as the etymology data (recorded in LICENSES.md).
+- The admin app shows each sense as a button. Clicking one takes the part of speech
+  (so the entry files as `back:noun`) and, when that sense's donor is one of the
+  recorded origins, the route too — which fills in that route's span. That is the
+  whole decision for the 11,214 words with several recorded origins, from evidence
+  rather than guesswork.
+- Bugs found while building it, both from writing the reader against the fixtures
+  rather than the pages: `JSON.stringify(file, Object.keys(file).sort(), 1)` passes a
+  REPLACER array (which whitelists keys at every level and emptied the records), and
+  POS headers are level-4 on pages with `===Etymology N===` but level-3 siblings on
+  pages like `money`, which returned "no senses" until the fallback went in.
+- tests: 322 total (+9: seven parser fixtures plus two admin-app cases, including the
+  two-noun-senses case and the app running with no senses file at all).
+
+
    b. Pull the next batch (`--mode next`), research, `--mode merge`, then
       `--mode tier` to re-balance and rebuild. 10 days of play needs 100 banked
       entries; each additional day needs one more word in EVERY tier.
@@ -1133,3 +1163,12 @@ on-land anchors** (this batch)
   curating removes a word from it. The audit, the period guard and `--mode tier` all
   had this hole at once (tiering put 320 curated words in tier 10 as "unranked"). Read
   chains from the bank, ranks from the frequency list, or the tool measures nothing.
+- `JSON.stringify(value, Object.keys(value).sort(), 1)` is not "sorted JSON": the
+  second argument is a REPLACER, so a key list there whitelists those names at every
+  level and silently empties the data. The fetcher's output file came out almost
+  empty and said nothing. Sort into a new object and pass `null`.
+- Wiktionary's page shape is not uniform: with `===Etymology N===` sections the parts
+  of speech are level-4 children, but pages like `money` have a single `===Etymology===`
+  with the parts of speech as level-3 siblings. A reader that only knows the first
+  shape reports "no senses" for the second, which looks like missing data rather than
+  a parser gap.
