@@ -104,4 +104,8 @@ export interface RoundScore {
   distanceKm: number | null;
   /** Best match level found (label for the reveal; region levels never add points). */
   credit: "country" | "intermediate" | "subregion" | "continent" | "proximity" | "none";
+  /** Years the window fell outside the answer's span; 0 when it overlapped. */
+  yearsMissed: number;
+  /** Kilometers from the pin to the answer's territory (0 inside it); null with no pin. */
+  kmMissed: number | null;
 }

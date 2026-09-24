@@ -16,7 +16,7 @@
  * scale, so the era scale can simply span the full track.
  */
 
-import { GUESS_SPAN_YEARS, GUESS_STEP_YEARS } from "../../src/scoring";
+import { GUESS_SPAN_YEARS, GUESS_STEP_YEARS, spanGapYears } from "../../src/scoring";
 import { ERAS, erasSpanned, type Era } from "../../src/timeline";
 
 /** Re-exported so the client reads the guess geometry from one module. */
@@ -117,20 +117,20 @@ export function outsideYears(answerYear: number, start: number, end: number): nu
 }
 
 /**
- * How far an answer SPAN fell outside the guessed window (0 when they overlap).
- * A coarse answer covers a range of years, so only a window missing the whole span
- * counts as a miss, and the distance is the gap between the two ranges.
+ * How far an answer SPAN fell outside the guessed window (0 when they overlap). A
+ * coarse answer covers a range of years, so only a window missing the whole span counts
+ * as a miss, and the distance is the gap between the two ranges.
+ *
+ * Delegates to the scorer: "missed by" is the same number on the timeline, in the
+ * reveal and in the round summary, and a second copy of that arithmetic is how they
+ * would come to disagree.
  */
 export function outsideSpanYears(
   answer: { from: number; to: number },
   start: number,
   end: number,
 ): number {
-  const from = Math.min(start, end);
-  const to = Math.max(start, end);
-  if (answer.from > to) return answer.from - to;
-  if (answer.to < from) return from - answer.to;
-  return 0;
+  return spanGapYears(answer, start, end);
 }
 
 /**

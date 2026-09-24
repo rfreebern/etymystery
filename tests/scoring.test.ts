@@ -6,6 +6,7 @@ import {
   scoreRound,
   scoreTemporalRange,
   scoreTemporalSpan,
+  spanGapYears,
   type GeocodeContext,
 } from "../src/scoring";
 import type { BankEntry, LanguageInfo, LatLng } from "../src/types";
@@ -489,3 +490,84 @@ describe("coarse answers are graded as a span, not a guessed year", () => {
   });
 });
 
+describe("how far off a guess was", () => {
+  // The summary shows these, so they are part of the contract: a score says how the game
+  // judged a guess, the miss says how close it actually was.
+  const ctx = makeContext();
+  const span = { from: 1151, to: 1500 };
+
+  it("reports 0 years and 0 km for a perfect round", () => {
+    const score = scoreRound(
+      norwegianWord,
+      { yearStart: 1200, yearEnd: 1300, point: { lat: 61, lng: 9 } },
+      ctx,
+    );
+    expect(score.yearsMissed).toBe(0);
+    expect(score.kmMissed).toBe(0);
+  });
+
+  it("measures the years the window missed by, on a span", () => {
+    // 1151-1500 with the window at 1600-1700: 100 years past the end.
+    expect(scoreTemporalSpan(span, 1600, 1700)).toBe(scoreTemporalRange(1500, 1600, 1700));
+    expect(spanGapYears(span, 1600, 1700)).toBe(100);
+    // A window before the span is the distance to its start, order-agnostic.
+    expect(spanGapYears(span, 1000, 1100)).toBe(51);
+    expect(spanGapYears(span, 1100, 1000)).toBe(51);
+    expect(spanGapYears(span, 1400, 1500)).toBe(0);
+  });
+
+  it("counts a pin inside the answer country as no miss, however far it is", () => {
+    // The country is the unit of knowledge: a pin in the far corner of Norway is as
+    // correct as one on the answer point, so "missed by" must not report the distance
+    // to the representative point, which would call a perfect answer 500 km wrong.
+    const answerPoint = scoreRound(
+      norwegianWord,
+      { yearStart: 1175, yearEnd: 1275, point: { lat: 61, lng: 9 } },
+      ctx,
+    );
+    const farCorner = scoreRound(
+      norwegianWord,
+      { yearStart: 1175, yearEnd: 1275, point: { lat: 64, lng: 13 } },
+      ctx,
+    );
+    expect(answerPoint.geographic).toBe(100);
+    expect(farCorner.geographic).toBe(100);
+    expect(answerPoint.kmMissed).toBe(0);
+    expect(farCorner.kmMissed).toBe(0);
+    // The scoring distance still tells the two apart, which is why the summary needs
+    // its own number rather than reusing that one.
+    expect(farCorner.distanceKm).toBeGreaterThan(answerPoint.distanceKm!);
+  });
+
+  it("reports the distance to the answer for a wrong-country pin", () => {
+    // The Netherlands, next door to Norway: proximity credit (the label may rise to
+    // subregion or continent, which adds no points).
+    const near = scoreRound(
+      norwegianWord,
+      { yearStart: 1175, yearEnd: 1275, point: { lat: 52.08, lng: 5.12 } },
+      ctx,
+    );
+    expect(near.geographic).toBeGreaterThan(0);
+    // Missed by the border distance, the same number the score decays on.
+    expect(near.kmMissed).toBe(near.distanceKm);
+    expect(near.kmMissed).toBeGreaterThan(0);
+    expect(near.credit).not.toBe("none");
+
+    // Tokyo is past the outer limit: it scores nothing and the miss is enormous, which
+    // is exactly what the summary should show rather than a blank.
+    const far = scoreRound(
+      norwegianWord,
+      { yearStart: 1175, yearEnd: 1275, point: { lat: 35.68, lng: 139.69 } },
+      ctx,
+    );
+    expect(far.credit).toBe("none");
+    expect(far.geographic).toBe(0);
+    expect(far.kmMissed).toBeGreaterThan(5000);
+  });
+
+  it("has no distance to report when the player skipped the pin", () => {
+    const score = scoreRound(norwegianWord, { yearStart: 1175, yearEnd: 1275, point: null }, ctx);
+    expect(score.kmMissed).toBeNull();
+    expect(score.geographic).toBe(0);
+  });
+});

@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 16)
+## Status (as of 2026-09-21, session 18)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 334/334 tests passing, typecheck clean, static build green. The priced-in work
+`main`): 351/351 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -885,6 +885,33 @@ on-land anchors** (this batch)
 - Cost: the bank file went 180 KB -> 502 KB (gzipped over the wire by Pages).
 - tests: 336 total (+2).
 
+**Session 18 - the end-of-day summary and the share result** (this batch)
+
+- The summary screen now breaks the day down: one row per round with the word (and its
+  part of speech), the language it came from, its earliest attestation, the time and map
+  scores, and how far the guess was off in years and kilometers. Below it a copy button
+  puts a plain-text result on the clipboard with one coloured square per round (blue 90+,
+  green 60+, yellow 30+, red under 30), the average and the URL.
+- Two numbers had to come from the scorer rather than be reconstructed on screen:
+  `RoundScore.yearsMissed` and `RoundScore.kmMissed`. The second one matters because
+  `distanceKm` is about the SCORE and means different places at different credit levels,
+  so reusing it would have told a perfect answer it was 500 km wrong (a pin in the far
+  corner of Norway is inside the country). `kmMissed` is 0 whenever the pin is in the
+  answer country, the border distance when it is not, and null when there was no pin.
+- `spanGapYears` is now the single implementation of "missed by": the scorer, the
+  reveal and the timeline helper all call it (the timeline's `outsideSpanYears` is a thin
+  wrapper). Two copies of that arithmetic is exactly how the reveal and the summary would
+  come to disagree.
+- The share text lives in `web/src/share.ts`, DOM-free so its thresholds are testable,
+  and a boundary takes the HIGHER band (90 is blue, 60 is green, 30 is yellow). A blocked
+  clipboard is the common case, so the text is also a selectable `<pre>` and the helper
+  selects it when the write fails.
+- Verified by simulating a whole day against the real bank and printing the table and the
+  share text: the period-derived words read "Middle English (1151-1500)" in the First use
+  column, the point-dated ones "around 1550", and the misses read
+  "60 y late · in country" / "50 y early · 1,535 km off" / "in window · no pin".
+- tests: 351 total (+15).
+
 ## Verification (re-run before trusting anything)
 
 
@@ -902,7 +929,7 @@ on-land anchors** (this batch)
 
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 334 passed (22 files)
+    npx vitest run            # 351 passed (23 files)
     npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos

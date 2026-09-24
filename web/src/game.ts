@@ -7,7 +7,7 @@
 import { ROUNDS_PER_DAY } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
 import { scoreRound, type GeocodeContext } from "../../src/scoring";
-import type { LatLng, RoundScore, WordBank } from "../../src/types";
+import type { BankEntry, LatLng, RoundScore, WordBank } from "../../src/types";
 
 export interface StoredGuess {
   /** First year of the guessed window. */
@@ -47,6 +47,9 @@ export interface StoredRound {
   credit: RoundScore["credit"];
   matchedCountry: string | null;
   distanceKm: number | null;
+  /** Years off the answer's span, and km off its territory; absent in older sessions. */
+  yearsMissed?: number;
+  kmMissed?: number | null;
 }
 
 export interface Session {
@@ -122,6 +125,8 @@ export function submitGuess(
     credit: score.credit,
     matchedCountry: score.matchedCountry,
     distanceKm: score.distanceKm,
+    yearsMissed: score.yearsMissed,
+    kmMissed: score.kmMissed,
   };
   session.rounds[roundIndex] = stored;
   persist(storage, session);
@@ -137,6 +142,30 @@ export interface SessionSummary {
   geographic: number;
   total: number;
   played: number;
+}
+
+/** One played round, with the entry it was about and the guess that scored it. */
+export interface RoundSummary {
+  index: number;
+  entry: BankEntry;
+  guess: { start: number; end: number; point: LatLng | null };
+  score: StoredRound;
+}
+
+/**
+ * Every round played today, in order, with its entry. The summary screen needs the
+ * words and their answers as well as the scores, and the session only stores ids.
+ */
+export function dayRounds(bank: WordBank, session: Session): RoundSummary[] {
+  const entries = getDailyPuzzle(bank, session.dayIndex);
+  const rows: RoundSummary[] = [];
+  session.rounds.forEach((score, index) => {
+    const entry = entries[index];
+    if (!score || !entry) return;
+    const { start, end } = guessRange(score.guess);
+    rows.push({ index, entry, guess: { start, end, point: score.guess.point ?? null }, score });
+  });
+  return rows;
 }
 
 export function summarize(session: Session): SessionSummary {

@@ -214,13 +214,10 @@ button.secondary { background: #2c3242; color: var(--ink); }
   margin: 2px 0 8px;
 }
 
-.rounds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
-.round-cell { background: #262c3b; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; }
 
 .total-line { text-align: center; font-size: 28px; font-weight: 700; margin: 8px 0; }
 
 @media (max-width: 640px) {
-  .rounds-grid { grid-template-columns: 1fr 1fr; }
   /* The era ruler below the slider is cramped at this width (four absolutely
      positioned labels), and the same information is already spelled out above the
      slider ("1450 – 1550 · Middle English · Early Modern"). */
@@ -239,3 +236,31 @@ button.secondary { background: #2c3242; color: var(--ink); }
 }
 .about a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .about a:hover { color: var(--ink); }
+
+/* The end-of-day summary: one row per round, with what was missed. */
+.summary-wrap { overflow-x: auto; margin: 12px 0; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.summary-table th {
+  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); font-weight: 600; padding: 4px 8px; border-bottom: 1px solid #333;
+  white-space: nowrap;
+}
+.summary-table td { padding: 6px 8px; border-bottom: 1px solid #24242c; vertical-align: top; }
+.summary-table tr:last-child td { border-bottom: none; }
+.summary-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.summary-table .sum-index { color: var(--muted); }
+.summary-table .sum-word { font-weight: 600; }
+.summary-table .sum-answer { color: var(--accent); white-space: nowrap; }
+.summary-table .sum-date, .summary-table .sum-missed { color: var(--muted); }
+.summary-table .sum-missed { white-space: nowrap; }
+.squares { font-size: 15px; line-height: 1; }
+
+.share { margin-top: 18px; text-align: center; }
+.share-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.share-text {
+  display: inline-block; text-align: left; white-space: pre; margin: 8px auto;
+  padding: 10px 14px; background: #1b1b22; border: 1px solid #333; border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
+  overflow-x: auto; max-width: 100%;
+}
+.share .muted { display: block; font-size: 12px; margin-top: 6px; min-height: 1em; }

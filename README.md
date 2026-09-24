@@ -155,7 +155,13 @@ the round was about, then the score chips, the credit line and the full origin r
 — with the hop you were asked about picked out in amber. The recorded chain can
 continue older than that, to a reconstruction that has no place on the map, which
 the reveal says plainly rather than leaving it looking like the answer. It also says
-whether the window caught the year; progress is kept in
+whether the window caught the year. The end of the day gets a
+**round-by-round summary**: each word, the language it came from, its earliest
+attestation (named as a period when the span is one), the time and map scores, and how
+far the guess was off in years and kilometers (`60 y late · 1,535 km off`, or
+`in window · in country` for a perfect round). Under it, a copy button puts a
+plain-text result on the clipboard with one coloured square per round: blue 90+, green
+60+, yellow 30+, red below that, plus the average and the URL. Progress is kept in
 `localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
 resumes and a finished day is never re-scored. `npm run build:web` emits a fully
 static `web/dist/` — any file host serves it.

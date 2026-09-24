@@ -281,3 +281,49 @@ describe("touch and small screens", () => {
     expect(main).not.toMatch(/\["Round",/);
   });
 });
+
+describe("the end-of-day summary", () => {
+  it("breaks the day down round by round", () => {
+    const summary = functionBody(main, "renderSummary");
+    // Everything asked for: the word, its origin, its earliest attestation, both scores
+    // and how far off the guess was.
+    for (const header of ["Word", "Came from", "First use", "Time", "Map", "Missed by"]) {
+      expect(summary).toContain(`"${header}"`);
+    }
+    expect(summary).toContain("dayRounds(bank, session)");
+    expect(summary).toContain("entry.originLanguage");
+    expect(summary).toContain("periodOfSpan(answer)?.label");
+    expect(summary).toContain("score.yearsMissed ?? spanGapYears(" );
+    expect(summary).toContain('el("td", "num", String(score.temporal))');
+    expect(summary).toContain('el("td", "num", String(score.geographic))');
+    // The two miss phrasings, so a perfect round and a far miss read differently.
+    expect(summary).toContain('missed.push("in window")');
+    expect(summary).toContain('missed.push("in country")');
+    expect(summary).toContain('missed.push("no pin")');
+    expect(summary).toContain("km off");
+    expect(summary).toContain("y ${guess.end < answer.from ? \"early\" : \"late\"}");
+  });
+
+  it("shows the share as text AND copies it", () => {
+    const summary = functionBody(main, "renderSummary");
+    expect(summary).toContain("shareText({");
+    expect(summary).toContain('el("pre", "share-text", text)');
+    expect(summary).toContain("copyResult(text, pre)");
+    // The clipboard write and its fallback live in the helper: a blocked clipboard must
+    // still leave the text copyable by hand, which is the common case.
+    const helper = functionBody(main, "copyResult");
+    expect(helper).toContain("navigator.clipboard.writeText(text)");
+    expect(helper).toContain("selectNodeContents(pre)");
+    expect(helper).toContain("addRange(range)");
+  });
+
+  it("colours each round by the band its score falls in", () => {
+    const summary = functionBody(main, "renderSummary");
+    expect(summary).toContain("scoreBand(score.total)");
+    expect(summary).toContain("scoreEmoji(score.total)");
+    // The band is on the element, so the square can be styled and read out.
+    expect(summary).toContain("`squares ${band}`");
+    expect(css).toMatch(/\.summary-table/);
+    expect(css).toMatch(/\.share-text\s*\{[^}]*white-space: pre/);
+  });
+});

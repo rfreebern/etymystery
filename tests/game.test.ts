@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildWordBank } from "../src/bank";
 import { dayNumberForDate } from "../src/daily";
+import { getDailyPuzzle } from "../src/daily";
 import { createGeocodeContext, type CountryFeature } from "../web/src/geo-context";
 import {
   currentRoundIndex,
+  dayRounds,
   guessRange,
   isComplete,
   loadSession,
@@ -133,5 +135,36 @@ describe("game session", () => {
     const morning = loadSession(bank, Date.parse("2026-01-01T00:00:01Z"), makeStorage());
     const evening = loadSession(bank, Date.parse("2026-01-01T23:00:00Z"), makeStorage());
     expect(morning.dayIndex).toBe(evening.dayIndex);
+  });
+});
+
+describe("the end-of-day rows", () => {
+  const ctx = createGeocodeContext({ features: makeFeatures(), languages: LANGUAGES });
+  // Inside the fixture bank's capacity (30 entries = 3 days from 2026-01-01).
+  const at = dayNumberForDate("2026-01-02") * 86_400_000;
+
+  it("gives the summary one row per played round, with the word it was about", () => {
+    const bank = makeBank();
+    const storage = makeStorage();
+    const session = loadSession(bank, at, storage);
+    const guess = { yearStart: 1900, yearEnd: 2000, point: { lat: 47, lng: 2 } };
+    submitGuess(bank, session, 0, guess, ctx, storage);
+
+    const rows = dayRounds(bank, session);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.index).toBe(0);
+    // The word, its answer and the guess all come back, not just the score.
+    expect(rows[0]!.entry.id).toBe(getDailyPuzzle(bank, session.dayIndex)[0]!.id);
+    expect(rows[0]!.entry.originLanguage).toBe("French");
+    expect(rows[0]!.guess).toEqual({ start: 1900, end: 2000, point: { lat: 47, lng: 2 } });
+    // The misses the summary prints are on the stored round.
+    expect(rows[0]!.score.yearsMissed).toBe(100); // the answer 1800 is 100 years before the window
+    expect(rows[0]!.score.kmMissed).toBe(0);
+  });
+
+  it("skips unplayed rounds rather than inventing rows for them", () => {
+    const bank = makeBank();
+    const session = loadSession(bank, at, makeStorage());
+    expect(dayRounds(bank, session)).toEqual([]);
   });
 });

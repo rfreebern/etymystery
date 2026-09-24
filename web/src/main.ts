@@ -5,7 +5,7 @@
 
 import { ROUNDS_PER_DAY, validateBank } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
-import { answerSpan } from "../../src/scoring";
+import { answerSpan, spanGapYears } from "../../src/scoring";
 import {
   ANSWER_YEAR_MAX,
   ANSWER_YEAR_MIN,
@@ -26,10 +26,12 @@ import {
   yearPositionPct,
 } from "./slider";
 import { ROUTE_ARROW, answerYearLabel, beyondNote, coarseSpanNote, routeLine } from "./reveal";
+import { scoreBand, scoreEmoji, shareText } from "./share";
 import { ZOOM_STEP } from "./view";
 import { hintsFor, isTouchFirst } from "./copy";
 import {
   currentRoundIndex,
+  dayRounds,
   guessRange,
   isComplete,
   loadSession,
@@ -382,6 +384,24 @@ async function boot(): Promise<void> {
     panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
+  /**
+   * Copy the share text, or leave it selected when the clipboard is unavailable (older
+   * browsers, or a page without the permission). Returns what to tell the player.
+   */
+  async function copyResult(text: string, pre: HTMLElement): Promise<string> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return "copied to the clipboard";
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(pre);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      return "selected: press Ctrl or Cmd and C to copy";
+    }
+  }
+
   function renderSummary(): void {
     const summary = summarize(session);
     app.replaceChildren();
@@ -396,14 +416,80 @@ async function boot(): Promise<void> {
     }
     panel.append(scores, el("p", "prompt", `${dateLabel(utcMs)} · solved ${summary.played} of ${ROUNDS_PER_DAY}.`));
 
-    const grid = el("div", "rounds-grid");
-    rounds.forEach((entry, i) => {
-      const stored = session.rounds[i]!;
-      const cell = el("div", "round-cell");
-      cell.append(el("span", undefined, `${i + 1}. ${entry.word}`), el("span", undefined, String(stored.total)));
-      grid.append(cell);
+    // What each round was about, how it scored, and how far off it was. The miss is the
+    // number a player can actually learn from: a score says how the game judged it, the
+    // miss says how close it was.
+    const table = el("table", "summary-table");
+    const head = el("tr");
+    for (const label of ["", "#", "Word", "Came from", "First use", "Time", "Map", "Missed by"]) {
+      head.append(el("th", undefined, label));
+    }
+    table.append(head);
+    for (const row of dayRounds(bank, session)) {
+      const { entry, guess, score } = row;
+      const answer = answerSpan(entry);
+      const period = periodOfSpan(answer)?.label;
+      const years = score.yearsMissed ?? spanGapYears(answer, guess.start, guess.end);
+      const tr = el("tr");
+      const band = scoreBand(score.total);
+      const square = el("span", `squares ${band}`, scoreEmoji(score.total));
+      square.title = `${band}: ${score.total}/100`;
+      const emojiCell = el("td", "sum-emoji");
+      emojiCell.append(square);
+      tr.append(emojiCell);
+      tr.append(el("td", "sum-index", String(row.index + 1)));
+      tr.append(
+        el("td", "sum-word", entry.pos ? `${entry.word} (${entry.pos})` : entry.word),
+      );
+      tr.append(el("td", "sum-answer", entry.originLanguage));
+      tr.append(
+        el(
+          "td",
+          "sum-date",
+          period
+            ? `${period} (${answer.from} – ${answer.to})`
+            : answer.from === answer.to
+              ? `around ${answer.from}`
+              : `${answer.from} – ${answer.to}`,
+        ),
+      );
+      tr.append(el("td", "num", String(score.temporal)));
+      tr.append(el("td", "num", String(score.geographic)));
+      const missed: string[] = [];
+      if (years === 0) missed.push("in window");
+      else missed.push(`${years} y ${guess.end < answer.from ? "early" : "late"}`);
+      if (score.kmMissed == null) missed.push("no pin");
+      else if (score.kmMissed === 0) missed.push("in country");
+      else missed.push(`${score.kmMissed.toLocaleString()} km off`);
+      tr.append(el("td", "sum-missed", missed.join(" · ")));
+      table.append(tr);
+    }
+    const wrap = el("div", "summary-wrap");
+    wrap.append(table);
+    panel.append(wrap);
+
+    // The share lives in the DOM as text as well as on the clipboard: a blocked clipboard
+    // is common, and a selected <pre> can always be copied by hand.
+    const rows = dayRounds(bank, session);
+    const text = shareText({
+      date: dateLabel(utcMs),
+      totals: rows.map((row) => row.score.total),
+      average: summary.total,
+      played: summary.played,
+      rounds: ROUNDS_PER_DAY,
+      url: `${window.location.origin}${window.location.pathname}`,
     });
-    panel.append(grid);
+    const shareBlock = el("div", "share");
+    const pre = el("pre", "share-text", text);
+    const copy = el("button", "secondary", "Copy result") as HTMLButtonElement;
+    const copied = el("span", "muted", "");
+    copy.addEventListener("click", () => {
+      void copyResult(text, pre).then((message) => {
+        copied.textContent = message;
+      });
+    });
+    shareBlock.append(el("div", "share-title", "Share today's result"), pre, copy, copied);
+    panel.append(shareBlock);
 
     const actions = el("div", "actions");
     const reset = el("button", "secondary", "Clear today's session") as HTMLButtonElement;

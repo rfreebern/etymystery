@@ -83,6 +83,12 @@ export interface GeographicDetail {
   credit: RoundScore["credit"];
   matchedCountry: string | null;
   distanceKm: number | null;
+  /**
+   * Kilometers from the pin to the answer's own territory (0 when inside it), whatever
+   * the credit level. `distanceKm` is about the score and means different places at
+   * different credit levels; this is the plain "how far off were you" the summary shows.
+   */
+  answerKm: number;
 }
 
 /**
@@ -116,11 +122,21 @@ export function answerSpan(answer: { year: number; yearTo?: number }): AnswerSpa
  * score decays with the gap to the nearer end of the span.
  */
 export function scoreTemporalSpan(answer: AnswerSpan, from: number, to: number): number {
+  return Math.round(100 * Math.exp(-spanGapYears(answer, from, to) / TEMPORAL_DECAY_YEARS));
+}
+
+/**
+ * How many years a guessed window fell outside the answer's span, and 0 when the two
+ * touch. One implementation, because the reveal, the summary and the score all mean
+ * the same thing by "missed by": the months of drift between them are exactly the
+ * bug this function exists to prevent.
+ */
+export function spanGapYears(answer: AnswerSpan, from: number, to: number): number {
   const start = Math.min(from, to);
   const end = Math.max(from, to);
-  const gap =
-    answer.from > end ? answer.from - end : answer.to < start ? start - answer.to : 0;
-  return Math.round(100 * Math.exp(-gap / TEMPORAL_DECAY_YEARS));
+  if (answer.from > end) return answer.from - end;
+  if (answer.to < start) return start - answer.to;
+  return 0;
 }
 
 /** A single answer year is the degenerate span; kept for callers that hold one. */
@@ -181,7 +197,13 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
   // Outer limit: the pin must be within MAX_RELEVANCE_KM of some hop.
   const nearestHopKm = Math.min(deepDistance.km, ...intermediateDistances.map((d) => d.km));
   if (!Number.isFinite(nearestHopKm) || nearestHopKm > MAX_RELEVANCE_KM) {
-    return { score: 0, credit: "none", matchedCountry: null, distanceKm: null };
+    return {
+      score: 0,
+      credit: "none",
+      matchedCountry: null,
+      distanceKm: null,
+      answerKm: Math.round(deepDistance.km),
+    };
   }
 
   // 1. Direct hit on the deep origin's country: full marks, wherever in the
@@ -196,6 +218,9 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
       credit: "country",
       matchedCountry: deepDistance.country,
       distanceKm: Math.round(haversineKm(deep.point, guess)),
+      // The country IS the unit of knowledge, so nothing was missed: showing the
+      // distance to the representative point here would call a correct answer wrong.
+      answerKm: 0,
     };
   }
 
@@ -208,6 +233,7 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
         credit: "intermediate",
         matchedCountry: distance.country,
         distanceKm: Math.round(haversineKm(intermediates[index]!.point, guess)),
+        answerKm: Math.round(deepDistance.km),
       };
     }
   }
@@ -217,12 +243,13 @@ export function scoreGeographic(entry: BankEntry, guess: LatLng, ctx: GeocodeCon
   //    wrong-country pins: region matches never add points beyond it.
   let best: GeographicDetail =
     deepDistance.country === null || !Number.isFinite(deepDistance.km)
-      ? { score: 0, credit: "none", matchedCountry: null, distanceKm: null }
+      ? { score: 0, credit: "none", matchedCountry: null, distanceKm: null, answerKm: 0 }
       : {
           score: Math.round(100 * Math.exp(-deepDistance.km / GEO_DECAY_KM)),
           credit: "proximity",
           matchedCountry: deepDistance.country,
           distanceKm: Math.round(deepDistance.km),
+          answerKm: Math.round(deepDistance.km),
         };
 
   // 4. Region/continent matches are reveal-time labels only: they never add
@@ -258,10 +285,17 @@ export function scoreRound(
   guess: RoundGuess,
   ctx: GeocodeContext,
 ): RoundScore {
-  const temporal = scoreTemporalSpan(answerSpan(entry), guess.yearStart, guess.yearEnd);
+  const answer = answerSpan(entry);
+  const temporal = scoreTemporalSpan(answer, guess.yearStart, guess.yearEnd);
   const geo = guess.point
     ? scoreGeographic(entry, guess.point, ctx)
-    : ({ score: 0, credit: "none", matchedCountry: null, distanceKm: null } as GeographicDetail);
+    : ({
+        score: 0,
+        credit: "none",
+        matchedCountry: null,
+        distanceKm: null,
+        answerKm: 0,
+      } as GeographicDetail);
   return {
     temporal,
     geographic: geo.score,
@@ -269,5 +303,9 @@ export function scoreRound(
     matchedCountry: geo.matchedCountry,
     distanceKm: geo.distanceKm,
     credit: geo.credit,
+    // What the summary shows: how far off the guess was, on each axis, in its own
+    // units. No pin means no distance to report (null), not zero.
+    yearsMissed: spanGapYears(answer, guess.yearStart, guess.yearEnd),
+    kmMissed: guess.point ? geo.answerKm : null,
   };
 }
