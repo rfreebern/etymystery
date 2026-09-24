@@ -501,6 +501,47 @@ Rules of thumb:
 - Prefer an override over a different answer: the alternative is picking a
   shallower origin, which puts the puzzle somewhere the word never came from.
 
+### Words from thin regions
+
+The calendar's regional mix is set by the *pool*, so this is the loop that changes it.
+The bank started 93% Europe (0 African, 0 Southeast Asian, 0 Oceanian rounds), and the
+deal could only spread what existed: the fix is more curated words from thin regions, not
+a smarter shuffle. In practice one word needs three things in this order.
+
+**1. The language's geography.** A word whose deepest language has no country cannot be
+placed at all — for Dharug, Kimbundu, Wiradhuri and seven others the missing piece was
+the overlay, not the etymology. Add the code to `curated/language-geo.json`
+(`name`, `lat`/`lng`, `countries`) and re-run `npm run bootstrap:languages`, then
+`npm run filter:edges` (the overlay changes which edges are usable) before building. Pick
+the point inside the country: section 4a's probe runs over every language in the table and
+names anything in the sea.
+
+**2. The donor, if the source got it wrong.** `banana` is recorded as Arabic and `manatee`
+as Spanish, so both were dropped from the batch rather than shipped as wrong answers.
+Where the true donor is missing but documented (`zombie` ← Kongo, `banjo` ← Kimbundu,
+`toboggan` ← Mi'kmaq, `savanna` ← Taíno), record it as an edge override — see above.
+
+**3. A blurb the route can credit.** A *transmission* language counts as an uncredited
+language even when it is historically true: `puma` and `llama` reached English through
+Spanish, but their recorded chain goes straight to Quechua, so a blurb saying "by way of
+Spanish" promised a pin that scores nothing. Either record the hop as an override
+(preferred — it earns partial credit) or trim the mention to the donor, which is what
+`candy`, `jar`, `genie`, `giraffe`, `azure` and `bamboo` needed.
+
+Then measure the property you actually want, not a proxy: rounds per continent, distinct
+subregions per day, and **days with no non-European round** (the last one is what "every
+day feels varied" means, and it is the number that improved from 13 of 37 to 0 of 42).
+
+Two things to expect when the batch lands:
+
+- A new override can *activate* entries that were unbankable when they were curated, and
+  an activated bare entry can collide with the sense-keyed one curated since: the build
+  refuses it with `duplicate puzzle: taboo answered by Tongan appears twice`. Keep the
+  sense-keyed entry (it names the part of speech and the origin) and drop the bare one.
+- The *last* days of a calendar are the least varied, because by then the thin pool is
+  spent and each tier's tail is whatever is left. That is the pool, not the scheduler;
+  adding words from thin regions is what moves it.
+
 ### Two traps in choosing the origin
 
 **Do not pick a thin sibling route.** A word often has several routes recorded as

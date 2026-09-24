@@ -4,18 +4,19 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 18)
+## Status (as of 2026-09-24, session 19)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 351/351 tests passing, typecheck clean, static build green. The priced-in work
+`main`): 357/357 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
 sense's part of speech, gloss and donors (so a click picks the sense and its route),
-and a dated EEBO-TCP sample can contradict a year a reference gave. The bank itself is
-still 620 entries / 37 days from 629 curated words (139 of them `unverified` until a human
-checks them), shipped as bank v3 on 2026-09-21.
+and a dated EEBO-TCP sample can contradict a year a reference gave. The bank is now bank v4:
+**420 entries / 42 days** from 701 curated words (139 of them `unverified` until a human
+checks them, plus this session's 81 thin-region words). Session 19 attacked the calendar's
+worst property: it was 93% Europe, with 13 of 37 days holding no non-European round at all.
 
 ## Done
 
@@ -808,6 +809,76 @@ on-land anchors** (this batch)
 - tests: 299 total (+21).
 
 
+**Session 13 — deriving the dates no reference has** (this batch)
+
+- Reported: the manual loop is too slow. The reframe that made it tractable: the
+  bottleneck is not typing years, it is *verifying* them — and for the words being hit,
+  verification is impossible by construction. "pre-12th century" is Merriam-Webster's
+  own *First Known Use* wording: MW only knows the period too.
+- **A consistency guard first** (`earliestEnglishEra`): a chain naming an English stage
+  claims the word was already IN English by then, so a later year refutes itself. The
+  audit matches the entry's own route (a homograph's other routes are different
+  senses). Verified against the shipped bank: 38 of 110 entries have an English stage
+  in their chain and none contradicts its year.
+- **Lever A — derive the span from the chain's period.** `npm run curate -- --mode
+  derive` drafts an entry for every word whose chain names an English period, with the
+  span set to that period and `"yearSource": "chain-period"`. On the real lists: **490
+  entries** (482 Middle English, 8 Old English) with zero research, skipping two
+  classes on purpose: 11,214 homographs (their routes imply *different* periods, so a
+  human must pick the sense first) and 21,559 words whose chain names no English stage
+  (real lookups).
+- End to end on the real data: derive → merge → `--mode tier` → build gives **600
+  curated entries** and, once tiers are balanced, **36 days of play instead of 10**.
+- The admin app closes the remaining gap: picking a route fills in the span that route
+  implies (route → period → dates, computed server-side so the client keeps no era
+  table), and the provenance line says the span came from the chain, with the checkbox
+  meaning "I checked the chain this span comes from".
+- The reveal names the period (`recorded in the Middle English period (1151 – 1500)`)
+  rather than printing the same two numbers the band already shows.
+- **Bug found and fixed while verifying: the CLI's writer silently dropped `yearTo`**,
+  so every coarse span became a fabricated point the moment it was merged. The format
+  now has ONE writer (`formatCuration` in scripts/lib/curation.ts, used by both the CLI
+  and the app) and a round-trip test that would have caught it. Two writers had drifted.
+- **Bug found by tests: the homograph check must precede the period check.** A
+  homograph's sampled route may have no English stage, which silently reclassified it
+  as "no period" instead of "needs a sense decision".
+- **`--mode tier` could not rank curated words.** They have left the work list, so they
+  all fell to tier 10 as "unranked" and capped the bank at whatever the work list held
+  (28 days). It now takes `--frequency data/en-frequency.txt`: 385 of 609 entries get a
+  real rank, and the capacity went 28 → 38 days.
+- tests: 313 total (+6).
+
+
+**Session 14 — which sense is this, and what does it mean** (this batch)
+
+- Lever C, and it fixes the ambiguity that started this thread. The etymology data
+  records relations per WORD, so `back` arrived as one pile holding both the inherited
+  word and the French loan, and `bank` as one pile holding the money, river and row
+  senses. Wiktionary writes the difference down; a page is small enough to fetch per
+  word, so `scripts/fetch-senses.ts` fetches only the words a curator is working on
+  (~1 s each, resumable, cached to gitignored `data/word-senses.json`).
+- `scripts/lib/wikitext.ts` is the reader, and it keeps exactly three facts per
+  (etymology, part of speech) pair: the part of speech, the first gloss, and the donor
+  languages that etymology's templates name. Verified on real pages: `back` gives 5
+  senses (4 under Etymology 1, sharing its donors), `bank` 7 across 3 etymologies,
+  `sole` 6 across 5, `tattoo` 5 (its skin sense's donor is `poz-pol`, a
+  reconstruction: the parked Tahitian question is answered by the source itself).
+  Chosen over the kaikki/wiktextract dump: same data, 2.7 GB versus per-word fetches,
+  and the same CC BY-SA licence as the etymology data (recorded in LICENSES.md).
+- The admin app shows each sense as a button. Clicking one takes the part of speech
+  (so the entry files as `back:noun`) and, when that sense's donor is one of the
+  recorded origins, the route too — which fills in that route's span. That is the
+  whole decision for the 11,214 words with several recorded origins, from evidence
+  rather than guesswork.
+- Bugs found while building it, both from writing the reader against the fixtures
+  rather than the pages: `JSON.stringify(file, Object.keys(file).sort(), 1)` passes a
+  REPLACER array (which whitelists keys at every level and emptied the records), and
+  POS headers are level-4 on pages with `===Etymology N===` but level-3 siblings on
+  pages like `money`, which returned "no senses" until the fallback went in.
+- tests: 322 total (+9: seven parser fixtures plus two admin-app cases, including the
+  two-noun-senses case and the app running with no senses file at all).
+
+
 **Session 15 - a dated corpus checks the years a reference has to give** (this batch)
 
 - Lever B, the last of the three. After `--mode derive` cleared the inherited layer, the
@@ -917,127 +988,99 @@ on-land anchors** (this batch)
   text. Verified by reverting the CSS and watching the test fail.
 - tests: 351 total (+15).
 
+**Session 19 - the calendar's regions, and a bug the map had all along** (this batch)
+
+- Reported: broaden the word bank's regional diversity, and make each day's rounds draw
+  from varied origins. Measuring first is what reframed the job: the bank was **93%
+  Europe** (0 African, 0 Southeast Asian, 0 Oceanian rounds, 11 American), so the deal
+  could only reshuffle what existed - 3.68 distinct subregions per day, and **13 of 37
+  days with no non-European round at all**. No scheduler fixes a 93/7 pool.
+- Both halves were done. `dealSequence` (replacing the index-based `interleave`) ranks each
+  tier's remaining queue by "is this a new subregion for TODAY?" and then gives every
+  continent a fair share of the days left (`ceil(remaining / daysLeft)`), so a thin region
+  plays across the whole calendar instead of being spent on day one. The pool grew by **81
+  words from 32 thin-region languages**: Quechua, Aymara, Taino, Arawak, Powhatan, Ojibwe,
+  Narragansett, Mi'kmaq, Igbo, Wolof, Tswana, Akan, Fon, Kimbundu, Kongo, Afrikaans, Zulu,
+  Malay, Javanese, Tamil, Malayalam, Kannada, Bengali, Hindi, Sanskrit, Arabic, Maori,
+  Hawaiian, Tongan, Dharug, Guugu Yimidhirr and Gamilaraay - each sense-picked, tiered and
+  blurbed. Ten of those languages had no geography at all, which was the real blocker: a
+  language with no country cannot be placed, so the overlay and the edge overrides came
+  first (see "Words from thin regions" in CURATION.md).
+- Measured on the shipped bank: subregions/day **3.68 -> 5.55**, continents/day **1.70 ->
+  3.36**, days with no non-European round **13 of 37 -> 0 of 42**. Rounds per continent went
+  Europe 335 / Asia 26 / Americas 9 -> Europe 298 / Asia 65 / Americas 30 / Oceania 16 /
+  Africa 11.
+- **A fair-sounding ranking rule made it worse.** The first attempt ranked candidates by
+  "least-used origin so far", which front-loaded every rare word (they are always the least
+  used) and produced **27** days with no non-European round - twice as bad as the 13 it
+  replaced. The per-day fair-share cap is what actually spreads them. Measure the property
+  you care about (days with a non-European round), not a proxy for it (rounds per
+  continent: 26 Asian rounds looked like diversity, but they were clustered).
+- **Bug found by the "every shipped puzzle can be won" guard: three Australian answers were
+  unwinnable.** The 50m atlas ships `Australia` and `Ashmore and Cartier Is.` as separate
+  features sharing ccn3 036, and `toCountryFeatures` keyed them by ISO code, so the lookup
+  kept whichever came last - a one-polygon reef 3,000 km offshore. `geoContains` on the
+  geometry said Sydney was in Australia while the context said it was 3,671 km away, so
+  `koala`, `boomerang`, `kangaroo` and `budgerigar` scored 9-21 proximity instead of 100.
+  Features are merged per country now (AU is 43 polygons) and a test pins the merge. The
+  guard only caught this because it runs over the SHIPPED bank rather than fixtures.
+- Two existing checks earned their keep. The reveal-blurb rule caught 8 words whose blurbs
+  named a *transmission* language the route cannot credit (`puma` "by way of Spanish",
+  `llama`, `bamboo` "by way of Dutch", `candy`, `jar`, `genie`, `giraffe`, `azure`) -
+  trimmed, the same call as `coffee`/`monsoon`. And `validateBank` refused a newly-activated
+  entry colliding with a sense-keyed one (`duplicate puzzle: taboo answered by Tongan
+  appears twice`): a new override edge can turn an entry that was unbankable when it was
+  curated into a bankable one, next to the sense-keyed entry curated since.
+- `scripts/lib/wikitext.ts` needed the same lesson again: `===Pronunciation N===` sections
+  NEST their level-3 headings, so a reader that assumed the flat shape reported "no senses"
+  for pages that plainly have them. `parseEnglishSenses` now covers etymology-present,
+  etymology-absent and linear pages.
+- Housekeeping: PROGRESS.md had sessions 13 and 14 pasted into the middle of the Remaining
+  list (15-18 were in Done, so the log read out of order). Moved back into Done.
+- tests: 357 total (+6: the dealing rules, the AU feature merge, the linear-sense fixture).
+
 ## Verification (re-run before trusting anything)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     npx tsc --noEmit          # clean
-    npx vitest run            # 351 passed (23 files)
-    npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
+    npx vitest run            # 357 passed (23 files)
+    npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
-      --out data/languages.tsv   # 312 languages, 0 overlay typos
+      --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
     npx tsx scripts/filter-edges.ts --edges data/etymology-db.csv.gz \
       --languages data/languages.tsv --out data/edges-filtered.csv.gz
-                                 # 4,222,599 rows -> 771,573 kept, ~20 s
+                                 # 4,222,599 rows -> 772,224 kept (~30 s)
     npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
       --languages data/languages.tsv --curation curated/curation.json \
-      --out data/word-bank.json --version 2 --epoch-start 2026-09-21 \
-      --worklist data/curation-worklist.tsv
-                                 # 41,985 candidates, 17 bankable, 37,211 uncurated
+      --out data/word-bank.json --version 4 --epoch-start 2026-09-21 \
+      --frequency data/en-frequency.txt --exclude-origin en,ang,enm \
+      --native-quota 0.1 --native-tiers 1,2
+                                 # bank v4: 420 entries / 42 days; 62,544 candidate
+                                 # senses, 701 accepted (curated), 0 skipped
     npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
-                                 # 515 words -> 513 with senses (POS + gloss + donors)
+                                 # 596 words -> 594 with senses (POS + gloss + donors)
     npx tsx scripts/attest-scan.ts --from-curation curated/curation.json \
-      --sample 400               # EEBO-TCP attestations -> data/attest.json
+      --sample 400               # 400 dated texts -> data/attest.json (80 words)
 
     # ranked curation order (add --frequency data/en-frequency.txt):
     npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
       --languages data/languages.tsv --curation curated/curation.json \
-      --out /dev/null --version 2 --frequency data/en-frequency.txt \
+      --out /dev/null --version 4 --frequency data/en-frequency.txt \
       --exclude-origin en,ang,enm --worklist-only \
       --worklist data/curation-worklist-interesting.tsv
-                                 # 26,590 words; top 5k coverage 1,007
+                                 # 45,829 words; coverage by rank: top 1k 611,
+                                 # 5k 3,421, 10k 5,997, 50k 16,122
 
 ## Remaining (next session)
 
-1. Curate more — the loop is in CURATION.md. The bank is now 110 entries / 10 days
-   from 119 curated words, all of them `unverified` drafts. Two jobs, in order:
+1. Curate more — the loop is in CURATION.md. The bank is now bank v4: **420 entries /
+   42 days** from 701 curated words (139 drafts plus this session's 81 region words, all
+   still `unverified`). Three jobs, in order:
    a. **Verify the drafts.** `npm run curate -- --mode check` lists them;
-**Session 13 — deriving the dates no reference has** (this batch)
-
-- Reported: the manual loop is too slow. The reframe that made it tractable: the
-  bottleneck is not typing years, it is *verifying* them — and for the words being hit,
-  verification is impossible by construction. "pre-12th century" is Merriam-Webster's
-  own *First Known Use* wording: MW only knows the period too.
-- **A consistency guard first** (`earliestEnglishEra`): a chain naming an English stage
-  claims the word was already IN English by then, so a later year refutes itself. The
-  audit matches the entry's own route (a homograph's other routes are different
-  senses). Verified against the shipped bank: 38 of 110 entries have an English stage
-  in their chain and none contradicts its year.
-- **Lever A — derive the span from the chain's period.** `npm run curate -- --mode
-  derive` drafts an entry for every word whose chain names an English period, with the
-  span set to that period and `"yearSource": "chain-period"`. On the real lists: **490
-  entries** (482 Middle English, 8 Old English) with zero research, skipping two
-  classes on purpose: 11,214 homographs (their routes imply *different* periods, so a
-  human must pick the sense first) and 21,559 words whose chain names no English stage
-  (real lookups).
-- End to end on the real data: derive → merge → `--mode tier` → build gives **600
-  curated entries** and, once tiers are balanced, **36 days of play instead of 10**.
-- The admin app closes the remaining gap: picking a route fills in the span that route
-  implies (route → period → dates, computed server-side so the client keeps no era
-  table), and the provenance line says the span came from the chain, with the checkbox
-  meaning "I checked the chain this span comes from".
-- The reveal names the period (`recorded in the Middle English period (1151 – 1500)`)
-  rather than printing the same two numbers the band already shows.
-- **Bug found and fixed while verifying: the CLI's writer silently dropped `yearTo`**,
-  so every coarse span became a fabricated point the moment it was merged. The format
-  now has ONE writer (`formatCuration` in scripts/lib/curation.ts, used by both the CLI
-  and the app) and a round-trip test that would have caught it. Two writers had drifted.
-- **Bug found by tests: the homograph check must precede the period check.** A
-  homograph's sampled route may have no English stage, which silently reclassified it
-  as "no period" instead of "needs a sense decision".
-- **`--mode tier` could not rank curated words.** They have left the work list, so they
-  all fell to tier 10 as "unranked" and capped the bank at whatever the work list held
-  (28 days). It now takes `--frequency data/en-frequency.txt`: 385 of 609 entries get a
-  real rank, and the capacity went 28 → 38 days.
-- tests: 313 total (+6).
-
-
       `npm run admin` shows each word beside Etymonline/Wiktionary/Ngrams so the
       date can be confirmed in one screen. Tick "checked against a reference" to
       clear the flag. This is the highest-value work: the years are claims, and
-      the whole game rests on them.
-**Session 14 — which sense is this, and what does it mean** (this batch)
-
-- Lever C, and it fixes the ambiguity that started this thread. The etymology data
-  records relations per WORD, so `back` arrived as one pile holding both the inherited
-  word and the French loan, and `bank` as one pile holding the money, river and row
-  senses. Wiktionary writes the difference down; a page is small enough to fetch per
-  word, so `scripts/fetch-senses.ts` fetches only the words a curator is working on
-  (~1 s each, resumable, cached to gitignored `data/word-senses.json`).
-- `scripts/lib/wikitext.ts` is the reader, and it keeps exactly three facts per
-  (etymology, part of speech) pair: the part of speech, the first gloss, and the donor
-  languages that etymology's templates name. Verified on real pages: `back` gives 5
-  senses (4 under Etymology 1, sharing its donors), `bank` 7 across 3 etymologies,
-  `sole` 6 across 5, `tattoo` 5 (its skin sense's donor is `poz-pol`, a
-  reconstruction: the parked Tahitian question is answered by the source itself).
-  Chosen over the kaikki/wiktextract dump: same data, 2.7 GB versus per-word fetches,
-  and the same CC BY-SA licence as the etymology data (recorded in LICENSES.md).
-- The admin app shows each sense as a button. Clicking one takes the part of speech
-  (so the entry files as `back:noun`) and, when that sense's donor is one of the
-  recorded origins, the route too — which fills in that route's span. That is the
-  whole decision for the 11,214 words with several recorded origins, from evidence
-  rather than guesswork.
-- Bugs found while building it, both from writing the reader against the fixtures
-  rather than the pages: `JSON.stringify(file, Object.keys(file).sort(), 1)` passes a
-  REPLACER array (which whitelists keys at every level and emptied the records), and
-  POS headers are level-4 on pages with `===Etymology N===` but level-3 siblings on
-  pages like `money`, which returned "no senses" until the fallback went in.
-- tests: 322 total (+9: seven parser fixtures plus two admin-app cases, including the
-  two-noun-senses case and the app running with no senses file at all).
-
-
+      the whole game rests on them. Start with the 81 region words, whose years are
+      drafts written from the printed record rather than read off a reference.
    b. Pull the next batch (`--mode next`), research, `--mode merge`, then
       `--mode tier` to re-balance and rebuild. 10 days of play needs 100 banked
       entries; each additional day needs one more word in EVERY tier.
@@ -1045,6 +1088,10 @@ on-land anchors** (this batch)
       a span (`year` = 700, `yearTo` = the bound the reference gives) using the new
       field in the admin app, rather than picking a year: `give` is the worked
       example in CURATION.md.
+   c. Keep feeding the thin regions. The last days of a calendar are always the least
+      varied (day 41 of v4 is 9 Latin rounds), because by then the thin pool is spent and
+      each tier's tail is whatever is left; only more words from thin regions move that.
+      The work list's `missingLanguage` column and the overlay are the shopping list.
 2. Proto-language policy (unchanged, still open): default (respect "deepest
    origin") = 17 bankable / 4,141 words lost; `--deepest-attested` = 21 bankable /
    4,137 recovered. The lost words' answers would be reconstructions
@@ -1055,17 +1102,43 @@ on-land anchors** (this batch)
    player cannot know which sense is being asked about (this is why the Tahitian
    tattoo sense was not added). A short `gloss` field shown under the prompt would
    fix it.
-3. Chained data errors found in the real data while drafting — worth a filter:
+4. Chained data errors found in the real data while drafting — worth a filter:
    `seen ← Arabic` and `sent ← Estonian` are foreign-language homographs, and
    `yoga ← Chamorro` is a Wiktionary artifact. The work list's `chain` column is a
    claim to verify, not just the year.
-4. GitHub Action: typecheck + tests + validate the shipped bank + days-of-play
+5. GitHub Action: typecheck + tests + validate the shipped bank + days-of-play
    countdown (works today; the nightly rebuild needs the 143 MB asset).
-5. Optional polish (not requested): share/streak summary, per-round distance
+6. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
 
 ## Gotchas learned (do not re-fight)
 
+- A country can be more than one atlas feature. `Australia` and `Ashmore and Cartier Is.`
+  share ccn3 036, and a lookup keyed by ISO code silently kept whichever came last - a
+  one-polygon reef 3,000 km offshore. Every pin on the mainland scored as a miss while
+  `geoContains` on the geometry said Sydney WAS in Australia. Merge features per code, and
+  assert containment per country (the bank-wide "can be won" guard is what found it;
+  fixtures never would have).
+- d3-geo reads polygon winding: a hand-written fixture ring wound counter-clockwise over a
+  small area has the rest of the sphere as its interior, so `geoContains` is false and the
+  test fails for a reason that has nothing to do with the code under test. The world-atlas
+  data is wound correctly; clockwise rings for fixtures.
+- A ranking rule that sounds fair can worsen the metric it targets. "Prefer the least-used
+  origin" front-loads every rare word, because a thin region's entries are ALWAYS the
+  least used: days with no non-European round went 13 -> 27. Cap the share a continent can
+  take per day instead. And measure the property you care about, not a proxy: 26 Asian
+  rounds looked like diversity while half the days had none.
+- Rounds per continent is not diversity; days-without-one is. Aggregates hide clustering,
+  so measure the worst day too (v4's day 41 is 9 Latin rounds - the pool is spent by then,
+  which is a curation problem, not a scheduler one).
+- Adding a curated edge can ACTIVATE entries that were unbankable when they were curated.
+  Two entries that never met in the bank will collide at that moment: `duplicate puzzle:
+  taboo answered by Tongan appears twice`. Keep the sense-keyed entry (it names the part of
+  speech and the origin), drop the bare one.
+- A blurb that names the language a word passed THROUGH is the same failure as naming any
+  uncredited language: `puma` "by way of Spanish" promised partial credit the recorded
+  chain cannot give (it goes straight to Quechua). Either record the hop as an override or
+  trim the mention to the donor.
 - A cosmetic offset tuned for one device class must be scoped to it. The thumb lift
   fixed a phone and broke desktop in the same commit because it was applied
   unconditionally; the touch engines align a custom range thumb differently, so the

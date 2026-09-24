@@ -27,7 +27,24 @@ export interface CountryMetaEntry {
 
 export const COUNTRY_META = countriesMeta as unknown as Record<string, CountryMetaEntry>;
 
-/** Join world-atlas features (numeric ids) to ISO2 codes via ccn3. */
+/** All the polygons of a geometry, whatever shape it arrives in. */
+function asPolygons(geometry: MapGeometry): number[][][][] {
+  return geometry.type === "MultiPolygon"
+    ? [...geometry.coordinates]
+    : [[...geometry.coordinates]];
+}
+
+/**
+ * Join world-atlas features (numeric ids) to ISO2 codes via ccn3, MERGING the features
+ * that share a code.
+ *
+ * The atlas splits some countries into several features (`Australia` and `Ashmore and
+ * Cartier Is.` share ccn3 036, as do a handful of other territories), and a lookup keyed
+ * by ISO code silently kept whichever came last. For Australia that was a one-polygon
+ * reef 3,000 km offshore, so every pin on the mainland scored as a miss: `geoContains`
+ * said Sydney was in Australia while the context said it was nowhere near it. Unioning
+ * the geometries is also the truthful reading: they are all that country.
+ */
 export function toCountryFeatures(
   geometries: Array<{ id?: string | number; properties?: { name?: string }; geometry: MapGeometry }>,
 ): CountryFeature[] {
@@ -35,14 +52,27 @@ export function toCountryFeatures(
   for (const [iso, meta] of Object.entries(COUNTRY_META)) {
     if (meta.ccn3) byCcn3.set(meta.ccn3, iso);
   }
-  const features: CountryFeature[] = [];
+  const byIso = new Map<string, CountryFeature>();
   for (const f of geometries) {
     const id = f.id === undefined || f.id === null ? null : String(f.id);
     const iso = id ? byCcn3.get(id) : undefined;
     if (!iso) continue;
-    features.push({ iso, name: f.properties?.name ?? COUNTRY_META[iso]!.name, geometry: f.geometry });
+    const name = f.properties?.name ?? COUNTRY_META[iso]!.name;
+    const existing = byIso.get(iso);
+    if (!existing) {
+      byIso.set(iso, { iso, name, geometry: f.geometry });
+      continue;
+    }
+    byIso.set(iso, {
+      iso,
+      name: existing.name,
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [...asPolygons(existing.geometry), ...asPolygons(f.geometry)],
+      },
+    });
   }
-  return features;
+  return [...byIso.values()];
 }
 
 export function createGeocodeContext(options: {

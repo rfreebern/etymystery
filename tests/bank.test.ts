@@ -3,6 +3,7 @@ import {
   BankValidationError,
   appendToBank,
   buildWordBank,
+  dealSequence,
   interleave,
   validateBank,
   validateEntry,
@@ -201,3 +202,99 @@ describe("the answer span in a bank entry", () => {
   });
 });
 
+describe("dealing the days for variety", () => {
+  // A region per entry, coarsest first, exactly as `regionsOfLanguage` supplies it.
+  const regions = new Map<string, string[]>();
+  const entry = (region: string, tier: number, n: number): BankEntry => {
+    const made = makeEntry({ id: `${region}-t${tier}-${n}`, word: `${region}${tier}${n}`, tier });
+    regions.set(made.id, [region]);
+    return made;
+  };
+  const regionsOf = (e: BankEntry): readonly string[] => regions.get(e.id) ?? ["unknown"];
+
+  /** Every tier starts Europe, Europe, Asia, Africa: the naive layout gives whole
+   *  European days and then whole Asian days. */
+  function clumpedTiers(): BankEntry[][] {
+    return Array.from({ length: 10 }, (_, tier) => [
+      entry("Europe", tier + 1, 1),
+      entry("Europe", tier + 1, 2),
+      entry("Asia", tier + 1, 1),
+      entry("Africa", tier + 1, 1),
+    ]);
+  }
+
+  it("spreads the regions of a day instead of clumping them", () => {
+    const tiers = clumpedTiers();
+    const naive = interleave(tiers.map((tier) => [...tier]));
+    const spread = interleave(tiers, { regionsOf });
+    const distinct = (sequence: BankEntry[]): number =>
+      new Set(sequence.map((e) => regionsOf(e)[0])).size;
+
+    expect(distinct(naive.slice(0, 10))).toBe(1); // ten European rounds
+    expect(distinct(spread.slice(0, 10))).toBe(3); // Europe, Asia, Africa
+    // And it keeps it up rather than spending the variety on one day.
+    expect(distinct(spread.slice(10, 20))).toBe(3);
+  });
+
+  it("still uses every entry exactly once, one per tier per day", () => {
+    const tiers = clumpedTiers();
+    const { master, tiers: dealt } = dealSequence(tiers, { regionsOf });
+    expect(master).toHaveLength(40);
+    expect(new Set(master.map((e) => e.id)).size).toBe(40);
+    for (let day = 0; day < 4; day++) {
+      for (let k = 0; k < 10; k++) {
+        expect(master[day * 10 + k]!.tier).toBe(k + 1);
+      }
+    }
+    // The queues come back in play order, which is the invariant validateBank checks.
+    for (let k = 0; k < 10; k++) {
+      for (let day = 0; day < 4; day++) {
+        expect(dealt[k]![day]!.id).toBe(master[day * 10 + k]!.id);
+      }
+    }
+  });
+
+  it("leaves days it is told not to touch alone", () => {
+    // Append semantics: the days already shipped keep their order, so a player's day
+    // cannot change because someone added words.
+    const tiers = clumpedTiers();
+    const before = interleave(tiers.map((tier) => [...tier]));
+    const after = interleave(tiers, { regionsOf, fromDay: 2 });
+    expect(after.slice(0, 20).map((e) => e.id)).toEqual(before.slice(0, 20).map((e) => e.id));
+    // From day 3 on it is dealt for variety, so the days differ from the naive layout.
+    expect(after.slice(20, 30).map((e) => e.id)).not.toEqual(before.slice(20, 30).map((e) => e.id));
+  });
+
+  it("gives a thin continent its fair share of a day instead of front-loading it", () => {
+    // Every tier starts with one African entry followed by three European ones: ten
+    // African rounds and thirty European ones over four days. Dealt by index, day 1 takes
+    // all ten African rounds and the rest of the calendar has none.
+    const tiers = Array.from({ length: 10 }, (_, tier) => [
+      entry("Africa", tier + 1, 1),
+      entry("Europe", tier + 1, 1),
+      entry("Europe", tier + 1, 2),
+      entry("Europe", tier + 1, 3),
+    ]);
+    const dayContinents = (sequence: BankEntry[]) =>
+      Array.from({ length: 4 }, (_, d) =>
+        sequence.slice(d * 10, d * 10 + 10).filter((e) => regionsOf(e)[0] === "Africa").length,
+      );
+
+    expect(dayContinents(interleave(tiers.map((tier) => [...tier])))).toEqual([10, 0, 0, 0]);
+    const spread = dayContinents(interleave(tiers, { regionsOf }));
+    expect(spread.reduce((a, b) => a + b, 0)).toBe(10); // every African round still played
+    expect(Math.max(...spread)).toBeLessThanOrEqual(4); // and no day takes them all
+    expect(spread.every((n) => n > 0)).toBe(true); // every day gets some
+  });
+
+  it("is exactly the old layout when no regions are given", () => {
+    // The default must not change a single day: day d of tier t is still tiers[t][d].
+    const tiers = clumpedTiers();
+    const naive = interleave(tiers.map((tier) => [...tier]));
+    for (let day = 0; day < 4; day++) {
+      for (let k = 0; k < 10; k++) {
+        expect(naive[day * 10 + k]!.id).toBe(tiers[k]![day]!.id);
+      }
+    }
+  });
+});

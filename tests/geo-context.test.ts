@@ -136,6 +136,36 @@ describe("every shipped puzzle can be won", () => {
   });
 });
 
+describe("countries the atlas splits into several features", () => {
+  // The 50m atlas ships Australia and Ashmore and Cartier Is. as separate features that
+  // share ccn3 036. Keyed by ISO code, the context silently kept whichever came last - a
+  // one-polygon reef 3,000 km offshore - so every pin on the mainland scored as a miss
+  // while `geoContains` on the geometry said Sydney was in Australia.
+  it("merges them into one country", () => {
+    const mainland = {
+      id: "036",
+      properties: { name: "Australia" },
+      // Rings run clockwise: that is the winding d3-geo reads as the interior.
+      geometry: { type: "Polygon" as const, coordinates: [[[112, -44], [112, -10], [154, -10], [154, -44], [112, -44]]] },
+    };
+    const reef = {
+      id: "036",
+      properties: { name: "Ashmore and Cartier Is." },
+      geometry: { type: "Polygon" as const, coordinates: [[[123, -12.5], [123, -12.2], [123.4, -12.2], [123.4, -12.5], [123, -12.5]]] },
+    };
+    const features = toCountryFeatures([mainland, reef]);
+    expect(features).toHaveLength(1);
+    expect(features[0]!.iso).toBe("AU");
+    expect(features[0]!.geometry.type).toBe("MultiPolygon");
+    expect(features[0]!.geometry.coordinates).toHaveLength(2);
+    // ...and the merged country really is both places.
+    const ctx = createGeocodeContext({ features, languages: {} });
+    expect(ctx.contains("AU", { lat: -25, lng: 133 })).toBe(true);
+    expect(ctx.contains("AU", { lat: -12.3, lng: 123.2 })).toBe(true);
+    expect(ctx.contains("AU", { lat: 48.85, lng: 2.35 })).toBe(false);
+  });
+});
+
 describe("world-atlas integration", () => {
   const topo = JSON.parse(readFileSync("web/public/countries-50m.json", "utf8")) as Parameters<typeof feature>[0];
   const collection = feature(

@@ -6,6 +6,12 @@ export const TIER_COUNT = 10;
 /** Rounds per daily puzzle — one word per tier. */
 export const ROUNDS_PER_DAY = 10;
 
+/**
+ * Separator for composite region keys: a NUL cannot appear in a language or region
+ * name, so joining names with it can never collide with a single name.
+ */
+const KEY_SEP = "\u0000";
+
 /** Errors thrown when a word bank fails structural validation. */
 export class BankValidationError extends Error {}
 
@@ -39,13 +45,17 @@ export function buildWordBank(input: BuildBankInput): WordBank {
   }
   for (const bucket of buckets) shuffle(bucket, rng);
 
-  return finalizeBank({
-    version: input.version,
-    epochStartDay: input.epochStartDay,
-    seed,
-    tiers: buckets,
-    languages: input.languages,
-  });
+  return finalizeBank(
+    {
+      version: input.version,
+      epochStartDay: input.epochStartDay,
+      seed,
+      tiers: buckets,
+      languages: input.languages,
+    },
+    // Days are filled to spread the origins: see `InterleaveOptions`.
+    { regionsOf: (entry) => regionsOfLanguage(input.languages, entry.originLanguage) },
+  );
 }
 
 /**
@@ -56,27 +66,190 @@ export function buildWordBank(input: BuildBankInput): WordBank {
  * gets precisely one word per tier (10 rounds, easy to hard). Surplus entries
  * in deeper tiers are left unconsumed for the next bank version.
  */
-export function interleave(tiers: BankEntry[][]): BankEntry[] {
+/**
+ * How the days are filled.
+ *
+ * `regionsOf` turns an entry into its origin's regions, coarsest first (for the shipped
+ * bank: `["Europe", "Southern Europe"]`). Given it, each day draws from a tier's queue
+ * the entry whose region is least represented in that day, so a day's ten rounds span as
+ * many origins as the queues allow instead of clumping. Ties go to the region that is
+ * least used across the whole bank, which spreads the thin regions over the calendar
+ * rather than burning them in the first week, and then to queue order, so the sequence
+ * stays a pure function of the shuffled queues.
+ */
+export interface InterleaveOptions {
+  regionsOf?: (entry: BankEntry) => readonly string[];
+  /**
+   * Deal region-aware only from this day on, taking the earlier days in queue order.
+   * `appendToBank` uses it: the days already shipped must not move, so only the days the
+   * new entries create are dealt for variety.
+   */
+  fromDay?: number;
+}
+
+/**
+ * How a candidate entry ranks for one slot, smallest wins.
+ *
+ * The first term is what makes the origins last: a continent may take at most its fair
+ * share of a day's rounds, so a continent with 30 rounds left over 37 days gets one round
+ * a day rather than nine rounds on the first day and none afterwards. Only then does the
+ * rest of the vector matter, and it is about the day itself: prefer a region the day has
+ * not used yet (continent, then subregion), then the rarest and least-used regions, so the
+ * thin origins reach the whole calendar instead of the first week. Queue order breaks the
+ * last tie, which keeps the sequence a pure function of the shuffled queues.
+ */
+function rankVector(
+  entry: BankEntry,
+  regionsOf: (entry: BankEntry) => readonly string[],
+  context: {
+    usedToday: ReadonlyMap<string, number>;
+    usedTotal: ReadonlyMap<string, number>;
+    remaining: ReadonlyMap<string, number>;
+    share: ReadonlyMap<string, number>;
+  },
+): number[] {
+  const regions = regionsOf(entry);
+  const continent = regions[0] ?? "unknown";
+  const vector: number[] = [
+    (context.usedToday.get(`day${KEY_SEP}${continent}`) ?? 0) >= (context.share.get(continent) ?? Infinity)
+      ? 1
+      : 0,
+  ];
+  for (let level = 0; level < regions.length; level++) {
+    vector.push(context.usedToday.get(regions.slice(0, level + 1).join(KEY_SEP)) ?? 0);
+  }
+  vector.push(context.remaining.get(continent) ?? 0);
+  for (let level = 0; level < regions.length; level++) {
+    vector.push(context.usedTotal.get(regions.slice(0, level + 1).join(KEY_SEP)) ?? 0);
+  }
+  return vector;
+}
+
+function isBetter(candidate: readonly number[], best: readonly number[]): boolean {
+  for (let i = 0; i < Math.min(candidate.length, best.length); i++) {
+    if (candidate[i]! !== best[i]!) return candidate[i]! < best[i]!;
+  }
+  return false;
+}
+
+/** Rounds of each continent still unplayed, and the most a day may take from it today. */
+function continentBudget(
+  queues: readonly BankEntry[][],
+  regionsOf: (entry: BankEntry) => readonly string[],
+  daysLeft: number,
+): { remaining: Map<string, number>; share: Map<string, number> } {
+  const remaining = new Map<string, number>();
+  for (const queue of queues) {
+    for (const entry of queue) {
+      const continent = regionsOf(entry)[0] ?? "unknown";
+      remaining.set(continent, (remaining.get(continent) ?? 0) + 1);
+    }
+  }
+  const share = new Map<string, number>();
+  for (const [continent, count] of remaining) {
+    share.set(continent, Math.max(1, Math.ceil(count / Math.max(1, daysLeft))));
+  }
+  return { remaining, share };
+}
+
+/**
+ * Deal the days from the tier queues: the round-robin sequence AND the queues in the
+ * order they will be played.
+ *
+ * The queues come back in play order because the two must agree: `validateBank` checks
+ * that `tiers[t][d]` is exactly round `d` of tier `t`, and `appendToBank` relies on the
+ * played entries sitting at the front so appending cannot move an existing day.
+ */
+export function dealSequence(
+  tiers: BankEntry[][],
+  options: InterleaveOptions = {},
+): { master: BankEntry[]; tiers: BankEntry[][] } {
   if (tiers.length !== TIER_COUNT) {
     throw new BankValidationError(`expected exactly ${TIER_COUNT} tiers, got ${tiers.length}`);
   }
   const days = Math.min(...tiers.map((t) => t.length));
+  const queues = tiers.map((tier) => [...tier]);
+  const regionsOf = options.regionsOf;
+  const fromDay = Math.max(0, options.fromDay ?? 0);
+  const usedTotal = new Map<string, number>();
   const master: BankEntry[] = [];
-  for (let i = 0; i < days; i++) {
-    for (const tier of tiers) {
-      const entry = tier[i];
-      if (!entry) throw new BankValidationError(`tier queue unexpectedly empty at day ${i}`);
+  const played: BankEntry[][] = Array.from({ length: TIER_COUNT }, () => []);
+
+  for (let day = 0; day < days; day++) {
+    // A continent may take at most its fair share of this day (see continentBudget),
+    // which is what spreads a thin origin over the calendar instead of the first week.
+    const context = {
+      usedToday: new Map<string, number>(),
+      usedTotal,
+      ...(regionsOf
+        ? continentBudget(queues, regionsOf, days - day)
+        : { remaining: new Map<string, number>(), share: new Map<string, number>() }),
+    };
+    for (const [tierIndex, queue] of queues.entries()) {
+      let index = 0;
+      // Days already shipped keep their order; only the new ones are dealt for variety.
+      if (regionsOf && day >= fromDay) {
+        let best = rankVector(queue[0]!, regionsOf, context);
+        for (let i = 1; i < queue.length; i++) {
+          const candidate = rankVector(queue[i]!, regionsOf, context);
+          if (isBetter(candidate, best)) {
+            best = candidate;
+            index = i;
+          }
+        }
+      }
+      const [entry] = queue.splice(index, 1);
+      if (!entry) throw new BankValidationError(`tier queue unexpectedly empty at day ${day}`);
       master.push(entry);
+      played[tierIndex]!.push(entry);
+      if (regionsOf) {
+        const regions = regionsOf(entry);
+        for (let level = 0; level < regions.length; level++) {
+          const key = regions.slice(0, level + 1).join(KEY_SEP);
+          context.usedToday.set(key, (context.usedToday.get(key) ?? 0) + 1);
+          context.usedTotal.set(key, (context.usedTotal.get(key) ?? 0) + 1);
+        }
+        // The continent tally is what the fair share is spent against.
+        const dayKey = `day${KEY_SEP}${regions[0] ?? "unknown"}`;
+        context.usedToday.set(dayKey, (context.usedToday.get(dayKey) ?? 0) + 1);
+      }
     }
   }
-  return master;
+  return {
+    master,
+    // Played entries first, in play order, then whatever is left for later days.
+    tiers: queues.map((queue, tierIndex) => [...played[tierIndex]!, ...queue]),
+  };
+}
+
+export function interleave(tiers: BankEntry[][], options: InterleaveOptions = {}): BankEntry[] {
+  return dealSequence(tiers, options).master;
 }
 
 /** Internal: attach a master sequence and validate the assembled bank. */
-function finalizeBank(bank: Omit<WordBank, "masterSequence">): WordBank {
-  const withMaster: WordBank = { ...bank, masterSequence: interleave(bank.tiers) };
+function finalizeBank(
+  bank: Omit<WordBank, "masterSequence">,
+  options: InterleaveOptions = {},
+): WordBank {
+  // Deal first: the queues come back in play order, which is what validateBank checks.
+  const { master, tiers } = dealSequence(bank.tiers, options);
+  const withMaster: WordBank = { ...bank, tiers, masterSequence: master };
   validateBank(withMaster);
   return withMaster;
+}
+
+/**
+ * The regions a day's answer should vary over: continent first, then subregion. Both
+ * levels matter, in that order: without the continent level a day could take four rounds
+ * from four European subregions and call itself varied, and without the subregion level a
+ * day with two Asian rounds would not care that both were Arabic.
+ */
+export function regionsOfLanguage(languages: Record<string, LanguageInfo>, name: string): string[] {
+  const info = languages[name];
+  const regions = [info?.continent, info?.subregion].filter(
+    (region): region is string => Boolean(region),
+  );
+  return regions.length > 0 ? regions : ["unknown"];
 }
 
 /**
@@ -106,13 +279,20 @@ export function appendToBank(
     shuffle(perTierNew[t]!, rng);
     tiers[t]!.push(...perTierNew[t]!);
   }
-  return finalizeBank({
-    version: nextVersion,
-    epochStartDay: bank.epochStartDay,
-    seed: bank.seed,
-    tiers,
-    languages: bank.languages,
-  });
+  // The days already shipped are indexed, not re-dealt: a player's day must not change
+  // because someone appended words. Only the days the new entries create are dealt to
+  // spread their origins.
+  const shippedDays = Math.floor(bank.masterSequence.length / ROUNDS_PER_DAY);
+  return finalizeBank(
+    {
+      version: nextVersion,
+      epochStartDay: bank.epochStartDay,
+      seed: bank.seed,
+      tiers,
+      languages: bank.languages,
+    },
+    { regionsOf: (entry) => regionsOfLanguage(bank.languages, entry.originLanguage), fromDay: shippedDays },
+  );
 }
 
 /** Validate a single bank entry. Throws BankValidationError. */
@@ -201,9 +381,13 @@ export function validateBank(bank: WordBank): void {
   }
 
   if (bank.tiers.length === TIER_COUNT) {
-    const expected = interleave(bank.tiers);
-    for (let i = 0; i < expected.length; i++) {
-      if (expected[i]!.id !== bank.masterSequence[i]?.id) {
+    // Check the tier queues and the sequence AGREE, rather than recomputing the sequence
+    // with one fixed rule: the dealing may be region-aware (see dealSequence), and a
+    // recomputation would then disagree with a bank that is perfectly consistent.
+    for (let i = 0; i < bank.masterSequence.length; i++) {
+      const tier = i % ROUNDS_PER_DAY;
+      const day = Math.floor(i / ROUNDS_PER_DAY);
+      if (bank.tiers[tier]?.[day]?.id !== bank.masterSequence[i]!.id) {
         problems.push(`masterSequence out of order at index ${i}`);
         break;
       }

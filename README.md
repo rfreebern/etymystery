@@ -20,6 +20,11 @@ file host serves the whole game.
   — exactly one word per tier per day, rounds ordered easy -> hard.
 - **No word repeats** until a tier queue is exhausted; `getDailyPuzzle`
   throws beyond capacity, signalling that a new bank version is due.
+- The deal **spreads origins**, not just tiers: within a day the scheduler prefers a
+  region the day has not used yet, gives each continent a fair share of the days
+  remaining, and never spends a thin region's handful of words on day one. Origins
+  *within* a day and the whole-calendar mix are separate properties, measured
+  separately (`dealSequence` in `src/bank.ts`, pinned by tests in `tests/bank.test.ts`).
 - Banks are **append-only**: new versions append to each tier queue without
   re-shuffling shipped positions, so past puzzles never change
   (verified by tests).
@@ -289,6 +294,15 @@ etymology-db's exact column schema). Together with the 22-language
 `curated/languages.tsv` and `curated/curation.json`,
 `npm run build:seed` regenerates a minimal seed bank committed at
 `web/public/word-bank.json`.
+
+**Breadth matters as much as order.** The bank was 93% Europe — 0 African, 0 Southeast
+Asian, 0 Oceanian and 11 American rounds on the calendar — and no re-sorting can make a
+ten-round day varied when the pool is not: 81 added words from 32 thin-region languages
+(Quechua, Powhatan, Maori, Malay, Kimbundu, Dharug, ...) took the days with no
+non-European round from 13 of 37 to 0 of 42, and continents per day from 1.70 to 3.36. A
+word from a thin region usually needs its language's geography first; that loop, and what
+to do when the source records the wrong donor, is "Words from thin regions" in
+[CURATION.md](CURATION.md).
 
 ## Scoring
 
