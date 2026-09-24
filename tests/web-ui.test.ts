@@ -152,29 +152,29 @@ describe("the origin route line", () => {
     expect(main).not.toMatch(/originChain\]?\s*\.reverse\(\)/);
     expect(main).toContain("routeLine(entry.originChain, entry.originLanguage)");
     expect(main).toContain("beyondNote(entry.originLanguage, line.beyond)");
-    expect(main).toContain("document.createTextNode(ROUTE_ARROW)");
+    expect(main).toContain('el("span", "route-arrow", ROUTE_ARROW)');
   });
 
   it("marks which hop was asked about", () => {
-    // The chain can continue older than the answer, so the answer hop is picked out
-    // rather than left as whatever happens to be first — and the same class carries
-    // into the answer heading.
+    // The chain can continue older than the answer, so the route picks the answer hop out
+    // rather than leaving whatever happens to be first, and the headline names it as the
+    // solution. Both read from the formatting module, not from a reordered array.
     expect(main).toContain('el("b", "hop-answer", hop)');
-    expect(main).toContain('el("b", "hop-answer", entry.originLanguage)');
+    expect(main).toContain('el("div", "solution-answer", entry.originLanguage)');
     expect(css).toMatch(/\.hop-answer\s*\{[^}]*var\(--accent\)/);
   });
 });
 
 describe("the reveal heading", () => {
-  it("leads with the word, then the answer in larger type", () => {
+  it("leads with the word, then the solution in much larger type", () => {
     expect(main).toContain('"reveal-word"');
-    expect(main).toContain('"reveal-answer"');
+    expect(main).toContain('"solution-answer"');
     // The word comes first in the DOM, the answer second.
-    expect(main.indexOf('"reveal-word"')).toBeLessThan(main.indexOf('"reveal-answer"'));
+    expect(main.indexOf('"reveal-word"')).toBeLessThan(main.indexOf('"solution-answer"'));
     const word = /\.reveal-word\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
-    const answer = /\.reveal-answer\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
+    const answer = /\.solution-answer\s*\{[^}]*\}/.exec(css)?.[0] ?? "";
     expect(word).toMatch(/font-size: 19px/);
-    expect(answer).toMatch(/font-size: clamp\(26px/);
+    expect(answer).toMatch(/font-size: clamp\(44px/);
     // The answer must actually be the larger of the two.
     expect(Number(/font-size: clamp\((\d+)/.exec(answer)![1])).toBeGreaterThan(
       Number(/font-size: (\d+)/.exec(word)![1]),
@@ -194,6 +194,67 @@ describe("the reveal heading", () => {
     expect(main).toContain("coarseSpanNote(entry.year, entry.yearTo, period)");
     expect(main).toContain("outsideSpanYears(answer, guessed.start, guessed.end)");
     expect(main).toContain("The answer's recorded span overlaps it");
+  });
+});
+
+describe("the solution footer", () => {
+  const reveal = functionBody(main, "renderReveal");
+
+  it("stacks the answer, its date, the blurb and then the scores", () => {
+    const at = (needle: string): number => reveal.indexOf(needle);
+    for (const part of ['"solution-answer"', '"solution-date"', '"solution-blurb"']) {
+      expect(at(part), part).toBeGreaterThan(-1);
+    }
+    expect(at('"solution-answer"')).toBeLessThan(at('"solution-date"'));
+    expect(at('"solution-date"')).toBeLessThan(at('"solution-blurb"'));
+    expect(at('"solution-blurb"')).toBeLessThan(at('const podium'));
+  });
+
+  it("puts the round score above the two scores it is made of", () => {
+    // Reading order is round, year, map; the GRID is what makes it a podium, with the
+    // round card in the middle column and the other two low in the outer ones.
+    expect(reveal).toContain('card("Round Score", stored.total, "podium-card podium-main")');
+    const podium = reveal.slice(
+      reveal.indexOf('const podium = el("div", "podium")'),
+      reveal.indexOf("solution.append(podium)"),
+    );
+    expect(podium.length, "the podium is built in one place").toBeGreaterThan(0);
+    // The round card is placed in the grid's middle column, the two sides beside it ...
+    expect(podium).toContain('card("Round Score", stored.total, "podium-card podium-main")');
+    expect(podium).toContain("yearSide, mapSide");
+    // ... and the sides are built year first, which is the reading order.
+    expect(reveal.indexOf('card("Year Score"')).toBeLessThan(reveal.indexOf('card("Map Score"'));
+    expect(css).toMatch(/\.podium-main\s*\{[^}]*grid-column: 2/);
+    expect(css).toMatch(/\.podium-year\s*\{[^}]*grid-column: 1/);
+    expect(css).toMatch(/\.podium-map\s*\{[^}]*grid-column: 3/);
+    // The sides sit low, beside the round score rather than under it.
+    expect(css).toMatch(/\.podium-side\s*\{[^}]*margin-top/);
+  });
+
+  it("keeps each note under the score it explains", () => {
+    // The window note belongs to the year score and the credit line to the map score.
+    // They used to be one centred line under the whole row, which read as if they
+    // explained both.
+    const yearSide = reveal.slice(
+      reveal.indexOf('"podium-side podium-year"'),
+      reveal.indexOf('"podium-side podium-map"'),
+    );
+    expect(yearSide).toContain("Your window: ");
+    expect(reveal.slice(reveal.indexOf('"podium-side podium-map"'))).toContain(
+      "creditLabel(stored.credit)",
+    );
+    // Both notes are the mock's italics, on the ink colour rather than grey.
+    expect(css).toMatch(/\.podium-note\s*\{[^}]*font-style: italic/);
+  });
+
+  it("ends with the route, and stops being three columns on a phone", () => {
+    expect(reveal.indexOf('el("div", "solution-route")')).toBeLessThan(
+      reveal.indexOf('el("div", "actions")'),
+    );
+    expect(css).toMatch(/\.solution-route\s*\{[^}]*font-style: italic/);
+    expect(css).toMatch(/\.route-arrow\s*\{[^}]*var\(--muted\)/);
+    const mobile = css.slice(css.indexOf("@media (max-width: 640px)"));
+    expect(mobile).toMatch(/\.podium \{[^}]*grid-template-columns/);
   });
 });
 

@@ -298,8 +298,8 @@ async function boot(): Promise<void> {
     worldMap.revealAnswer(entry, stored.guess.point);
 
     const panel = el("div", "panel");
-    // Heading: the word in medium type, then the answer in larger type, because the
-    // answer is what the round was actually about.
+    // Heading: the word in medium type, then the solution below it, because the answer
+    // is what the round was actually about.
     panel.append(
       el(
         "div",
@@ -307,44 +307,27 @@ async function boot(): Promise<void> {
         entry.pos ? `${entry.word.toUpperCase()} (${entry.pos})` : entry.word.toUpperCase(),
       ),
     );
-    const answerLine = el("div", "reveal-answer");
-    answerLine.append(el("b", "hop-answer", entry.originLanguage));
+
+    // The solution footer: the answer as the headline, then the scores as a podium (the
+    // round score centred above the two it is made of), each score carrying the note that
+    // explains it, and the route underneath.
+    const solution = el("div", "solution");
+    solution.append(el("div", "solution-answer", entry.originLanguage));
     // A span that covers a whole period exactly is named as that period: it is what
     // the record actually says, and better reading than two bare years.
     const period = periodOfSpan(answerSpan(entry))?.label;
-    answerLine.append(
-      document.createTextNode(` · ${answerYearLabel(entry.year, entry.yearTo, period)}`),
-    );
-    panel.append(answerLine);
+    solution.append(el("div", "solution-date", answerYearLabel(entry.year, entry.yearTo, period)));
+    solution.append(el("p", "solution-blurb", entry.blurb));
+    // Explain the grading for an undated word, or a full score for an early window
+    // reads as the game being generous rather than the record being vague.
+    const spanNote = coarseSpanNote(entry.year, entry.yearTo, period);
+    if (spanNote) solution.append(el("p", "solution-note", spanNote));
 
-    const scores = el("div", "scores");
-    const chips: Array<[string, number]> = [
-      ["Year Score", stored.temporal],
-      ["Map Score", stored.geographic],
-      ["Round Score", stored.total],
-    ];
-    for (const [label, value] of chips) {
-      const chip = el("div", "score-chip");
-      chip.append(el("div", "value", String(value)), el("div", "label", label));
-      scores.append(chip);
-    }
-    panel.append(scores, el("div", "credit-line", creditLabel(stored.credit)));
-
-    // The route reads oldest-first and ends at English (`English reads left to
-    // right`), with the hop the player was asked about picked out — the chain can
-    // extend older than it.
-    const line = routeLine(entry.originChain, entry.originLanguage);
-    const routeEl = el("div", "route");
-    routeEl.append(document.createTextNode("Route: "));
-    line.hops.forEach((hop, i) => {
-      if (i > 0) routeEl.append(document.createTextNode(ROUTE_ARROW));
-      routeEl.append(
-        hop === entry.originLanguage ? el("b", "hop-answer", hop) : document.createTextNode(hop),
-      );
-    });
-    panel.append(routeEl);
-    const older = beyondNote(entry.originLanguage, line.beyond);
-    if (older) panel.append(el("div", "route beyond-note", older));
+    const card = (label: string, value: number, className = "podium-card"): HTMLElement => {
+      const node = el("div", className);
+      node.append(el("div", "value", String(value)), el("div", "label", label));
+      return node;
+    };
 
     // Say plainly whether the window caught the answer: it is the whole temporal
     // mechanic, and the only feedback that teaches where to place it. A coarse
@@ -353,10 +336,12 @@ async function boot(): Promise<void> {
     const answer = answerSpan(entry);
     const missed = outsideSpanYears(answer, guessed.start, guessed.end);
     const coarse = answer.to > answer.from;
-    panel.append(
+    const yearSide = el("div", "podium-side podium-year");
+    yearSide.append(card("Year Score", stored.temporal));
+    yearSide.append(
       el(
-        "div",
-        "route",
+        "p",
+        "podium-note",
         `Your window: ${rangeLabel(guessed.start, guessed.end)}. ${
           missed === 0
             ? coarse
@@ -366,11 +351,33 @@ async function boot(): Promise<void> {
         }`,
       ),
     );
-    // Explain the grading for an undated word, or a full score for an early window
-    // reads as the game being generous rather than the record being vague.
-    const spanNote = coarseSpanNote(entry.year, entry.yearTo, period);
-    if (spanNote) panel.append(el("div", "beyond-note", spanNote));
-    panel.append(el("p", "prompt", entry.blurb));
+    const mapSide = el("div", "podium-side podium-map");
+    mapSide.append(card("Map Score", stored.geographic));
+    mapSide.append(el("p", "podium-note", creditLabel(stored.credit)));
+
+    const podium = el("div", "podium");
+    podium.append(card("Round Score", stored.total, "podium-card podium-main"), yearSide, mapSide);
+    solution.append(podium);
+
+    // The route reads oldest-first and ends at English (`English reads left to
+    // right`), with the hop the player was asked about picked out — the chain can
+    // extend older than it.
+    const line = routeLine(entry.originChain, entry.originLanguage);
+    const routeEl = el("div", "solution-route");
+    routeEl.append(document.createTextNode("Route: "));
+    line.hops.forEach((hop, i) => {
+      if (i > 0) routeEl.append(el("span", "route-arrow", ROUTE_ARROW));
+      routeEl.append(
+        hop === entry.originLanguage
+          ? el("b", "hop-answer", hop)
+          : el("span", "route-hop", hop),
+      );
+    });
+    solution.append(routeEl);
+    const older = beyondNote(entry.originLanguage, line.beyond);
+    if (older) solution.append(el("div", "beyond-note", older));
+    panel.append(solution);
+
     // The answer's own span, on the timeline the player just used, is the clearest
     // possible statement of how close the window was.
     markAnswer(entry);

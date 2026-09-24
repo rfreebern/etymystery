@@ -190,29 +190,73 @@ button {
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 button.secondary { background: #2c3242; color: var(--ink); }
 
+/* The end-of-day summary averages. */
 .scores { display: flex; gap: 12px; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
 .score-chip { border-radius: 8px; padding: 8px 16px; background: #262c3b; text-align: center; min-width: 124px; }
 .score-chip .value { font-size: 26px; font-weight: 700; }
 .score-chip .label { font-size: 12px; color: var(--muted); }
 
-.credit-line { text-align: center; color: var(--muted); font-style: italic; }
-
-.route { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0; }
-/* The hop the player was asked about, in the route and in the answer line. */
+/* The hop the player was asked about, in the route line. */
 .hop-answer { color: var(--accent); }
-.beyond-note { font-size: 12px; opacity: 0.85; }
+.beyond-note { font-size: 12px; opacity: 0.85; text-align: center; }
 
-/* Reveal heading: the word medium, the answer larger — the answer is the point. */
+/* Reveal heading: the word in quiet type above the solution, which is the point. */
 .reveal-word {
   text-align: center; color: var(--muted);
   font-size: 19px; font-weight: 600; letter-spacing: 1.2px;
   margin-top: 2px;
 }
-.reveal-answer {
-  text-align: center; color: var(--ink);
-  font-size: clamp(26px, 4.6vw, 36px); font-weight: 700; letter-spacing: 0.2px;
-  margin: 2px 0 8px;
+
+/* The solution footer: the answer as the headline, the scores as a podium (the round
+   score centred above the two scores it is made of), each carrying the note that
+   explains it, and the route closing it. Colours are the palette the panel already
+   used: #262c3b cards on the --panel background, --ink text, --accent for the hop the
+   player was asked about. */
+.solution { display: flex; flex-direction: column; align-items: stretch; }
+.solution-answer {
+  text-align: center; font-size: clamp(44px, 7vw, 68px);
+  font-weight: 800; line-height: 1.05; overflow-wrap: anywhere;
 }
+.solution-date {
+  text-align: center; font-size: clamp(17px, 2.6vw, 27px); font-weight: 700;
+  margin-top: 4px;
+}
+.solution-blurb {
+  text-align: center; margin: 10px auto 0; max-width: 46rem;
+  font-size: clamp(15px, 2vw, 20px);
+}
+.solution-note { text-align: center; margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+
+.podium {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start; justify-items: center; gap: 0 24px;
+  width: 100%; max-width: 58rem; margin: 34px auto 0;
+}
+.podium-card { background: #262c3b; border-radius: 12px; text-align: center; padding: 24px 18px; }
+.podium-main { grid-column: 2; grid-row: 1; padding: 24px 20px; }
+.podium-main .value { font-size: clamp(48px, 8.4vw, 81px); font-weight: 800; line-height: 1; }
+.podium-main .label { margin-top: 8px; font-size: clamp(18px, 2.6vw, 26px); font-weight: 600; }
+/* The two scores the round score is made of sit low, beside it rather than under it. The
+   column is a flex box so the card keeps its own width instead of stretching to the
+   column, with its note centred underneath. */
+.podium-side {
+  grid-row: 1; margin-top: clamp(3rem, 10vw, 6.6rem);
+  display: flex; flex-direction: column; align-items: center;
+}
+.podium-year { grid-column: 1; }
+.podium-map { grid-column: 3; }
+.podium-side .value { font-size: clamp(32px, 5.6vw, 54px); font-weight: 800; line-height: 1; }
+.podium-side .label { margin-top: 8px; font-size: clamp(15px, 2.2vw, 22px); font-weight: 600; }
+.podium-note {
+  margin: 22px 0 0; width: 100%; max-width: 23rem; text-align: center;
+  font-style: italic; font-size: clamp(15px, 2.2vw, 18px); line-height: 1.35;
+}
+.solution-route {
+  text-align: center; margin: 44px auto 0; max-width: 46rem;
+  font-style: italic; font-weight: 600; font-size: clamp(16px, 2.6vw, 21px);
+}
+.route-arrow { color: var(--muted); font-style: normal; }
+.solution + .actions { margin-top: 20px; }
 
 
 .total-line { text-align: center; font-size: 28px; font-weight: 700; margin: 8px 0; }
@@ -222,6 +266,14 @@ button.secondary { background: #2c3242; color: var(--ink); }
      positioned labels), and the same information is already spelled out above the
      slider ("1450 – 1550 · Middle English · Early Modern"). */
   .timeline-scale { display: none; }
+
+  /* The podium stacks: the round score on top, the two it is made of beneath it. */
+  .podium { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .podium-main, .podium-side { grid-row: auto; }
+  .podium-main { grid-column: 1 / -1; }
+  .podium-year { grid-column: 1; }
+  .podium-map { grid-column: 2; }
+  .podium-side { margin-top: 18px; }
 }
 
 /* Attributions: present for licence compliance, quiet enough to ignore. */
