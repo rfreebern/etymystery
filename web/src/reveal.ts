@@ -68,10 +68,12 @@ export function beyondNote(answerLanguage: string, beyond: readonly string[]): s
  * How the answer's date reads. Many words have no precise date: the references say
  * "recorded in Old English" or "before 1150", which the bank stores as a span
  * (`year`..`yearTo`) rather than one invented year. The wording follows the data,
- * so the reveal never claims a precision the record does not have.
+ * so the reveal never claims a precision the record does not have. When the span
+ * covers a whole period exactly, name the period: that is what the record says.
  */
-export function answerYearLabel(year: number, yearTo?: number): string {
+export function answerYearLabel(year: number, yearTo?: number, period?: string): string {
   if (yearTo === undefined || yearTo <= year) return `first used around ${year}`;
+  if (period) return `recorded in the ${period} period (${year} – ${yearTo})`;
   return `first recorded between ${year} and ${yearTo}`;
 }
 
@@ -80,11 +82,11 @@ export function answerYearLabel(year: number, yearTo?: number): string {
  * Without this a player who guessed 700-800 on an undated word sees 100/100 and
  * cannot tell whether the window was right or the game was generous.
  */
-export function coarseSpanNote(year: number, yearTo?: number): string | null {
+export function coarseSpanNote(year: number, yearTo?: number, period?: string): string | null {
   if (yearTo === undefined || yearTo <= year) return null;
-  return (
-    `No source dates ${year === yearTo ? "it" : "this"} more exactly than “in use by ${yearTo}”, ` +
-    `so any window touching ${year} – ${yearTo} counts as a hit.`
-  );
+  const dated = period
+    ? `The sources date it only by period`
+    : `No source dates this more exactly than “in use by ${yearTo}”`;
+  return `${dated}, so any window touching ${year} – ${yearTo} counts as a hit.`;
 }
 

@@ -7,9 +7,10 @@
  */
 
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN } from "../src/timeline";
+import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, earliestEnglishEra } from "../src/timeline";
 import {
   auditCuration,
+  formatCuration,
   mergeCuration,
   parseWorklist,
   selectNextBatch,
@@ -67,6 +68,19 @@ export interface QueueItem {
   origin: string;
   /** Drafted but not checked against a reference by a human yet. */
   unverified: boolean;
+  /** `"chain-period"` when the span comes from the chain's own period, not a lookup. */
+  yearSource: string;
+  /**
+   * The span each recorded route implies, with the period it names. A homograph's
+   * routes are different words, so they carry different spans (or none).
+   */
+  routes: Array<{
+    origin: string;
+    chain: string[];
+    year: number | null;
+    yearTo: number | null;
+    period: string | null;
+  }>;
 }
 
 export interface AdminState {
@@ -109,23 +123,6 @@ export function readSkipWords(path: string): string[] {
 }
 
 /** The format the CLI writes: one word per line, `{ "year": ..., "tier": ... }`. */
-export function formatCuration(curation: Curation): string {
-  const words = Object.keys(curation).sort();
-  const lines = words.map((word) => {
-    const entry = curation[word]!;
-    const parts: string[] = [];
-    if (entry.year !== undefined) parts.push(`"year": ${entry.year}`);
-    if (entry.yearTo !== undefined) parts.push(`"yearTo": ${entry.yearTo}`);
-    if (entry.tier !== undefined) parts.push(`"tier": ${entry.tier}`);
-    if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
-    if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
-    if (entry.origin !== undefined) parts.push(`"origin": ${JSON.stringify(entry.origin)}`);
-    if (entry.unverified) parts.push(`"unverified": true`);
-    return `  ${JSON.stringify(word)}: { ${parts.join(", ")} }`;
-  });
-  return `{\n${lines.join(",\n")}\n}\n`;
-}
-
 export function writeBatch(path: string, batch: Curation): void {
   writeFileSync(path, formatCuration(batch));
 }
@@ -181,6 +178,8 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
   const worklist = readWorklist(paths.worklist);
   const bySense = new Map(worklist.map((candidate) => [candidate.sense, candidate]));
   const byWord = new Map(worklist.map((candidate) => [candidate.word, candidate]));
+  // Built before the queue: every card carries the span its routes imply.
+  const routesByWord = collectRoutes(worklist, paths.bank);
   const skipWords = readSkipWords(paths.skip);
 
   // The batch is keyed by WORD: the work list's other rows for the same word are
@@ -209,6 +208,20 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
       pos: entry.pos ?? "",
       origin: entry.origin ?? routeOrigin,
       unverified: Boolean(entry.unverified),
+      yearSource: entry.yearSource ?? "",
+      // The span each recorded route implies, so a curator picking the sense gets the
+      // dates for free: the routes of a homograph are different words (`back` the
+      // French loan vs the native word) and they do not share a period.
+      routes: (routesByWord.get(candidate?.word ?? wordOfSenseId(sense)) ?? []).map((route) => {
+        const era = earliestEnglishEra(route.chain);
+        return {
+          origin: route.origin,
+          chain: route.chain,
+          year: era?.from ?? null,
+          yearTo: era?.to ?? null,
+          period: era?.label ?? null,
+        };
+      }),
     };
   });
 
@@ -217,7 +230,7 @@ export function buildQueue(paths: AdminPaths, index = 0): AdminState {
     knownWords: new Set(worklist.map((candidate) => candidate.word)),
     bankWords: readBankWords(paths.bank),
     originsByWord: new Map(worklist.map((candidate) => [candidate.word, candidate.origins])),
-    routesByWord: collectRoutes(worklist, paths.bank),
+    routesByWord,
     yearFloor: ANSWER_YEAR_MIN,
     yearCeiling: ANSWER_YEAR_MAX,
   });

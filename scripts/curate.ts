@@ -12,12 +12,15 @@
  * "check" audits the file against the current work list and reports progress per
  * tier, which is what actually determines days of play.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
-import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN } from "../src/timeline";
+import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, earliestEnglishEra } from "../src/timeline";
 import { loadDrawableCountries } from "./lib/map-coverage";
+import { parseFrequencyList } from "./lib/frequency";
 import {
   auditCuration,
+  derivePeriodEntries,
+  formatCuration,
   mergeCuration,
   parseWorklist,
   selectNextBatch,
@@ -45,6 +48,7 @@ const { values } = parseArgs({
     limit: { type: "string", default: "25" },
     floor: { type: "string", default: String(ANSWER_YEAR_MIN) },
     ceiling: { type: "string", default: String(ANSWER_YEAR_MAX) },
+    frequency: { type: "string" },
   },
 });
 
@@ -54,24 +58,7 @@ function fail(message: string): never {
 }
 
 /** One entry in the hand-written style: `{ "year": 1590, "tier": 1, ... }`. */
-function formatEntry(entry: CurationEntryInput): string {
-  const parts: string[] = [];
-  if (entry.year !== undefined) parts.push(`"year": ${entry.year}`);
-  if (entry.tier !== undefined) parts.push(`"tier": ${entry.tier}`);
-  if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
-  if (entry.origin !== undefined) parts.push(`"origin": ${JSON.stringify(entry.origin)}`);
-  if (entry.unverified) parts.push(`"unverified": true`);
-  if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
-  return parts.length ? `{ ${parts.join(", ")} }` : "{}";
-}
-
 /** Match the hand-written style: one word per line, sorted. */
-function formatCuration(curation: Curation): string {
-  const words = Object.keys(curation).sort();
-  const lines = words.map((word) => `  ${JSON.stringify(word)}: ${formatEntry(curation[word]!)}`);
-  return `{\n${lines.join(",\n")}\n}\n`;
-}
-
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
 }
@@ -149,8 +136,8 @@ const limit = Number.parseInt(values.limit!, 10) || 25;
 const yearFloor = Number.parseInt(values.floor!, 10);
 const yearCeiling = Number.parseInt(values.ceiling!, 10);
 
-if (!["next", "merge", "check", "tier"].includes(mode)) {
-  fail(`--mode must be next | merge | check | tier, got "${mode}"`);
+if (!["next", "merge", "check", "tier", "derive"].includes(mode)) {
+  fail(`--mode must be next | derive | merge | check | tier, got "${mode}"`);
 }
 
 const curation = readJson<Curation>(values.curation!);
@@ -203,6 +190,39 @@ if (mode === "next") {
     `\nNow, for each word: check the chain against your reference, put the year English` +
       ` first used it in ${values.batch!}, then run --mode merge.`,
   );
+} else if (mode === "derive") {
+  // Words no source dates: the chain names an English stage, so the answer's span is
+  // that period. This is the batch the manual pass could not have reached.
+  const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
+  const candidatesByWord = new Map(candidates.map((candidate) => [candidate.word, candidate]));
+  const settled = settledSenseIds(curation, candidatesByWord);
+  const skip = readSkip(values.skip);
+  // Existing research is kept: derive adds, never replaces.
+  const existing = existsSync(values.batch!) ? readJson<Curation>(values.batch!) : {};
+  const result = derivePeriodEntries(candidates, { settled, skip, limit });
+  const batch: Curation = { ...existing, ...result.entries };
+  writeFileSync(values.batch!, formatCuration(batch));
+
+  const periods = new Map<string, number>();
+  for (const candidate of candidates) {
+    const era = earliestEnglishEra(candidate.chain);
+    if (era) periods.set(era.label, (periods.get(era.label) ?? 0) + 1);
+  }
+  console.log(
+    `drafted ${result.derived} entries from the period their chain records into ${values.batch!}`,
+  );
+  console.log(
+    `  by period: ${[...periods].map(([label, n]) => `${label} ${n}`).join(", ") || "none"}`,
+  );
+  console.log(
+    `  skipped: ${result.needsSense} words with several recorded origins (they need a human to` +
+      ` say which sense it is, and the routes imply different periods)`,
+  );
+  console.log(`  skipped: ${result.noPeriod} words whose chain names no English stage`);
+  console.log(
+    `\nThese need no reference lookup: the span IS what the chain claims. Check the chain, then` +
+      ` merge. For the words skipped above, use --mode next.`,
+  );
 } else if (mode === "merge") {
   const batch = readJson<Curation>(values.batch!);
   const { merged, added, skipped } = mergeCuration(curation, batch);
@@ -233,10 +253,21 @@ if (mode === "next") {
   // obscurity instead: rank the curated pool by word frequency and cut it into
   // ten equal slices. Rarest first-class entries land in tier 10.
   const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
+  // Rank from the frequency list when there is one: a curated word has LEFT the work
+  // list, so the work list cannot rank the very entries being tiered (they all fell
+  // to tier 10 as "unranked", which capped the bank at whatever the work list had).
   const rankOf = new Map(candidates.map((candidate) => [candidate.word, candidate.frequencyRank]));
+  if (values.frequency && existsSync(values.frequency)) {
+    const frequency = parseFrequencyList(readFileSync(values.frequency, "utf8"));
+    for (const key of Object.keys(curation)) {
+      const bare = key.split(":")[0] ?? key;
+      const rank = frequency.rankOf(bare);
+      if (rank !== undefined && rankOf.get(bare) === undefined) rankOf.set(bare, rank);
+    }
+  }
   const keys = Object.keys(curation).filter((key) => Number.isFinite(curation[key]!.year));
-  // Only words the work list ranks can enter the bank at all (an unranked word has
-  // no mappable chain). Letting those consume slice slots would skew every tier.
+  // Only words we can rank and that the pipeline can bank (a rank means the word has
+  // a mappable chain) enter a tier; the rest are unfinishable today.
   const ranked = keys.filter((key) => rankOf.get(key.split(":")[0] ?? key) !== undefined);
   const ordered = ranked.sort((a, b) => {
     const ra = rankOf.get(a.split(":")[0] ?? a)!;
@@ -288,6 +319,18 @@ if (mode === "next") {
     console.log(
       `\n${unverified.length} entries are marked "unverified" (drafted, not checked against a ` +
         `reference): ${unverified.join(", ")}`,
+    );
+  }
+  // A period-derived span needs no reference check: it is what the chain claims.
+  const periodic = Object.entries(curation)
+    .filter(([, entry]) => entry.yearSource === "chain-period")
+    .map(([word]) => word);
+  if (periodic.length) {
+    console.log(
+      `\n${periodic.length} entries take their span from the period their chain records ` +
+        `(no reference can narrow these): ${periodic.slice(0, 12).join(", ")}${
+          periodic.length > 12 ? ", …" : ""
+        }`,
     );
   }
 

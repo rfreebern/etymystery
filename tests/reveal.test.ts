@@ -170,5 +170,19 @@ describe("the answer's date wording", () => {
     // No em dashes in user-visible prose (the project's copy rule).
     expect(note).not.toContain("—");
   });
+
+  it("names the period when the span is exactly a period", () => {
+    // A span taken from the chain IS the period it names, so the reveal says so
+    // rather than printing the same two numbers with no explanation.
+    expect(answerYearLabel(1151, 1500, "Middle English")).toBe(
+      "recorded in the Middle English period (1151 – 1500)",
+    );
+    expect(coarseSpanNote(700, 1150, "Old English")).toBe(
+      "The sources date it only by period, so any window touching 700 – 1150 counts as a hit.",
+    );
+    // A period label without a span (or with a point span) must not be borrowed.
+    expect(answerYearLabel(1590, undefined, "Modern")).toBe("first used around 1590");
+    expect(coarseSpanNote(1590, undefined, "Modern")).toBeNull();
+  });
 });
 

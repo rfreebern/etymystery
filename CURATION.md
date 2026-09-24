@@ -84,6 +84,52 @@ the way, so nothing is lost), `1`–`9` jump to a source, `r` reloads it,
 fetches the reference sites itself — the iframes are just your browser loading
 pages you could open by hand.
 
+## 1c. Derive the words no source can date (the fast path)
+
+One word in six of the ranked list is *held* in English since a period no reference
+dates more precisely. For those there is nothing to look up, so there is nothing to
+research either: the chain names the period, and the span IS that period.
+
+    npm run curate -- --mode derive --limit 5000   # writes into the batch, keeps existing work
+
+Measured on the real lists: **490 entries drafted**, 482 in the Middle English period
+and 8 in Old English. Each one carries `"yearSource": "chain-period"` plus the span
+(`1151 – 1500`, or `700 – 1150`):
+
+```json
+"abbey": { "year": 1151, "yearTo": 1500, "tier": 4, "origin": "Ecclesiastical Latin", "yearSource": "chain-period" }
+```
+
+It deliberately **skips two classes**:
+
+- **11,214 words with several recorded origins.** A homograph's routes are different
+  words and imply different periods (`give` is 700–1150 as the native word and
+  1151–1500 as the Old Norse borrowing), so the span cannot be derived before a
+  human says which sense it is. In the admin app, picking a route fills its span in
+  for you and tells you which period it came from.
+- **21,559 words whose chain names no English stage.** Those are borrowings whose
+  first use is a real reference lookup (`algebra ← Medieval Latin`).
+
+So the loop for a derived batch is: open `npm run admin`, check the *chain* on each
+card (the span is trustworthy exactly as far as the chain is), press Enter. No
+reference, no typing. Words the data marks as never-verified-by-a-human
+(`"unverified": true`) are a different flag and still need their date checked.
+
+Then rebalance and build:
+
+    npm run curate -- --mode tier --frequency data/en-frequency.txt
+    npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
+      --languages data/languages.tsv --curation curated/curation.json \
+      --out data/word-bank.json --version 3 --epoch-start 2026-09-21 \
+      --frequency data/en-frequency.txt --exclude-origin en,ang,enm
+
+`--frequency` matters here: a curated word has *left* the work list, so the work list
+cannot rank the very entries being tiered. Without it every derived word fell to tier
+10 as "unranked" and capped the bank. With it, 385 of 609 entries get a real rank and
+the bank went from **10 days of play to 36**.
+
+
+
 ## 2. Research each word
 
 For every word in the batch:
@@ -135,11 +181,17 @@ Instead state the span the record allows:
 - `yearTo` is the **upper bound**: the year by which the word was in use.
 - Leave `yearTo` off, or equal to `year`, for a normally dated word. Nothing else
   changes for those.
+- You rarely type this by hand: `--mode derive` fills it in for every word whose chain
+  names an English period (see "1c. Derive the words no source can date"), and the
+  admin app fills it in when you pick a route. Those entries carry
+  `"yearSource": "chain-period"`, which tells the tools that no reference lookup is
+  pending for them.
 
 The game then scores any 100-year window **overlapping** the span as a full hit and
-decays by the gap to the nearer end, the reveal reads `first recorded between 700
-and 1150` with a note saying why, and the timeline draws the answer as a **band**
-across those years instead of a dot on one. `give` measured end to end: windows
+decays by the gap to the nearer end; when the span is a whole period exactly, the
+reveal names it (`recorded in the Middle English period (1151 – 1500)`) with a note
+saying why, and the timeline draws the answer as a **band** across those years
+instead of a dot on one. `give` measured end to end: windows
 700-1200 all score 100, 1200-1300 scores 61, 1300-1400 scores 22.
 
 In the admin app this is the "Only dated as *in use by* a year?" field under the

@@ -6,7 +6,12 @@
 import { ROUNDS_PER_DAY, validateBank } from "../../src/bank";
 import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
 import { answerSpan } from "../../src/scoring";
-import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, sliderStartBounds } from "../../src/timeline";
+import {
+  ANSWER_YEAR_MAX,
+  ANSWER_YEAR_MIN,
+  periodOfSpan,
+  sliderStartBounds,
+} from "../../src/timeline";
 import { feature } from "topojson-client";
 import type { BankEntry, WordBank } from "../../src/types";
 import { createGeocodeContext, toCountryFeatures } from "./geo-context";
@@ -302,7 +307,12 @@ async function boot(): Promise<void> {
     );
     const answerLine = el("div", "reveal-answer");
     answerLine.append(el("b", "hop-answer", entry.originLanguage));
-    answerLine.append(document.createTextNode(` · ${answerYearLabel(entry.year, entry.yearTo)}`));
+    // A span that covers a whole period exactly is named as that period: it is what
+    // the record actually says, and better reading than two bare years.
+    const period = periodOfSpan(answerSpan(entry))?.label;
+    answerLine.append(
+      document.createTextNode(` · ${answerYearLabel(entry.year, entry.yearTo, period)}`),
+    );
     panel.append(answerLine);
 
     const scores = el("div", "scores");
@@ -356,7 +366,7 @@ async function boot(): Promise<void> {
     );
     // Explain the grading for an undated word, or a full score for an early window
     // reads as the game being generous rather than the record being vague.
-    const spanNote = coarseSpanNote(entry.year, entry.yearTo);
+    const spanNote = coarseSpanNote(entry.year, entry.yearTo, period);
     if (spanNote) panel.append(el("div", "beyond-note", spanNote));
     panel.append(el("p", "prompt", entry.blurb));
     // The answer's own span, on the timeline the player just used, is the clearest

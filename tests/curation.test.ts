@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   auditCuration,
   composeSenseKey,
+  derivePeriodEntries,
+  formatCuration,
   mergeCuration,
   parseSenseKey,
   parseWorklist,
@@ -9,6 +11,7 @@ import {
   settledSenseIds,
   wordOfSenseId,
   type Curation,
+  type WorklistCandidate,
 } from "../scripts/lib/curation";
 import { bestPossibleTemporal } from "../src/timeline";
 import { scoreTemporalRange } from "../src/scoring";
@@ -342,4 +345,127 @@ describe("a year that contradicts its own chain", () => {
 });
 
 });
+
+
+describe("the curation file format", () => {
+  it("round-trips every field, so no writer can silently drop one", () => {
+    // This is the test that was missing: the CLI's writer omitted `yearTo`, so a
+    // coarse span became a fabricated point the moment it was merged. Both writers
+    // are one function now, and this is what keeps it complete.
+    const curation: Curation = {
+      "back:noun": {
+        year: 1000,
+        yearTo: 1150,
+        tier: 6,
+        blurb: "From Old English bæc, 'back'.",
+        pos: "noun",
+        origin: "Old English",
+        unverified: true,
+      },
+      give: { year: 700, yearTo: 1150, tier: 3, origin: "Old English", yearSource: "chain-period" },
+    };
+    const written = formatCuration(curation);
+    expect(JSON.parse(written)).toEqual(curation);
+    // A period-derived span keeps its provenance, which is what tells the tools it
+    // needs no reference check at all.
+    expect(written).toContain('"yearSource": "chain-period"');
+    expect(written).toContain('"yearTo": 1150');
+    // And the format is stable: writing it again changes nothing.
+    expect(formatCuration(JSON.parse(written))).toBe(written);
+  });
+
+  it("drops nothing when a span is the only unusual field", () => {
+    const merged = mergeCuration({}, { give: { year: 700, yearTo: 1150 } });
+    expect(JSON.parse(formatCuration(merged.merged))).toEqual(merged.merged);
+    expect(merged.merged.give).toEqual({ year: 700, yearTo: 1150 });
+  });
+});
+
+describe("deriving spans from the chain's period", () => {
+  // One word in six of the ranked list is this shape: held in English since a period
+  // no reference dates more precisely. The span IS the chain's claim, so nothing
+  // needs looking up — which is what makes them curatable at volume.
+  const candidate = (over: Partial<WorklistCandidate> & { word: string }): WorklistCandidate => ({
+    origin: "Old French",
+    sense: over.word,
+    tier: 4,
+    chainDepth: 2,
+    deepestLanguage: "Old French",
+    chain: ["Middle English", "Old French"],
+    origins: ["Old French"],
+    ...over,
+  });
+
+  it("takes the span from the period the chain records", () => {
+    const { entries, derived } = derivePeriodEntries(
+      [candidate({ word: "abbey", chain: ["Middle English", "Late Latin"], origin: "Late Latin" })],
+      {},
+    );
+    expect(derived).toBe(1);
+    expect(entries.abbey).toEqual({
+      year: 1151,
+      yearTo: 1500,
+      tier: 4,
+      origin: "Late Latin",
+      yearSource: "chain-period",
+      blurb: "",
+    });
+  });
+
+  it("uses the Old English period when the chain reaches back that far", () => {
+    const { entries } = derivePeriodEntries(
+      [candidate({ word: "candle", chain: ["Old English"], origin: "Old English" })],
+      {},
+    );
+    expect(entries.candle).toMatchObject({ year: 700, yearTo: 1150, yearSource: "chain-period" });
+  });
+
+  it("leaves words alone that a reference CAN date", () => {
+    // No English stage in the chain: the word is a borrowing whose first use is a
+    // real lookup, and the period rule has nothing to say about it.
+    const { entries, derived, noPeriod } = derivePeriodEntries(
+      [candidate({ word: "algebra", chain: ["Medieval Latin"], origin: "Medieval Latin" })],
+      {},
+    );
+    expect(derived).toBe(0);
+    expect(noPeriod).toBe(1);
+    expect(entries).toEqual({});
+  });
+
+  it("refuses to choose a sense for a homograph", () => {
+    // `back` is a different word per route, and the routes imply different periods,
+    // so the span cannot be derived before a human says which sense it is.
+    const { derived, needsSense, entries } = derivePeriodEntries(
+      [
+        candidate({
+          word: "back",
+          origins: ["Middle French", "Old English"],
+          chain: ["Middle French"],
+          origin: "Middle French",
+        }),
+      ],
+      {},
+    );
+    expect(derived).toBe(0);
+    expect(needsSense).toBe(1);
+    expect(entries).toEqual({});
+  });
+
+  it("respects what is settled, skipped, and the limit", () => {
+    const rows = [
+      candidate({ word: "one", chain: ["Middle English"] }),
+      candidate({ word: "two", chain: ["Middle English"] }),
+      candidate({ word: "three", chain: ["Middle English"] }),
+      candidate({ word: "four", chain: ["Middle English"] }),
+    ];
+    const { entries, derived } = derivePeriodEntries(rows, {
+      settled: new Set(["one"]),
+      skip: new Set(["two"]),
+      limit: 2,
+    });
+    expect(Object.keys(entries)).toEqual(["three", "four"]);
+    expect(derived).toBe(2);
+  });
+});
+
 

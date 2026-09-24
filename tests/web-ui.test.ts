@@ -184,14 +184,14 @@ describe("the reveal heading", () => {
   it("drops the 'Answer:' prefix", () => {
     expect(main).not.toContain("Answer: ");
     // The wording lives in reveal.ts so the coarse/precise distinction is testable.
-    expect(main).toContain("answerYearLabel(entry.year, entry.yearTo)");
+    expect(main).toContain("answerYearLabel(entry.year, entry.yearTo, period)");
     expect(literals(reveal).some((s) => s.includes("first used around"))).toBe(true);
   });
 
   it("says which kind of date the answer has, and why it was graded that way", () => {
     // A full score for an early window on an undated word reads as the game being
     // generous unless the reveal says the record is vague.
-    expect(main).toContain("coarseSpanNote(entry.year, entry.yearTo)");
+    expect(main).toContain("coarseSpanNote(entry.year, entry.yearTo, period)");
     expect(main).toContain("outsideSpanYears(answer, guessed.start, guessed.end)");
     expect(main).toContain("The answer's recorded span overlaps it");
   });

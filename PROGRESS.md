@@ -4,13 +4,15 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-21, session 12)
+## Status (as of 2026-09-21, session 13)
 
 Engine + pipeline + web client COMPLETE, published at
 <https://rfreebern.github.io/etymystery/> (GitHub Pages, auto-deployed from
-`main`): 299/299 tests passing, typecheck clean, static build green. The bank is
+`main`): 313/313 tests passing, typecheck clean, static build green. The bank is
 110 entries / 10 days from 119 curated words, all flagged `unverified` until a
-human checks the dates against a reference. Session 12 made an answer a **span**:
+human checks the dates against a reference; a derived batch of 490 more is waiting
+for a chain check (see session 13), which takes the same curation to 600 entries and
+36 days. Session 13 automated the dates no reference has. Session 12 made an answer a **span**:
 words no source dates past a period ("recorded in Old English", "in use by 1150")
 are curated as `year` + `yearTo` and scored by overlap, instead of forcing a
 fabricated year that would decide the player's score by coin flip. Earlier
@@ -826,7 +828,7 @@ on-land anchors** (this batch)
 
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 299 passed (20 files)
+    npx vitest run            # 313 passed (20 files)
     npx vite build web        # 68.7 kB js (23.6 kB gzip) / 5.5 kB css (1.8 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 312 languages, 0 overlay typos
@@ -851,6 +853,46 @@ on-land anchors** (this batch)
 1. Curate more — the loop is in CURATION.md. The bank is now 110 entries / 10 days
    from 119 curated words, all of them `unverified` drafts. Two jobs, in order:
    a. **Verify the drafts.** `npm run curate -- --mode check` lists them;
+**Session 13 — deriving the dates no reference has** (this batch)
+
+- Reported: the manual loop is too slow. The reframe that made it tractable: the
+  bottleneck is not typing years, it is *verifying* them — and for the words being hit,
+  verification is impossible by construction. "pre-12th century" is Merriam-Webster's
+  own *First Known Use* wording: MW only knows the period too.
+- **A consistency guard first** (`earliestEnglishEra`): a chain naming an English stage
+  claims the word was already IN English by then, so a later year refutes itself. The
+  audit matches the entry's own route (a homograph's other routes are different
+  senses). Verified against the shipped bank: 38 of 110 entries have an English stage
+  in their chain and none contradicts its year.
+- **Lever A — derive the span from the chain's period.** `npm run curate -- --mode
+  derive` drafts an entry for every word whose chain names an English period, with the
+  span set to that period and `"yearSource": "chain-period"`. On the real lists: **490
+  entries** (482 Middle English, 8 Old English) with zero research, skipping two
+  classes on purpose: 11,214 homographs (their routes imply *different* periods, so a
+  human must pick the sense first) and 21,559 words whose chain names no English stage
+  (real lookups).
+- End to end on the real data: derive → merge → `--mode tier` → build gives **600
+  curated entries** and, once tiers are balanced, **36 days of play instead of 10**.
+- The admin app closes the remaining gap: picking a route fills in the span that route
+  implies (route → period → dates, computed server-side so the client keeps no era
+  table), and the provenance line says the span came from the chain, with the checkbox
+  meaning "I checked the chain this span comes from".
+- The reveal names the period (`recorded in the Middle English period (1151 – 1500)`)
+  rather than printing the same two numbers the band already shows.
+- **Bug found and fixed while verifying: the CLI's writer silently dropped `yearTo`**,
+  so every coarse span became a fabricated point the moment it was merged. The format
+  now has ONE writer (`formatCuration` in scripts/lib/curation.ts, used by both the CLI
+  and the app) and a round-trip test that would have caught it. Two writers had drifted.
+- **Bug found by tests: the homograph check must precede the period check.** A
+  homograph's sampled route may have no English stage, which silently reclassified it
+  as "no period" instead of "needs a sense decision".
+- **`--mode tier` could not rank curated words.** They have left the work list, so they
+  all fell to tier 10 as "unranked" and capped the bank at whatever the work list held
+  (28 days). It now takes `--frequency data/en-frequency.txt`: 385 of 609 entries get a
+  real rank, and the capacity went 28 → 38 days.
+- tests: 313 total (+6).
+
+
       `npm run admin` shows each word beside Etymonline/Wiktionary/Ngrams so the
       date can be confirmed in one screen. Tick "checked against a reference" to
       clear the flag. This is the highest-value work: the years are claims, and
@@ -1083,3 +1125,11 @@ on-land anchors** (this batch)
   the nearest end, and the curation tools must accept, validate and persist the
   bound. `answerSpan()` (a zero-width span for a single year) is what keeps the two
   shapes from forking into separate code paths.
+- A file format written by two functions WILL drift, and the loss is silent: the CLI's
+  writer omitted `yearTo`, so merging turned every coarse span into a fabricated point.
+  One writer per format, plus a round-trip test asserting every field survives — the
+  test that was missing.
+- Any check or tool that reads the *work list* is blind to already-curated words:
+  curating removes a word from it. The audit, the period guard and `--mode tier` all
+  had this hole at once (tiering put 320 curated words in tier 10 as "unranked"). Read
+  chains from the bank, ranks from the frequency list, or the tool measures nothing.

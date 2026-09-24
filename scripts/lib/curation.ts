@@ -12,7 +12,8 @@
  * the whole project (see CURATION.md).
  */
 
-import { bestPossibleTemporal, earliestEnglishEra } from "../../src/timeline";
+import { answerSpan } from "../../src/scoring";
+import { bestPossibleTemporal, earliestEnglishEra, periodOfSpan } from "../../src/timeline";
 
 export interface CurationEntryInput {
   year?: number;
@@ -24,6 +25,14 @@ export interface CurationEntryInput {
    * year makes the player's score depend on the curator's coin flip.
    */
   yearTo?: number;
+  /**
+   * Why the entry has a span rather than a looked-up date. `"chain-period"` means it
+   * was taken from the period the word's own recorded chain names: `give` was in
+   * English by Old English, so the answer IS the Old English period. There is
+   * nothing a reference could narrow, so these need no reference check at all — and
+   * inventing a year for them would make the player's score depend on a coin flip.
+   */
+  yearSource?: "chain-period";
   tier?: number;
   blurb?: string;
   /**
@@ -191,6 +200,87 @@ export function parseWorklist(text: string): WorklistCandidate[] {
  * `settled` holds the sense ids the curation file already covers, so finishing
  * the noun of a homograph leaves its verb in the queue.
  */
+/**
+ * The curation file format, shared by the CLI and the admin app.
+ *
+ * It lives here, in one place, because it was duplicated before and one copy silently
+ * lost a field: the CLI's writer omitted `yearTo`, so every coarse span became a
+ * fabricated point the moment it was merged. A format needs one writer, and the
+ * round-trip test in tests/curation.test.ts is what keeps it honest.
+ */
+export function formatCuration(curation: Curation): string {
+  const words = Object.keys(curation).sort();
+  const lines = words.map((word) => {
+    const entry = curation[word]!;
+    const parts: string[] = [];
+    if (entry.year !== undefined) parts.push(`"year": ${entry.year}`);
+    if (entry.yearTo !== undefined) parts.push(`"yearTo": ${entry.yearTo}`);
+    if (entry.tier !== undefined) parts.push(`"tier": ${entry.tier}`);
+    if (entry.blurb !== undefined) parts.push(`"blurb": ${JSON.stringify(entry.blurb)}`);
+    if (entry.pos !== undefined) parts.push(`"pos": ${JSON.stringify(entry.pos)}`);
+    if (entry.origin !== undefined) parts.push(`"origin": ${JSON.stringify(entry.origin)}`);
+    if (entry.unverified) parts.push(`"unverified": true`);
+    if (entry.yearSource) parts.push(`"yearSource": ${JSON.stringify(entry.yearSource)}`);
+    return `  ${JSON.stringify(word)}: { ${parts.join(", ")} }`;
+  });
+  return `{\n${lines.join(",\n")}\n}\n`;
+}
+
+/**
+ * Draft entries for words no source can date: when a word's recorded chain names an
+ * English stage, it was already in English by then, so its answer's span IS that
+ * period — 700-1150 for Old English, 1151-1500 for Middle English. One word in six
+ * of the ranked list is this shape, which is why hand-dating them was the bottleneck.
+ *
+ * These entries carry `yearSource: "chain-period"`: the span is not a lookup, it is
+ * the chain's own claim, so there is nothing a reference could confirm.
+ *
+ * Only single-route words are drafted. A word with several recorded routes needs a
+ * human to say which sense it is FIRST (the routes often imply different periods:
+ * `give` is 700-1150 as the native word and 1151-1500 as the Old Norse borrowing),
+ * and that decision must never be made on the curator's behalf.
+ */
+export function derivePeriodEntries(
+  candidates: readonly WorklistCandidate[],
+  options: { settled?: ReadonlySet<string>; skip?: ReadonlySet<string>; limit?: number },
+): { entries: Curation; derived: number; needsSense: number; noPeriod: number } {
+  const settled = options.settled ?? new Set<string>();
+  const skip = options.skip ?? new Set<string>();
+  const entries: Curation = {};
+  const seen = new Set<string>();
+  let derived = 0;
+  let needsSense = 0;
+  let noPeriod = 0;
+  for (const candidate of candidates) {
+    if (options.limit !== undefined && derived >= options.limit) break;
+    if (seen.has(candidate.word)) continue; // one card per word, as everywhere else
+    if (settled.has(candidate.word) || skip.has(candidate.word)) continue;
+    seen.add(candidate.word);
+    // A homograph is decided FIRST: its routes are different words, so the period one
+    // of them implies does not apply to the sense the curator will pick. Deriving
+    // before asking would pin a span to a sense nobody chose.
+    if (candidate.origins.length > 1) {
+      needsSense += 1;
+      continue;
+    }
+    const era = earliestEnglishEra(candidate.chain);
+    if (!era) {
+      noPeriod += 1; // borrowed with no English stage recorded: needs a reference
+      continue;
+    }
+    entries[candidate.word] = {
+      year: era.from,
+      yearTo: era.to,
+      tier: candidate.tier,
+      ...(candidate.origin ? { origin: candidate.origin } : {}),
+      yearSource: "chain-period",
+      blurb: "",
+    };
+    derived += 1;
+  }
+  return { entries, derived, needsSense, noPeriod };
+}
+
 export function selectNextBatch(
   candidates: readonly WorklistCandidate[],
   options: { settled?: ReadonlySet<string>; skip?: ReadonlySet<string>; limit: number },
@@ -422,6 +512,13 @@ export function mergeCuration(
     // year, and a backwards pair is a data error the audit reports.
     if (entry.yearTo !== undefined && Math.round(entry.yearTo) > cleaned.year!) {
       cleaned.yearTo = Math.round(entry.yearTo);
+    }
+    // The provenance only travels with a span that really is a period's own bounds,
+    // so the flag can never claim more than the data says.
+    // The provenance only travels with a span that really is a period's own bounds,
+    // so the flag can never claim more than the data says.
+    if (entry.yearSource === "chain-period" && periodOfSpan(answerSpan({ year: cleaned.year!, yearTo: cleaned.yearTo }))) {
+      cleaned.yearSource = "chain-period";
     }
     if (entry.tier !== undefined) cleaned.tier = entry.tier;
     if (entry.blurb?.trim()) cleaned.blurb = entry.blurb.trim();

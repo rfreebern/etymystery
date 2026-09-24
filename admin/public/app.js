@@ -61,6 +61,15 @@ function issuesFor(word) {
   return (state.issues || []).filter((issue) => issue.word === word).map((issue) => issue.problem);
 }
 
+/**
+ * The recorded route for an origin, as the server computed it (with the span it
+ * implies). The client holds no era table of its own: `src/timeline.ts` owns that,
+ * and a second copy here would drift from it.
+ */
+function routeFor(origin) {
+  return (current()?.routes || []).find((route) => route.origin === origin);
+}
+
 async function load(index = 0) {
   state = await api(`/api/state?index=${index}`);
   yearFloor = state.yearFloor;
@@ -160,12 +169,18 @@ function render() {
             (origin) =>
               `<label class="origin-option"><input type="radio" name="origin" value="${origin}"${
                 origin === item.origin ? " checked" : ""
-              } /> ${origin}</label>`,
+              } /> ${origin}${
+                routeFor(origin)?.period ? ` <span class="muted">· ${routeFor(origin).period}</span>` : ""
+              }</label>`,
           )
           .join("")}
       </div>
       <div class="muted">${item.origins.length} recorded origins for ${item.word}. Leaving this unpicked
-        makes the build fall back to a tie-break guess, so it has to be chosen.</div>
+        makes the build fall back to a tie-break guess, so it has to be chosen.${
+          item.routes.some((route) => route.period)
+            ? " If a route names an English period, picking it fills the span in for you."
+            : ""
+        }</div>
     </div>`
         : ""
     }
@@ -212,12 +227,20 @@ function render() {
     <div class="field">
       <label for="verified">Provenance</label>
       <div class="row">
-        <label class="verify"><input id="verified" type="checkbox" ${
-          item.unverified ? "" : "checked"
-        } /> I checked this date against a reference</label>
+        ${
+          item.yearSource === "chain-period"
+            ? `<label class="verify"><input id="verified" type="checkbox" ${
+                item.unverified ? "" : "checked"
+              } /> I checked the chain this span comes from</label>
+        <span class="muted">span taken from the period the chain records: no reference can
+          narrow it, so there is no date to look up</span>`
+            : `<label class="verify"><input id="verified" type="checkbox" ${
+                item.unverified ? "" : "checked"
+              } /> I checked this date against a reference</label>
         <span class="muted">${
           item.unverified ? "currently marked unverified: a drafted date" : "recorded as verified"
-        }</span>
+        }</span>`
+        }
       </div>
     </div>
     <div class="field">
@@ -253,6 +276,18 @@ function render() {
       event.preventDefault();
       void save({ advance: !event.shiftKey }); // Shift+Enter saves without moving on
     }
+  });
+  // Picking the sense fills the span its route implies: for a word no source dates,
+  // the period IS the answer, and typing two years by hand is where mistakes creep in.
+  document.querySelectorAll('input[name="origin"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      dirty = true;
+      const route = routeFor(radio.value);
+      if (!route?.period || Number(el("year").value) > 0) return;
+      el("year").value = route.year;
+      el("year-to").value = route.yearTo;
+      status(`span from the chain: ${route.period} (${route.year} – ${route.yearTo})`);
+    });
   });
   el("blurb").addEventListener("input", () => (dirty = true));
   el("pos").addEventListener("input", () => {

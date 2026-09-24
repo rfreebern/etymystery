@@ -7,7 +7,6 @@ import { REFERENCE_SOURCES, sourcesFor } from "../admin/sources";
 import {
   DEFAULT_PATHS,
   buildQueue,
-  formatCuration,
   mergeBatch,
   pullNextBatch,
   saveEntry,
@@ -15,6 +14,7 @@ import {
   type AdminPaths,
 } from "../admin/store";
 import { createAdminServer } from "../admin/server";
+import { formatCuration } from "../scripts/lib/curation";
 
 /** A throwaway data dir plus the work list the app reads. */
 function makeWorkspace(): AdminPaths {
@@ -320,12 +320,40 @@ describe("coarse answer spans in the admin app", () => {
     expect(plain.queue.find((item) => item.sense === "money")!.yearTo).toBe(0);
   });
 
+  it("carries the span each recorded route implies, so the sense pick fills the dates", () => {
+    // `back`'s two routes are two different words: the Old English one is the native
+    // word (in English by the Old English period), the French one is a loan, and no
+    // source can date it by period. The card offers both, and the curator's pick
+    // decides which span applies — the client must not guess.
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 10);
+    const back = buildQueue(paths).queue.find((item) => item.word === "back")!;
+    const byOrigin = new Map(back.routes.map((route) => [route.origin, route]));
+    expect(byOrigin.get("Old English")).toMatchObject({
+      year: 700,
+      yearTo: 1150,
+      period: "Old English",
+    });
+    expect(byOrigin.get("Middle French")).toMatchObject({ year: null, yearTo: null, period: null });
+    // A word whose chain does name a period offers it even without a homograph, and
+    // one whose chain names no English stage offers nothing.
+    const money = buildQueue(paths).queue.find((item) => item.word === "money")!;
+    expect(money.routes[0]).toMatchObject({ period: "Middle English", year: 1151, yearTo: 1500 });
+    const must = buildQueue(paths).queue.find((item) => item.word === "must")!;
+    expect(must.routes.every((route) => route.period === null)).toBe(true);
+  });
+
   it("offers the span field in the client, with the rule that explains it", () => {
     // app.js is plain JS: nothing typechecks it, so its wiring is asserted here.
     const client = readFileSync("admin/public/app.js", "utf8");
     expect(client).toContain('el("year-to")');
     expect(client).toContain("yearTo:");
     expect(client).toContain("in use by");
+    // Picking a route fills its span, and the client reads it from the server rather
+    // than keeping an era table of its own.
+    expect(client).toContain("routeFor(radio.value)");
+    expect(client).toContain("span from the chain");
+    expect(client).not.toContain("Old English\", from:");
   });
 });
 

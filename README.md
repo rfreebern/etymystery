@@ -71,7 +71,7 @@ file host serves the whole game.
     npm run preview        # serve the built site
     npm run build:seed     # rebuild web/public/word-bank.json from curated/
     npm run gen:countries  # regenerate web/src/countries.json
-    npm run curate -- --mode next|check|merge   # see CURATION.md for the process
+    npm run curate -- --mode next|derive|merge|check|tier  # see CURATION.md for the process
     npm run admin          # local curation UI: word on the left, references on the right
     npm run bootstrap:languages -- \
       --codes data/wiktionary_codes.csv \
@@ -204,8 +204,10 @@ Inputs:
    second sense of the same part of speech (a word like `sole` has four recorded
    origins), with `pos` and `origin` fields saying which sense it is. A word no
    source dates precisely takes a **span** (`year` + `yearTo`, meaning "first used
-   somewhere in here") instead of a fabricated year — see
-   [CURATION.md](CURATION.md).
+   somewhere in here") instead of a fabricated year — and for the one word in six
+   whose chain names an English period, `npm run curate -- --mode derive` writes that
+   span for you, marked `"yearSource": "chain-period"` because no reference lookup is
+   possible or pending. See [CURATION.md](CURATION.md).
 
 The full dataset never fits in memory comfortably, so filter it once to the
 edges a bank build can use:
