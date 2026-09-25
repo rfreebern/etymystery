@@ -30,7 +30,9 @@ body {
 }
 
 .topbar h1 { font-size: 20px; margin: 0; letter-spacing: 0.5px; }
-#day-label { color: var(--muted); font-size: 14px; }
+/* Two stacked lines: which puzzle this is, and how long until the next one turns over. */
+#day-label { display: flex; flex-direction: column; gap: 1px; color: var(--muted); font-size: 14px; }
+#day-label .countdown { font-size: 12px; opacity: 0.9; }
 
 main {
   flex: 1;
@@ -318,3 +320,8 @@ button.secondary { background: #2c3242; color: var(--ink); }
   overflow-x: auto; max-width: 100%;
 }
 .share .muted { font-size: 12px; min-height: 1em; }
+
+/* The success page's one outbound line: a suggestion, so it stays quiet and last. */
+.more-puzzles { margin: 20px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
+.more-puzzles a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.more-puzzles a:hover { color: var(--accent); }

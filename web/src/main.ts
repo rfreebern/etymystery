@@ -26,6 +26,7 @@ import {
   yearPositionPct,
 } from "./slider";
 import { ROUTE_ARROW, answerYearLabel, beyondNote, coarseSpanNote, routeLine } from "./reveal";
+import { TURNOVER_LABEL, countdownLabel } from "./countdown";
 import { scoreBand, scoreEmoji, shareText } from "./share";
 import { ZOOM_STEP } from "./view";
 import { hintsFor, isTouchFirst } from "./copy";
@@ -105,9 +106,41 @@ async function boot(): Promise<void> {
   // The player picks a 100-year window; 1800–1900 is an arbitrary, neutral start.
   let guess: StoredGuess = { yearStart: 1800, yearEnd: 1900, point: null };
 
+  /** The top bar: which puzzle this is, and the clock to the next one. */
   function renderDayLabel(): void {
-    document.getElementById("day-label")!.textContent =
+    document.getElementById("puzzle-line")!.textContent =
       `Puzzle ${dayIndex + 1} of bank v${bank.version} · ${dateLabel(utcMs)} UTC`;
+  }
+
+  /** Set once the day is finished, so a turnover has no round in progress to lose. */
+  let dayFinished = false;
+  /** Set once the page has noticed the day turn over while it was open. */
+  let turnOverPending = false;
+
+  /**
+   * The top bar's clock, one second at a time.
+   *
+   * The countdown is not decoration: midnight UTC is the moment `dayIndexFor` advances, and
+   * the page has to notice. Reloading the instant it turns would yank a half-played round
+   * from under the player (the guess on screen is not stored until it is scored), so a
+   * turnover during play waits instead: the line says a new puzzle is ready, and
+   * `renderSummary` reloads once the day is finished. A player who is already done is
+   * reloaded straight away, which is the case the countdown is really for.
+   */
+  function tickCountdown(): void {
+    const now = Date.now();
+    const label = document.getElementById("countdown");
+    if (!label) return;
+    if (Math.max(0, dayIndexFor(bank, now)) === dayIndex) {
+      label.textContent = countdownLabel(now);
+      return;
+    }
+    turnOverPending = true;
+    if (dayFinished) {
+      window.location.reload();
+      return;
+    }
+    label.textContent = TURNOVER_LABEL;
   }
 
   /** Timeline nodes for the round on screen, so the reveal can mark the answer. */
@@ -412,6 +445,8 @@ async function boot(): Promise<void> {
   function renderSummary(): void {
     const summary = summarize(session);
     app.replaceChildren();
+    // No round is in progress from here, so a turnover may reload the page.
+    dayFinished = true;
 
     const panel = el("div", "panel");
     panel.append(el("div", "total-line", `${summary.total} / 100`));
@@ -506,10 +541,24 @@ async function boot(): Promise<void> {
     });
     actions.append(reset);
     panel.append(actions);
+
+    // One outbound line, below everything: it is a suggestion, not part of the result.
+    const more = el("p", "more-puzzles");
+    const moreLink = el("a", undefined, "WordLadder") as HTMLAnchorElement;
+    moreLink.href = "https://wordladder.fun";
+    more.append(document.createTextNode("Looking for more daily word puzzles? Try "), moreLink);
+    panel.append(more);
+
     app.append(panel);
+
+    // The day turned over while this page was open and a round was still being played;
+    // now that the day is finished, go and fetch the new puzzle.
+    if (turnOverPending) window.location.reload();
   }
 
   renderDayLabel();
+  tickCountdown();
+  window.setInterval(tickCountdown, 1_000);
   renderRound();
 }
 

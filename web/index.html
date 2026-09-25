@@ -12,7 +12,11 @@
   <body>
     <header class="topbar">
       <h1>Etymystery</h1>
-      <div id="day-label"></div>
+      <!-- Two lines: which puzzle this is, and when the next one turns over. -->
+      <div id="day-label">
+        <span id="puzzle-line"></span>
+        <span id="countdown" class="countdown"></span>
+      </div>
     </header>
     <main id="app">
       <noscript>Etymystery needs JavaScript.</noscript>

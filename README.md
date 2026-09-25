@@ -112,6 +112,13 @@ file host serves the whole game.
 Each round: drop a pin where the word came from, place the year window on the
 timeline, lock it in.
 
+The top bar names the puzzle and its date, with a live countdown to the next one:
+the sequence is keyed on UTC days, so midnight UTC is the turnover, and the page
+notices (`web/src/countdown.ts` holds the wording and the arithmetic; the page reloads
+into the new day, or waits for the round in progress to finish rather than pulling it
+out from under the player). The end-of-day summary ends with one outbound line to
+another daily puzzle.
+
 **The map** zooms and pans: scroll to zoom (toward the cursor), drag to pan,
 double-click to zoom in, **two fingers to pinch** on a touch screen, and
 `+` / `−` / `Reset` sit in the map's corner. A drag is never mistaken for a pin drop

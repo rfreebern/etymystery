@@ -12,6 +12,7 @@ const main = readFileSync("web/src/main.ts", "utf8");
 const map = readFileSync("web/src/map.ts", "utf8");
 const reveal = readFileSync("web/src/reveal.ts", "utf8");
 const css = readFileSync("web/src/style.css", "utf8");
+const indexHtml = readFileSync("web/index.html", "utf8");
 
 /** The body of a function declaration or object-method shorthand, by brace matching. */
 function functionBody(source: string, name: string): string {
@@ -258,6 +259,48 @@ describe("the solution footer", () => {
   });
 });
 
+describe("the top bar clock", () => {
+  it("shows the puzzle number, and a second line counting to the next puzzle", () => {
+    expect(indexHtml).toContain('id="puzzle-line"');
+    expect(indexHtml).toContain('id="countdown"');
+    // Both live inside the day label, which is the first thing on the page.
+    const label = indexHtml.slice(indexHtml.indexOf('id="day-label"'), indexHtml.indexOf("</div>", indexHtml.indexOf('id="day-label"')));
+    expect(label).toContain('id="puzzle-line"');
+    expect(label).toContain('id="countdown"');
+    expect(main).toContain('document.getElementById("puzzle-line")!');
+    expect(main).toContain("Puzzle ${dayIndex + 1} of bank v${bank.version}");
+  });
+
+  it("ticks once a second, from the shared countdown module", () => {
+    // The wording and the arithmetic live in web/src/countdown.ts (unit tested); this is
+    // only the wiring, and a timer that stops is invisible until the day turns.
+    expect(main).toContain("countdownLabel(now)");
+    expect(main).toContain("window.setInterval(tickCountdown, 1_000)");
+    expect(main).toContain("tickCountdown();"); // once before the first tick
+    const tick = functionBody(main, "tickCountdown");
+    expect(tick).toContain("Date.now()");
+    expect(tick).toContain("dayIndexFor(bank, now)");
+  });
+
+  it("reloads into the new day, but not out from under a half-played round", () => {
+    // Midnight UTC is when `dayIndexFor` advances, so the page has to notice. A turnover
+    // during a round would lose the guess being placed, so that case waits for the day to
+    // finish, and the summary is what reloads.
+    const tick = functionBody(main, "tickCountdown");
+    expect(tick).toContain("dayFinished");
+    expect(tick).toContain("TURNOVER_LABEL");
+    expect(tick.indexOf("dayFinished")).toBeLessThan(tick.indexOf("location.reload"));
+    const summary = functionBody(main, "renderSummary");
+    expect(summary).toContain("dayFinished = true");
+    expect(summary).toContain("if (turnOverPending) window.location.reload()");
+  });
+
+  it("keeps the clock quieter than the line it sits under", () => {
+    expect(css).toMatch(/#day-label\s*\{[^}]*flex-direction: column/);
+    expect(css).toMatch(/#day-label \.countdown\s*\{[^}]*font-size: 12px/);
+  });
+});
+
 describe("the game's copy", () => {
   it("uses no em dashes in user-visible strings", () => {
     // Requested: the reveal and round text should not lean on em dashes. Comments
@@ -384,6 +427,20 @@ describe("the end-of-day summary", () => {
     expect(summary.indexOf('"Copy result"')).toBeLessThan(summary.indexOf('shareBlock.append'));
     expect(css).toMatch(/\.share\s*\{[^}]*flex-direction: column/);
     expect(css).toMatch(/\.share-text\s*\{[^}]*display: block/);
+  });
+
+  it("ends with a pointer to another daily puzzle, below the content", () => {
+    const summary = functionBody(main, "renderSummary");
+    expect(summary).toContain('el("p", "more-puzzles")');
+    expect(summary).toContain('document.createTextNode("Looking for more daily word puzzles? Try ")');
+    expect(summary).toContain('el("a", undefined, "WordLadder")');
+    expect(summary).toContain('moreLink.href = "https://wordladder.fun"');
+    // Below the share block, and below the controls: it is the last line on the page.
+    expect(summary.indexOf("panel.append(shareBlock)")).toBeLessThan(summary.indexOf("more-puzzles"));
+    expect(summary.indexOf("panel.append(actions)")).toBeLessThan(summary.indexOf("more-puzzles"));
+    expect(summary.indexOf("more-puzzles")).toBeLessThan(summary.indexOf("app.append(panel)"));
+    expect(css).toMatch(/\.more-puzzles\s*\{[^}]*text-align: center/);
+    expect(css).toMatch(/\.more-puzzles a\s*\{[^}]*text-decoration: underline/);
   });
 
   it("colours each round by the band its score falls in", () => {

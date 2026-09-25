@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-24, session 21)
+## Status (as of 2026-09-25, session 22)
 
 Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
 (GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
-URL redirects there): 362/362 tests passing, typecheck clean, static build green. The priced-in work
+URL redirects there): 372/372 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -1076,6 +1076,31 @@ on-land anchors** (this batch)
   is a bank-FORMAT change, unlike the append-only rebuilds before it.
 - tests: 358 total (+1: the thin-group cap).
 
+**Session 22 - the turnover clock, and a pointer to another puzzle** (this batch)
+
+- Reported: show the date and puzzle number at the top with a countdown to the next
+  puzzle, and end the success page with a line about another daily puzzle.
+- The countdown is to midnight **UTC** because that is what the sequence is keyed on:
+  `dayIndexFor` splits on `MS_PER_DAY`, so the moment the day advances is the moment the
+  clock reaches zero. That makes it more than decoration - the page has to notice. The
+  awkward case is a turnover while a round is in progress: reloading instantly would
+  throw away the guess on screen, which is not stored until it is scored. So a turnover
+  during play changes the line to "A new puzzle is ready" and the summary reloads once
+  the day is finished; a player who has already finished is reloaded straight away.
+- The wording and the arithmetic live in `web/src/countdown.ts`, DOM-free and with no
+  `Date.now()` inside (the `share.ts` precedent), so the boundaries are unit tested:
+  1..86_400 seconds, the midnight second printing `00:00:00` rather than `24:00:00`, every
+  field padded so the line cannot jump about, and a wrong system clock still landing in
+  range. The clock itself is one `setInterval` of a second on the shared helper.
+- The success page ends with "Looking for more daily word puzzles? Try WordLadder",
+  an ordinary link to <https://wordladder.fun>, below the share block and the controls
+  because it is a suggestion rather than part of the result.
+- Verified by driving a real headless Chrome through all five rounds: the top bar reads
+  `Puzzle 5 of bank v5 · September 25, 2026 UTC`, the clock ticks (`20:19:12` to
+  `20:19:10` two seconds later, matching the real time of day), the summary ends with the
+  link and nothing overflows at 1037px.
+- tests: 372 total (+10: five for the countdown, five for the wiring).
+
 **Session 21 - the custom domain, and a design pass on the solution footer** (this batch)
 
 - Reported: the site had to move to a newly bought domain, and the live URL had
@@ -1103,7 +1128,7 @@ on-land anchors** (this batch)
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 362 passed (23 files)
+    npx vitest run            # 372 passed (24 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
