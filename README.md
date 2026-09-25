@@ -192,7 +192,9 @@ the day, so an answer to the old deal cannot be carried over to the new one.
 
 The committed `web/public/word-bank.json` is **bank v6**: 450 entries across 5 balanced
 tiers, five rounds a day (90 days of puzzles), built from `curated/curation.json`.
-Rebuild it after curating — see "Ship it" in [CURATION.md](CURATION.md); the old
+Grow it after curating with `--append-to`, which appends new words and records corrections as
+`superseded` on the entries that already shipped rather than changing a round someone has
+played - see "Ship it" in [CURATION.md](CURATION.md); the old
 `npm run build:seed` path still exists as a 30-word stand-in for bootstrapping without
 the 4.2M-edge download.
 

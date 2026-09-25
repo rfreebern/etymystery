@@ -1,4 +1,11 @@
-import type { BankEntry, LanguageInfo, WordBank } from "./types";
+import type {
+  BankEntry,
+  CorrectableField,
+  CorrectedFields,
+  LanguageInfo,
+  Superseded,
+  WordBank,
+} from "./types";
 import { hashString, mulberry32, shuffle } from "./prng";
 
 /**
@@ -356,6 +363,152 @@ export function appendToBank(
   );
 }
 
+/** The fields `extendBank` compares and annotates; see `CorrectableField`. */
+const CORRECTABLE_FIELDS: readonly CorrectableField[] = [
+  "pos",
+  "year",
+  "yearTo",
+  "tier",
+  "originChain",
+  "originLanguage",
+  "countries",
+  "point",
+  "blurb",
+];
+
+/** The shape an annotation must use for each field, checked by `validateEntry`. */
+const CORRECTED_SHAPES: Record<CorrectableField, "number" | "string" | "array" | "point"> = {
+  pos: "string",
+  year: "number",
+  yearTo: "number",
+  tier: "number",
+  originChain: "array",
+  originLanguage: "string",
+  countries: "array",
+  point: "point",
+  blurb: "string",
+};
+
+/**
+ * Structural comparison for entry fields and annotations.
+ *
+ * Canonical JSON covers the shapes involved (scalars, string arrays, a flat point) and
+ * treats an absent field as equal to an undefined one, which is what "curation did not
+ * touch it" means here.
+ */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === undefined || b === undefined) return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** Which correctable fields differ between what shipped and what curation says now. */
+export function changedFields(shipped: BankEntry, fresh: BankEntry): CorrectableField[] {
+  return CORRECTABLE_FIELDS.filter((field) => !sameValue(shipped[field], fresh[field]));
+}
+
+export interface BankExtension {
+  /** The bank to write: the shipped one grown, or annotated, or both. */
+  bank: WordBank;
+  /** Entries the shipped bank did not hold at all: these are the new puzzles. */
+  added: BankEntry[];
+  /** Shipped entries a later curation disagrees with, and the fields that differ. */
+  annotated: Array<{ id: string; fields: CorrectableField[] }>;
+  /** Shipped entries curation no longer holds; reported, never removed. */
+  uncurated: string[];
+}
+
+/**
+ * Grow a shipped bank from a freshly built set of entries, without re-dealing it.
+ *
+ * Two kinds of change arrive from curation, and they are treated differently on purpose:
+ *
+ * - **New entries** are appended through `appendToBank`, which keeps every shipped day
+ *   verbatim and deals only the days the new words create.
+ * - **Corrections to entries that already shipped** are recorded on the entry as
+ *   `superseded`, never applied: that day was played, and its answer must not move under the
+ *   player who scored it. A later rebuild from curation carries the corrected value on its
+ *   own, so the annotation is what keeps this file honest in the meantime.
+ *
+ * `nextVersion` is used only when something is appended. A correction-only pass keeps the
+ * shipped version, because the client keys a player's stored day on that version: bumping it
+ * would throw away the day in progress to record a correction nobody can see. A run with
+ * nothing to append and nothing to correct returns the input bank itself, so repeating it is
+ * a no-op rather than a rewrite.
+ */
+export function extendBank(
+  shipped: WordBank,
+  freshEntries: BankEntry[],
+  nextVersion: number,
+): BankExtension {
+  const freshById = new Map(freshEntries.map((entry) => [entry.id, entry]));
+  const shippedEntries = shipped.tiers.flat();
+  const shippedIds = new Set(shippedEntries.map((entry) => entry.id));
+  const added = freshEntries.filter((entry) => !shippedIds.has(entry.id));
+  // The version an annotation says it was recorded in: the version the file will carry.
+  const recordVersion = added.length > 0 ? nextVersion : shipped.version;
+  const corrections = new Map<string, BankEntry>();
+  const annotated: Array<{ id: string; fields: CorrectableField[] }> = [];
+
+  for (const entry of shippedEntries) {
+    const fresh = freshById.get(entry.id);
+    if (!fresh) continue;
+    const fields = changedFields(entry, fresh);
+    if (fields.length === 0) {
+      // Curation agrees with what shipped again: take any annotation off, so the file never
+      // claims a correction that nobody stands behind any more.
+      if (entry.superseded) {
+        const { superseded: _dropped, ...rest } = entry;
+        corrections.set(entry.id, rest);
+      }
+      continue;
+    }
+    const corrected: CorrectedFields = {};
+    for (const field of fields) {
+      const value = fresh[field];
+      if (value === undefined) {
+        // Only `yearTo` can go missing, and that means the span became a single year.
+        if (field === "yearTo") corrected.yearTo = null;
+        continue;
+      }
+      // Copied, so the annotation cannot alias the fresh build's arrays.
+      Object.assign(corrected, { [field]: JSON.parse(JSON.stringify(value)) });
+    }
+    const superseded: Superseded = { version: recordVersion, corrected };
+    // Idempotent: an annotation that already says exactly this is not a change.
+    if (entry.superseded && sameValue(entry.superseded, superseded)) continue;
+    corrections.set(entry.id, { ...entry, superseded });
+    annotated.push({ id: entry.id, fields });
+  }
+
+  const uncurated = shippedEntries
+    .filter((entry) => !freshById.has(entry.id))
+    .map((entry) => entry.id);
+
+  // The tier queues and the master sequence hold the same entry objects, so an annotation has
+  // to land in both or the file would disagree with itself.
+  const carry = (entries: BankEntry[]): BankEntry[] =>
+    entries.map((entry) => corrections.get(entry.id) ?? entry);
+  const tiers = shipped.tiers.map(carry);
+
+  if (added.length === 0) {
+    if (corrections.size === 0) return { bank: shipped, added, annotated, uncurated };
+    const withCorrections: WordBank = {
+      ...shipped,
+      tiers,
+      masterSequence: carry(shipped.masterSequence),
+    };
+    validateBank(withCorrections);
+    return { bank: withCorrections, added, annotated, uncurated };
+  }
+  return {
+    bank: appendToBank({ ...shipped, tiers }, added, nextVersion),
+    added,
+    annotated,
+    uncurated,
+  };
+}
+
 /** Validate a single bank entry. Throws BankValidationError. */
 export function validateEntry(entry: BankEntry): void {
   const problems: string[] = [];
@@ -391,6 +544,56 @@ export function validateEntry(entry: BankEntry): void {
     problems.push("point.lng must be within -180..180");
   }
   if (!entry.blurb.trim()) problems.push("blurb must be non-empty");
+  if (entry.superseded) {
+    // The corrected VALUES come from a fresh build, so their ranges were checked as an entry
+    // of their own; what is checked here is the annotation's shape, which nothing else sees.
+    const { version: noted, corrected } = entry.superseded;
+    if (!Number.isInteger(noted) || noted < 1) {
+      problems.push("superseded.version must be a positive integer (the bank version that recorded it)");
+    }
+    const fields = Object.keys(corrected);
+    if (fields.length === 0) {
+      problems.push("superseded.corrected must name at least one corrected field");
+    }
+    for (const [field, value] of Object.entries(corrected)) {
+      const shape = CORRECTED_SHAPES[field as CorrectableField];
+      if (!shape) {
+        problems.push(`superseded.corrected.${field} is not a correctable field`);
+        continue;
+      }
+      if (value === undefined) {
+        problems.push(`superseded.corrected.${field} carries no value (null would mean "should be absent")`);
+        continue;
+      }
+      // `null` is only meaningful for the one optional field it describes.
+      if (value === null) {
+        if (field !== "yearTo") problems.push(`superseded.corrected.${field} must not be null`);
+        continue;
+      }
+      const point = (value ?? {}) as { lat?: unknown; lng?: unknown };
+      // The same ranges an entry is held to. Internal consistency (`year <= yearTo`) cannot
+      // be checked on a partial annotation, because only the changed fields are here.
+      const wrongShape =
+        shape === "number"
+          ? typeof value !== "number" ||
+            !Number.isFinite(value) ||
+            (field === "year" && (value < -4000 || value > 2200)) ||
+            (field === "yearTo" && (value < -4000 || value > 2200)) ||
+            (field === "tier" && (!Number.isInteger(value) || value < 1 || value > TIER_COUNT))
+          : shape === "array"
+            ? !Array.isArray(value) || value.length === 0
+            : shape === "point"
+              ? typeof value !== "object" ||
+                !Number.isFinite(point.lat) ||
+                !Number.isFinite(point.lng) ||
+                (point.lat as number) < -90 ||
+                (point.lat as number) > 90 ||
+                (point.lng as number) < -180 ||
+                (point.lng as number) > 180
+              : typeof value !== "string" || value.trim() === "";
+      if (wrongShape) problems.push(`superseded.corrected.${field} is not a valid ${shape}`);
+    }
+  }
   if (problems.length > 0) {
     throw new BankValidationError(`invalid entry "${entry.word}": ${problems.join("; ")}`);
   }

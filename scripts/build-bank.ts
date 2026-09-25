@@ -11,16 +11,24 @@
  *     --version 1 \
  *     [--epoch-start 2026-01-01] [--english-code en] [--max-depth 3]
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { gunzipSync } from "node:zlib";
-import { ROUNDS_PER_DAY } from "../src/bank";
+import { ROUNDS_PER_DAY, extendBank, validateBank } from "../src/bank";
+import type { WordBank } from "../src/types";
 import { dayNumberForDate } from "../src/daily";
 import { buildBankFromInputs, type CurationEntry } from "./lib/bank-builder";
 import { parseFrequencyList } from "./lib/frequency";
 import { unusableSenseKeys } from "./lib/register";
 
+/** Default start of the deterministic sequence: the day the site went up. */
+const DEFAULT_EPOCH = "2026-01-01";
+
+/**
+ * Default start of the deterministic sequence. Changing it renumbers every day, so append
+ * mode refuses to move it.
+ */
 const { values } = parseArgs({
   options: {
     edges: { type: "string" },
@@ -28,7 +36,7 @@ const { values } = parseArgs({
     curation: { type: "string" },
     out: { type: "string", short: "o" },
     version: { type: "string", short: "v" },
-    "epoch-start": { type: "string", default: "2026-01-01" },
+    "epoch-start": { type: "string", default: DEFAULT_EPOCH },
     "english-code": { type: "string", default: "en" },
     "max-depth": { type: "string", default: "3" },
     frequency: { type: "string" },
@@ -49,6 +57,11 @@ const { values } = parseArgs({
     worklist: { type: "string" },
     /** Sense cache used for the register rule; see the load below. */
     senses: { type: "string", default: "data/word-senses.json" },
+    /**
+     * Grow this shipped bank instead of replacing it: new entries are appended, shipped days
+     * stay byte-identical, and corrections are recorded as `superseded`. See the load below.
+     */
+    "append-to": { type: "string" },
   },
 });
 
@@ -57,21 +70,63 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-if (!values.edges || !values.languages || !values.curation || !values.out || !values.version) {
+if (
+  !values.edges ||
+  !values.languages ||
+  !values.curation ||
+  !values.out ||
+  (!values.version && !values["append-to"])
+) {
   fail(
-    "required: --edges <csv[.gz]> --languages <tsv> --curation <json> --out <bank.json> --version N " +
+    "required: --edges <csv[.gz]> --languages <tsv> --curation <json> --out <bank.json> " +
+      "--version N, or --append-to <shipped bank.json> to grow one " +
       "[--epoch-start YYYY-MM-DD] [--english-code en] [--max-depth 3]",
   );
 }
+/**
+ * Append mode: grow the bank a player is already playing, instead of building a new one.
+ *
+ * A rebuild produces a fresh shuffle, so every day that has already shipped would change -
+ * and the day in progress would be orphaned, because the client keys its stored session on
+ * the bank version. Extending is therefore append-only: `appendToBank` keeps the shipped days
+ * verbatim, and a correction to an entry that already shipped is recorded as `superseded`
+ * rather than applied, so no round anyone scored moves under them. `extendBank` (src/bank.ts)
+ * owns those rules; this reads the bank they apply to and refuses to guess at it.
+ */
+const appendPath = values["append-to"];
+let shipped: WordBank | undefined;
+if (appendPath) {
+  if (!existsSync(appendPath)) fail(`--append-to ${appendPath} does not exist`);
+  shipped = JSON.parse(readFileSync(appendPath, "utf8")) as WordBank;
+  try {
+    validateBank(shipped);
+  } catch (error) {
+    fail(
+      `--append-to ${appendPath} is not a valid bank: ` +
+        (error instanceof Error ? error.message : String(error)),
+    );
+  }
+}
 
-const version = Number.parseInt(values.version!, 10);
+const version = values.version ? Number.parseInt(values.version, 10) : (shipped?.version ?? 0) + 1;
 if (!Number.isInteger(version) || version < 1) {
   fail(`--version must be a positive integer, got "${values.version}"`);
 }
-const epochStartDay = dayNumberForDate(values["epoch-start"]!);
-if (!Number.isFinite(epochStartDay)) {
+if (shipped && version <= shipped.version) {
+  fail(`--version ${version} must be greater than the shipped bank's version ${shipped.version}`);
+}
+const requestedEpoch = dayNumberForDate(values["epoch-start"]!);
+if (!Number.isFinite(requestedEpoch)) {
   fail(`--epoch-start must be a YYYY-MM-DD date, got "${values["epoch-start"]}"`);
 }
+if (shipped && values["epoch-start"] !== DEFAULT_EPOCH && requestedEpoch !== shipped.epochStartDay) {
+  fail(
+    `--epoch-start ${values["epoch-start"]} disagrees with the shipped bank's epoch ` +
+      `(day ${shipped.epochStartDay}): appending cannot move the day numbering`,
+  );
+}
+// The shipped bank's epoch wins: it is what every stored day already counts from.
+const epochStartDay = shipped ? shipped.epochStartDay : requestedEpoch;
 const maxChainDepth = Number.parseInt(values["max-depth"]!, 10);
 if (!Number.isInteger(maxChainDepth) || maxChainDepth < 1) {
   fail(`--max-depth must be a positive integer, got "${values["max-depth"]}"`);
@@ -161,15 +216,59 @@ const worklist: Array<{ rank: number; line: string }> = [];
       });
     },
   });
-  if (bank) {
-    mkdirSync(path.dirname(values.out!), { recursive: true });
-    writeFileSync(values.out!, `${JSON.stringify(bank, null, 2)}\n`);
+  const extension = bank && shipped ? extendBank(shipped, bank.tiers.flat(), version) : undefined;
+  const final = extension ? extension.bank : bank;
+  // An extension that adds nothing and corrects nothing comes back as the input bank, so a
+  // repeated run is a no-op rather than a rewrite of the file a player's days come from.
+  const changed = extension ? extension.added.length > 0 || extension.annotated.length > 0 : Boolean(final);
+  if (!final) {
+    console.log(`bank not assembled (--worklist-only); nothing written to ${values.out}`);
+  } else if (!changed) {
     console.log(
-      `wrote ${values.out}: bank v${bank.version}, ${bank.masterSequence.length} entries ` +
-        `(${bank.masterSequence.length / ROUNDS_PER_DAY} days of puzzles), epoch start day ${bank.epochStartDay}`,
+      `nothing to append and no corrections to record: ${appendPath} left untouched ` +
+        `(bank v${final.version}, ${final.masterSequence.length / ROUNDS_PER_DAY} days)`,
     );
   } else {
-    console.log(`bank not assembled (--worklist-only); nothing written to ${values.out}`);
+    mkdirSync(path.dirname(values.out!), { recursive: true });
+    const payload = `${JSON.stringify(final, null, 2)}\n`;
+    // Append mode is usually pointed at the bank it just read, so write beside it and rename:
+    // an interrupted run must not leave a half-written file that a player's days depend on.
+    if (appendPath) {
+      writeFileSync(`${values.out!}.tmp`, payload);
+      renameSync(`${values.out!}.tmp`, values.out!);
+    } else {
+      writeFileSync(values.out!, payload);
+    }
+    console.log(
+      `wrote ${values.out}: bank v${final.version}, ${final.masterSequence.length} entries ` +
+        `(${final.masterSequence.length / ROUNDS_PER_DAY} days of puzzles), epoch start day ${final.epochStartDay}`,
+    );
+  }
+  if (extension && shipped) {
+    const before = shipped.masterSequence.length / ROUNDS_PER_DAY;
+    const after = extension.bank.masterSequence.length / ROUNDS_PER_DAY;
+    console.log(
+      extension.added.length > 0
+        ? `append: ${extension.added.length} entries in curation that the bank did not have: ` +
+            `${before} days -> ${after} days (v${shipped.version} -> v${extension.bank.version})`
+        : `append: no new entries in curation: still ${before} days at v${shipped.version}`,
+    );
+    if (extension.annotated.length > 0) {
+      console.log(
+        `corrections: ${extension.annotated.length} shipped entries a later curation disagrees with, ` +
+          `recorded as "superseded" (the played values are untouched): ` +
+          `${extension.annotated.slice(0, 8).map(({ id, fields }) => `${id} [${fields.join(", ")}]`).join(", ")}` +
+          `${extension.annotated.length > 8 ? `, and ${extension.annotated.length - 8} more` : ""}`,
+      );
+    }
+    if (extension.uncurated.length > 0) {
+      console.log(
+        `no longer curated: ${extension.uncurated.length} shipped entries are absent from the ` +
+          `curation file, left in place because a shipped day cannot lose its word: ` +
+          `${extension.uncurated.slice(0, 6).join(", ")}` +
+          `${extension.uncurated.length > 6 ? ", ..." : ""}`,
+      );
+    }
   }
   console.log(
     `report: ${report.candidateSenses} candidate senses (${report.candidateWords} words) | ` +

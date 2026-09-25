@@ -382,7 +382,45 @@ printing two numbers.
 
 ## 5. Ship it
 
-Once every tier has enough words for the days you want:
+Once every tier has enough words for the days you want. Which of two paths you take depends
+on whether anyone is playing.
+
+**A bank with players: append.** New words are added to the end, and every day that has
+already shipped keeps its words, so no scored round changes and no day in progress is
+orphaned. `--version` defaults to the bank's next version:
+
+```bash
+npm run build:bank -- --edges data/edges-filtered.csv.gz --languages data/languages.tsv \
+  --curation curated/curation.json --out data/word-bank.json \
+  --append-to data/word-bank.json --frequency data/en-frequency.txt --exclude-origin en,ang,enm
+cp data/word-bank.json web/public/word-bank.json
+npm run build:web
+```
+
+It prints what it did, and two lines are worth reading every time:
+
+    append: 6 entries in curation that the bank did not have: 90 days -> 91 days (v6 -> v7)
+    corrections: 2 shipped entries a later curation disagrees with, recorded as "superseded"
+
+A **correction** to a word that has already been played is never applied. The round was
+scored against the year it shipped with, so the entry keeps that year and gains a
+`superseded` field naming what it should have been:
+
+```json
+"superseded": { "version": 7, "corrected": { "year": 1250, "yearTo": null } }
+```
+
+`yearTo: null` is deliberate: it means the field should be *absent* in a fresh build (a span a
+later check narrowed to a single year). A rebuild reads curation directly and is right on its
+own; the annotation is what keeps the shipped file honest in the meantime for anyone reading
+or reusing the data. Corrections alone do not bump the version, because the client keys a
+player's stored day on it: recording one must not throw away the day in progress.
+
+Days only appear when *every* tier grew: the calendar is as long as the smallest tier, so six
+new words in tier 3 move nothing and the append says `90 days -> 90 days` honestly. An append
+with nothing new and nothing to correct writes nothing at all.
+
+**No players yet, or a deliberate reset: a fresh rebuild.** This re-deals every day.
 
 ```bash
 npm run build:bank -- --edges data/edges-filtered.csv.gz --languages data/languages.tsv \
@@ -392,10 +430,9 @@ cp data/word-bank.json web/public/word-bank.json
 npm run build:web
 ```
 
-Two invariants: keep the **same epoch** (20717) so day numbering never shifts,
-and grow the shipped bank with `appendToBank` so already-shipped tier positions
-never change (see PROGRESS.md). Rebuilding from scratch is only acceptable while
-the bank has no players.
+Two invariants: keep the **same epoch** (20717) so day numbering never shifts — append mode
+refuses an `--epoch-start` that disagrees with the bank it is growing — and grow a bank with
+players by appending rather than re-dealing it.
 
 ## Parts of speech and multiple origins
 

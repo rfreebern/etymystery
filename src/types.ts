@@ -59,6 +59,60 @@ export interface BankEntry {
   point: LatLng;
   /** Short reveal-time blurb, original prose. */
   blurb: string;
+  /**
+   * What this entry should have said, when curation changed after it had already shipped.
+   *
+   * A shipped day is frozen - a player scored it, so a corrected year must not move under
+   * them (`appendToBank`'s append-only guarantee). But the correction is worth keeping, so
+   * it rides along here: the entry keeps the values that were played, and `superseded`
+   * records the ones a fresh build from curation would use instead. A rebuild reads
+   * curation directly and is right on its own; this is what makes the OLD bank file honest
+   * about what is known now.
+   */
+  superseded?: Superseded;
+}
+
+/**
+ * The fields of an entry a later curation can disagree with.
+ *
+ * `id` and `word` are deliberately absent: an entry that changed identity is a different
+ * puzzle, and the bank would rather keep the one it shipped than swap a word under a day
+ * someone has played.
+ */
+export type CorrectableField =
+  | "pos"
+  | "year"
+  | "yearTo"
+  | "tier"
+  | "originChain"
+  | "originLanguage"
+  | "countries"
+  | "point"
+  | "blurb";
+
+/** The corrected values a `Superseded` annotation can carry, field by field. */
+export interface CorrectedFields {
+  pos?: string;
+  year?: number;
+  /**
+   * `null` means the field should be ABSENT in a fresh build: a span a later check narrowed
+   * to a single year. `undefined` would mean "unchanged", which is not what this records.
+   */
+  yearTo?: number | null;
+  tier?: number;
+  originChain?: string[];
+  originLanguage?: string;
+  countries?: CountryCode[];
+  point?: LatLng;
+  blurb?: string;
+}
+
+/** A correction to an entry that had already shipped; see `BankEntry.superseded`. */
+export interface Superseded {
+  /** The bank version that recorded the correction (annotations do not bump the version). */
+  version: number;
+  /** The corrected values, for the fields that differ. */
+  corrected: CorrectedFields;
 }
 
 /**

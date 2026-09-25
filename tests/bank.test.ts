@@ -8,10 +8,11 @@ import {
   dealSequence,
   interleave,
   validateBank,
+  extendBank,
   validateEntry,
 } from "../src/bank";
 import { makeEntry } from "./helpers";
-import type { BankEntry } from "../src/types";
+import type { BankEntry, WordBank } from "../src/types";
 
 function makeBankEntries(perTier: number): BankEntry[] {
   return Array.from({ length: perTier * TIER_COUNT }, () => makeEntry());
@@ -330,5 +331,179 @@ describe("dealing the days for variety", () => {
         expect(naive[day * ROUNDS_PER_DAY + k]!.id).toBe(tiers[k]![day]!.id);
       }
     }
+  });
+});
+
+describe("extendBank (growing a live bank)", () => {
+  /** A one-day bank: one entry per tier, so the shipped sequence is exactly one day. */
+  function shippedBank(): WordBank {
+    return buildWordBank({
+      version: 6,
+      epochStartDay: 20_700,
+      entries: Array.from({ length: TIER_COUNT }, (_, i) =>
+        makeEntry({ id: `shipped-${i + 1}`, word: `shipped${i + 1}`, tier: i + 1 }),
+      ),
+      languages: LANGUAGES,
+    });
+  }
+  /** What a fresh build from the same curation would produce, with edits per entry id. */
+  function freshEntries(bank: WordBank, edits: Record<string, Partial<BankEntry>> = {}): BankEntry[] {
+    return bank.tiers.flat().map((entry) => ({ ...entry, ...edits[entry.id] }));
+  }
+  /** One new word per tier: enough for the appended set to make one more day. */
+  function newWords(): BankEntry[] {
+    return Array.from({ length: TIER_COUNT }, (_, i) =>
+      makeEntry({ id: `new-${i + 1}`, word: `new${i + 1}`, tier: i + 1 }),
+    );
+  }
+
+  it("appends new words and leaves the shipped days verbatim", () => {
+    const shipped = shippedBank();
+    const before = shipped.masterSequence.map((entry) => entry.id);
+    const { bank, added, annotated, uncurated } = extendBank(
+      shipped,
+      [...freshEntries(shipped), ...newWords()],
+      7,
+    );
+    expect(bank.version).toBe(7);
+    expect(added).toHaveLength(TIER_COUNT);
+    expect(annotated).toEqual([]);
+    expect(uncurated).toEqual([]);
+    expect(bank.masterSequence).toHaveLength(2 * ROUNDS_PER_DAY);
+    expect(bank.masterSequence.slice(0, ROUNDS_PER_DAY).map((entry) => entry.id)).toEqual(before);
+    expect(new Set(bank.masterSequence.map((entry) => entry.id)).size).toBe(2 * ROUNDS_PER_DAY);
+  });
+
+  it("annotates a correction instead of applying it, without bumping the version", () => {
+    // The year was wrong for a round that has already been played. Applying it would move the
+    // answer under the player who scored it, and bumping the version would orphan the day
+    // they have in progress, so the correction rides on the entry instead.
+    const shipped = shippedBank();
+    const { bank, added, annotated } = extendBank(
+      shipped,
+      freshEntries(shipped, { "shipped-3": { year: 1500 } }),
+      7,
+    );
+    const entry = bank.masterSequence.find((candidate) => candidate.id === "shipped-3")!;
+    expect(entry.year).toBe(1900); // the value that was played
+    expect(entry.superseded).toEqual({ version: 6, corrected: { year: 1500 } });
+    expect(annotated).toEqual([{ id: "shipped-3", fields: ["year"] }]);
+    expect(added).toEqual([]);
+    expect(bank.version).toBe(6);
+    expect(bank.masterSequence.map((candidate) => candidate.id)).toEqual(
+      shipped.masterSequence.map((candidate) => candidate.id),
+    );
+  });
+
+  it("keeps the tier queues and the sequence agreeing about the annotation", () => {
+    // Both hold the same entry objects; an annotation that landed in only one would make the
+    // file say two different things about one entry.
+    const shipped = shippedBank();
+    const { bank } = extendBank(shipped, freshEntries(shipped, { "shipped-2": { blurb: "Better." } }), 7);
+    const inTier = bank.tiers.flat().find((entry) => entry.id === "shipped-2")!;
+    const inSequence = bank.masterSequence.find((entry) => entry.id === "shipped-2")!;
+    expect(inTier.superseded).toEqual({ version: 6, corrected: { blurb: "Better." } });
+    expect(inSequence.superseded).toEqual(inTier.superseded);
+    expect(() => validateBank(bank)).not.toThrow();
+  });
+
+  it("records a span that a later check narrowed to a single year", () => {
+    // A disappearing `yearTo` cannot be expressed as a value, so the annotation says null:
+    // "in a fresh build this field would be absent".
+    const shipped = buildWordBank({
+      version: 6,
+      epochStartDay: 20_700,
+      entries: Array.from({ length: TIER_COUNT }, (_, i) =>
+        makeEntry({ id: `s${i}`, word: `s${i}`, tier: i + 1, year: 1151, yearTo: 1500 }),
+      ),
+      languages: LANGUAGES,
+    });
+    const fresh = shipped.tiers.flat().map((entry) => {
+      if (entry.id !== "s2") return entry;
+      const { yearTo: _dropped, ...rest } = entry;
+      return { ...rest, year: 1200 };
+    });
+    const { bank, annotated } = extendBank(shipped, fresh, 7);
+    const entry = bank.masterSequence.find((candidate) => candidate.id === "s2")!;
+    expect(entry.yearTo).toBe(1500); // still the span that was scored
+    expect(entry.superseded).toEqual({ version: 6, corrected: { year: 1200, yearTo: null } });
+    expect(annotated).toEqual([{ id: entry.id, fields: ["year", "yearTo"] }]);
+  });
+
+  it("is idempotent, and takes the annotation off when curation agrees again", () => {
+    const shipped = shippedBank();
+    const corrected = freshEntries(shipped, { "shipped-1": { year: 1600 } });
+    const once = extendBank(shipped, corrected, 7);
+    // Nothing left to record: the same bank comes back, so a repeated run rewrites nothing.
+    expect(extendBank(once.bank, corrected, 7).bank).toBe(once.bank);
+    expect(extendBank(once.bank, corrected, 7).annotated).toEqual([]);
+
+    const back = extendBank(once.bank, freshEntries(shipped), 7);
+    expect(back.bank.version).toBe(6);
+    expect(back.bank.masterSequence.every((entry) => entry.superseded === undefined)).toBe(true);
+  });
+
+  it("reports entries curation has dropped, and leaves them in place", () => {
+    // Removing one would take a day off the calendar that someone has already played.
+    const shipped = shippedBank();
+    const fresh = freshEntries(shipped).filter((entry) => entry.id !== "shipped-4");
+    const { bank, uncurated } = extendBank(shipped, fresh, 7);
+    expect(uncurated).toEqual(["shipped-4"]);
+    expect(bank.masterSequence.some((entry) => entry.id === "shipped-4")).toBe(true);
+    expect(bank).toBe(shipped); // nothing to append, nothing to correct: the input comes back
+  });
+
+  it("annotates and appends in one pass when both arrive together", () => {
+    const shipped = shippedBank();
+    const fresh = [
+      ...freshEntries(shipped, {
+        "shipped-5": { originChain: ["Middle French"], originLanguage: "Middle French" },
+      }),
+      ...newWords(),
+    ];
+    const { bank, added, annotated } = extendBank(shipped, fresh, 7);
+    expect(bank.version).toBe(7);
+    expect(added).toHaveLength(TIER_COUNT);
+    expect(annotated).toEqual([
+      { id: "shipped-5", fields: ["originChain", "originLanguage"] },
+    ]);
+    expect(bank.masterSequence.slice(0, ROUNDS_PER_DAY).map((entry) => entry.id)).toEqual(
+      shipped.masterSequence.map((entry) => entry.id),
+    );
+    const entry = bank.masterSequence.find((candidate) => candidate.id === "shipped-5")!;
+    expect(entry.originLanguage).toBe("French"); // what was played
+    expect(entry.superseded).toEqual({
+      version: 7,
+      corrected: { originChain: ["Middle French"], originLanguage: "Middle French" },
+    });
+  });
+});
+
+describe("validating a superseded annotation", () => {
+  it("accepts a well-formed one and rejects the shapes that would lie", () => {
+    expect(() =>
+      validateEntry(makeEntry({ superseded: { version: 6, corrected: { year: 1500 } } })),
+    ).not.toThrow();
+    const broken = [
+      { version: 0, corrected: { year: 1500 } },
+      { version: 6, corrected: {} },
+      { version: 6, corrected: { year: "1500" } },
+      { version: 6, corrected: { yearTo: "1500" } },
+      { version: 6, corrected: { countries: [] } },
+      { version: 6, corrected: { point: { lat: 200, lng: 0 } } },
+      { version: 6, corrected: { year: 9000 } },
+      { version: 6, corrected: { tier: 9 } },
+      { version: 6, corrected: { id: "elsewhere" } },
+      { version: 6, corrected: { blurb: "" } },
+    ] as unknown as Array<BankEntry["superseded"]>;
+    for (const superseded of broken) {
+      expect(() => validateEntry(makeEntry({ superseded })), JSON.stringify(superseded)).toThrow(
+        BankValidationError,
+      );
+    }
+    // `yearTo: null` is the one legitimate null: the field should be absent in a fresh build.
+    expect(() =>
+      validateEntry(makeEntry({ superseded: { version: 6, corrected: { yearTo: null } } })),
+    ).not.toThrow();
   });
 });

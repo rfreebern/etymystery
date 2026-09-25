@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-25, session 26)
+## Status (as of 2026-09-25, session 27)
 
 Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
 (GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
-URL redirects there): 406/406 tests passing, typecheck clean, static build green. The priced-in work
+URL redirects there): 414/414 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -20,8 +20,10 @@ refuses words Wiktionary marks obsolete, archaic or literary, so `musard` (which
 a player) cannot come back. Session 24 removed the day-level reset and made the client keep
 the whole day - scored rounds and the round in progress - so a reload resumes rather than
 replays, session 25 made the reveal frame both the guess and the answer, with every new
-word starting from the whole world, and session 26 took the bank's size off the header, since
-the bank is meant to be extended indefinitely rather than counted down. Sessions 19 and 20
+word starting from the whole world, session 26 took the bank's size off the header, since the
+bank is meant to be extended indefinitely rather than counted down, and session 27 built the
+append-only growth path that plan needs (`--append-to`, with corrections recorded rather than
+applied). Sessions 19 and 20
 went after the calendar's worst property: the bank was 93% Europe with 13 of 37 days holding
 no non-European round at all, and the deal now puts a non-European origin in every one of
 the 90 days it has.
@@ -1226,10 +1228,44 @@ on-land anchors** (this batch)
   rest with `appendToBank(shipped, fresh, version + 1)`. Recorded under Remaining.
 - tests: 406 (no count change: the assertion moved, it did not multiply).
 
+**Session 27 - append-only growth, and corrections that annotate instead of rewrite** (this batch)
+
+- Asked for: the `--append-to` growth path, with a past round *annotated* rather than changed, so
+  the data is right if it is used again.
+- `extendBank(shipped, freshEntries, nextVersion)` (src/bank.ts) is the whole operation:
+  - **New entries** go through `appendToBank`, so every shipped day stays byte-identical.
+  - **Corrections to entries that already shipped** land on the entry as `superseded`
+    (src/types.ts): the played values stay and the corrected ones ride along, field by field
+    (`{ "version": 7, "corrected": { "year": 1250, "yearTo": null } }`). `null` means "this
+    field should be ABSENT in a fresh build", which is the only way to record a span that a
+    later check narrowed to a single year.
+  - A correction alone does **not** bump the version: the client keys a player's stored day on
+    it, so recording one must not throw away the day in progress.
+  - It is idempotent (a repeated run hands the input bank back, so nothing is rewritten), it
+    reports entries curation has dropped instead of removing them (a shipped day cannot lose
+    its word), and it clears an annotation when curation agrees again.
+- `scripts/build-bank.ts --append-to <bank.json>`: loads and validates that bank, defaults
+  `--version` to the next one, refuses an `--epoch-start` that disagrees with it, writes through
+  a temp file and a rename (append mode is usually pointed at the file it just read), and prints
+  `append:` / `corrections:` / `no longer curated:` lines.
+- A bank holds the same entry objects in its tier queues and its master sequence, so an
+  annotation has to land in both - otherwise the file would say two things about one entry.
+- Verified on the real data with a scratch curation (a corrected year for `window:noun`, plus one
+  new word):
+  - same curation: the rebuild reproduced all 636 shipped entries field-for-field, so the CLI
+    wrote nothing and said so - which also pins the build's determinism;
+  - with the scratch changes: `90 days -> 90 days (v6 -> v7)`, shipped sequence **verbatim**,
+    epoch and seed unchanged, `window:noun` still `year: 1225` (what was played) carrying
+    `superseded: {version: 7, corrected: {year: 1250, blurb: ...}}` in both the tier queue and
+    the sequence, and the new word (`jacket`) in a tier queue but not in play - the calendar is
+    the smallest tier, so one word added to tier 3 moves no days;
+  - against its own output: a no-op again (idempotent), nothing written.
+- tests: 414 (+8 in tests/bank.test.ts, including the annotation shapes that must be refused).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 406 passed (25 files)
+    npx vitest run            # 414 passed (25 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
@@ -1275,6 +1311,15 @@ on-land anchors** (this batch)
     # ?act=map instead zooms in four times, drops a pin in a corner, locks it in, and reports
     # both pins' screen positions plus the transform after `Next word`.
 
+    # Growing a shipped bank (append-only; see CURATION.md "Ship it"):
+    npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
+      --languages data/languages.tsv --curation curated/curation.json \
+      --out data/word-bank.json --append-to data/word-bank.json \
+      --frequency data/en-frequency.txt --exclude-origin en,ang,enm \
+      --native-quota 0.1 --native-tiers 1,2
+                                 # with the shipped curation: nothing written (a no-op)
+                                 # with new or corrected words: `append:` + `corrections:`
+
 ## Remaining (next session)
 
 1. Curate more — the loop is in CURATION.md. The bank is bank v6: **450 entries / 90 days** from 636 shippable curated words
@@ -1319,12 +1364,12 @@ on-land anchors** (this batch)
    countdown (works today; the nightly rebuild needs the 143 MB asset).
 6. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
-7. **Append-only growth for a live game** (see session 26): wire `appendToBank` into the CLI as
-   `--append-to <shipped bank>` — load it, drop the entries it already holds by id, append the
-   rest with the next version — so extending the bank does not re-deal days players have
-   already scored. Decide what a *correction* to a shipped entry does (append-only keeps the
-   old year, which is fair to scored players and wrong forever), and note that new days still
-   need words in every tier, because the day count is the smallest tier.
+7. **Corrections the bank cannot make** (session 27 built the mechanism; this is the policy
+   left over): `id` and `word` are deliberately not correctable, because a shipped day cannot
+   have its word swapped. A genuinely mis-curated word therefore needs a decision - retire it
+   from future banks (`uncurated`, which is already reported), or leave it and accept that one
+   day of its calendar is wrong. Also worth adding to the nightly check: whether the curation
+   pool is balanced enough to append a full day (the smallest tier decides).
 
 ## Gotchas learned (do not re-fight)
 
