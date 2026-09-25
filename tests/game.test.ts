@@ -8,7 +8,9 @@ import {
   dayRounds,
   guessRange,
   isComplete,
+  currentDraft,
   loadSession,
+  saveDraft,
   storageKey,
   submitGuess,
   summarize,
@@ -166,5 +168,50 @@ describe("the end-of-day rows", () => {
     const bank = makeBank();
     const session = loadSession(bank, at, makeStorage());
     expect(dayRounds(bank, session)).toEqual([]);
+  });
+});
+
+describe("the round in progress survives a reload", () => {
+  const bank = makeBank();
+  const ctx = createGeocodeContext({ features: makeFeatures(), languages: LANGUAGES });
+  const utcMs = Date.parse("2026-01-01T12:00:00Z");
+
+  it("keeps a window and a pin that were not locked in yet", () => {
+    const storage = makeStorage();
+    const session = loadSession(bank, utcMs, storage);
+    saveDraft(session, { yearStart: 1750, yearEnd: 1850, point: { lat: 41, lng: 29 } }, storage);
+
+    // A reload is just a session built from the same storage again.
+    const reloaded = loadSession(bank, utcMs, storage);
+    expect(currentDraft(reloaded)).toEqual({ yearStart: 1750, yearEnd: 1850, point: { lat: 41, lng: 29 } });
+    expect(currentRoundIndex(reloaded)).toBe(0);
+  });
+
+  it("drops the draft once the round is scored", () => {
+    // Otherwise the next round would open with the previous round's pin on the map.
+    const storage = makeStorage();
+    const session = loadSession(bank, utcMs, storage);
+    saveDraft(session, { yearStart: 1750, yearEnd: 1850, point: { lat: 41, lng: 29 } }, storage);
+    submitGuess(bank, session, 0, { yearStart: 1750, yearEnd: 1850, point: { lat: 41, lng: 29 } }, ctx, storage);
+    expect(currentDraft(loadSession(bank, utcMs, storage))).toBeNull();
+  });
+
+  it("ignores a draft left over from a round that has since been played", () => {
+    // A hand-written session, as a torn write or an older client could leave behind.
+    const storage = makeStorage();
+    const session = loadSession(bank, utcMs, storage);
+    submitGuess(bank, session, 0, { yearStart: 1800, yearEnd: 1900, point: null }, ctx, storage);
+    storage.setItem(
+      storageKey(bank.version, session.dayIndex),
+      JSON.stringify({
+        ...session,
+        draft: { round: 0, guess: { yearStart: 1200, yearEnd: 1300, point: null } },
+      }),
+    );
+    expect(currentDraft(loadSession(bank, utcMs, storage))).toBeNull();
+  });
+
+  it("has no draft to restore on a day nobody has touched", () => {
+    expect(currentDraft(loadSession(bank, utcMs, makeStorage()))).toBeNull();
   });
 });

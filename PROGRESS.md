@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-25, session 23)
+## Status (as of 2026-09-25, session 24)
 
 Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
 (GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
-URL redirects there): 393/393 tests passing, typecheck clean, static build green. The priced-in work
+URL redirects there): 398/398 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -17,7 +17,9 @@ and a dated EEBO-TCP sample can contradict a year a reference gave. The bank is 
 them `unverified` until a human checks them), and a day is **five rounds** - one word
 per tier - instead of ten. Session 23 put a floor under the vocabulary: the build now
 refuses words Wiktionary marks obsolete, archaic or literary, so `musard` (which reached
-a player) cannot come back. Sessions 19 and 20
+a player) cannot come back. Session 24 removed the day-level reset and made the client keep
+the whole day - scored rounds and the round in progress - so a reload resumes rather than
+replays. Sessions 19 and 20
 went after the calendar's worst property: the bank was 93% Europe with 13 of 37 days holding
 no non-European round at all, and the deal now puts a non-European origin in every one of
 the 90 days it has.
@@ -1159,10 +1161,32 @@ on-land anchors** (this batch)
   never play). Last puzzle 2026-12-19, new bank needed 2026-12-20 - unchanged.
 - tests: 393 (+21: the label reader, the register rule, and the two build/UI guards).
 
+**Session 24 - a reload keeps the day, and the reset goes away** (this batch)
+
+- Three requests, all about the client rather than the puzzle: stop naming the bank version
+  on the site, drop the "Clear today's session" button (replaying is not part of the game any
+  more), and make sure a day's answers survive a reload.
+- The top bar reads `Puzzle 5 of 90 · September 25, 2026 UTC`: how far through the bank this
+  is, which is a number a player can use, instead of which curation batch built it.
+- `Clear today's session` is gone - button, handler and the `storageKey` import that existed
+  only for it - and a test asserts the affordance cannot come back.
+- Durability: scored rounds were already written on lock-in, and the round *in progress* now
+  is too. `Session.draft` holds the window and pin someone has placed but not submitted,
+  written through `saveDraft` (throttled to one save per pause, because a slider drag fires
+  dozens of input events) and restored through `currentDraft`. Locking a round in clears it,
+  and a draft whose round has since been played is dropped on load, so a stale pin can never
+  reappear on the next word.
+- Verified in a real browser rather than only in unit tests: a probe page (the built bundle
+  plus a script) driven by headless Chrome with `--dump-dom` and a persistent profile, so the
+  second run was a genuine reload. It came back with `sliderValue: 1300, pin: true` restored,
+  and after locking a round in, the resumed page returned at `Round 2 of 5` with round 1's
+  score, and no draft, in storage. Commands in the Verification section.
+- tests: 398 (+5: four on the draft in `game.test.ts`, one guard on the client wiring).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 393 passed (25 files)
+    npx vitest run            # 398 passed (25 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
@@ -1194,6 +1218,17 @@ on-land anchors** (this batch)
       --worklist data/curation-worklist-interesting.tsv
                                  # 45,829 words; coverage by rank: top 1k 611,
                                  # 5k 3,421, 10k 5,997, 50k 16,122
+
+
+    # The client's reload path, in a real browser (after `npx vite build web`). probe.html
+    # is index.html plus a small module script that drives the round and then prints what
+    # the browser kept; it is a build artifact, so it is not committed.
+    python3 -m http.server 8099 --directory web/dist
+    google-chrome --headless=new --no-sandbox --user-data-dir=/tmp/etymystery-probe \
+      --virtual-time-budget=10000 --dump-dom "http://127.0.0.1:8099/probe.html?act=1"
+                                 # slider 1300 + a pin placed; storage shows the draft
+    # Run the same command without ?act and the same profile: the window and the pin come
+    # back, which is the reload a player experiences.
 
 ## Remaining (next session)
 

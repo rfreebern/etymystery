@@ -4,7 +4,7 @@
  */
 
 import { ROUNDS_PER_DAY, TIER_COUNT, validateBank } from "../../src/bank";
-import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
+import { dayIndexFor, getDailyPuzzle, totalPuzzles } from "../../src/daily";
 import { answerSpan, spanGapYears } from "../../src/scoring";
 import {
   ANSWER_YEAR_MAX,
@@ -31,12 +31,13 @@ import { scoreBand, scoreEmoji, shareText } from "./share";
 import { ZOOM_STEP } from "./view";
 import { hintsFor, isTouchFirst } from "./copy";
 import {
+  currentDraft,
   currentRoundIndex,
   dayRounds,
   guessRange,
   isComplete,
   loadSession,
-  storageKey,
+  saveDraft,
   submitGuess,
   summarize,
   type Session,
@@ -105,11 +106,23 @@ async function boot(): Promise<void> {
   const worldMap = createWorldMap(app, features);
   // The player picks a 100-year window; 1800–1900 is an arbitrary, neutral start.
   let guess: StoredGuess = { yearStart: 1800, yearEnd: 1900, point: null };
+  /** Pending draft write; kept here so a new round can cancel the previous one's. */
+  let draftTimer: number | undefined;
+  /**
+   * Persist the round in progress, at most once per pause: a slider drag fires dozens of
+   * input events, and only the last one describes where the player stopped. `submitGuess`
+   * retires the draft, so a pending write is cancelled whenever a round is locked in.
+   */
+  function saveDraftSoon(): void {
+    window.clearTimeout(draftTimer);
+    draftTimer = window.setTimeout(() => saveDraft(session, guess, window.localStorage), 250);
+  }
+
 
   /** The top bar: which puzzle this is, and the clock to the next one. */
   function renderDayLabel(): void {
     document.getElementById("puzzle-line")!.textContent =
-      `Puzzle ${dayIndex + 1} of bank v${bank.version} · ${dateLabel(utcMs)} UTC`;
+      `Puzzle ${dayIndex + 1} of ${totalPuzzles(bank)} · ${dateLabel(utcMs)} UTC`;
   }
 
   /** Set once the day is finished, so a turnover has no round in progress to lose. */
@@ -176,8 +189,10 @@ async function boot(): Promise<void> {
     // The previous round's lock must not leak into this one.
     worldMap.allowPicking(true);
     // A fresh window each round: keeping the previous round's placement would
-    // carry an accidental hint (or a wrong idea) into the next word.
-    guess = { yearStart: 1800, yearEnd: 1900, point: null };
+    // carry an accidental hint (or a wrong idea) into the next word. A draft of THIS
+    // round is the exception - it is what the player already chose here.
+    window.clearTimeout(draftTimer);
+    guess = currentDraft(session) ?? { yearStart: 1800, yearEnd: 1900, point: null };
     if (index === null) {
       renderSummary();
       return;
@@ -230,6 +245,7 @@ async function boot(): Promise<void> {
       guess = { ...guess, point: { lat: lngLat[1], lng: lngLat[0] } };
       worldMap.setGuessPin(guess.point);
       submitButton.disabled = false;
+      saveDraftSoon();
     });
 
     const timeline = el("div", "panel timeline");
@@ -267,7 +283,10 @@ async function boot(): Promise<void> {
       rangeText.textContent = rangeLabel(guess.yearStart, guess.yearEnd);
       eraText.textContent = rangeEraLabel(guess.yearStart, guess.yearEnd);
     }
-    slider.addEventListener("input", () => setWindow(Number(slider.value)));
+    slider.addEventListener("input", () => {
+      setWindow(Number(slider.value));
+      saveDraftSoon();
+    });
 
     // The tablet has to be as wide as the years it spans, so its width follows the
     // track: `trackWidth * span / windowYears` (see slider.ts for why that is the
@@ -317,11 +336,20 @@ async function boot(): Promise<void> {
 
     submitButton.addEventListener("click", () => {
       if (locked) return;
+      window.clearTimeout(draftTimer);
       const stored = submitGuess(bank, session, index, guess, ctx, window.localStorage);
       lockRound();
       renderReveal(entry, stored);
     });
     actions.append(submitButton);
+
+    // A restored draft: the pin the player had dropped before the reload, and the lock
+    // button it had already earned. The window is already back (the slider starts from
+    // `guess`), so this only has the map to catch up on.
+    if (guess.point) {
+      worldMap.setGuessPin(guess.point);
+      submitButton.disabled = false;
+    }
 
     app.append(wordPanel, mapPanel, timeline, actions);
     sizeTablet();
@@ -532,15 +560,6 @@ async function boot(): Promise<void> {
     });
     shareBlock.append(el("div", "share-title", "Share today's result"), pre, copy, copied);
     panel.append(shareBlock);
-
-    const actions = el("div", "actions");
-    const reset = el("button", "secondary", "Clear today's session") as HTMLButtonElement;
-    reset.addEventListener("click", () => {
-      window.localStorage.removeItem(storageKey(bank.version, session.dayIndex));
-      window.location.reload();
-    });
-    actions.append(reset);
-    panel.append(actions);
 
     // One outbound line, below everything: it is a suggestion, not part of the result.
     const more = el("p", "more-puzzles");

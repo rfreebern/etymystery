@@ -259,6 +259,20 @@ describe("the solution footer", () => {
   });
 });
 
+describe("a reload resumes the day", () => {
+  it("writes the day to storage as it is played, and offers no way to wipe it", () => {
+    // Each scored round is persisted on lock-in, and the round in progress as a draft, so
+    // a reload continues the day rather than replaying it. Replaying is not part of the
+    // game any more, so no reset belongs on the summary.
+    expect(main).toContain("submitGuess(bank, session, index, guess, ctx, window.localStorage)");
+    expect(main).toContain("saveDraft(session, guess, window.localStorage)");
+    expect(main).toContain("currentDraft(session)");
+    expect(main).toContain("worldMap.setGuessPin(guess.point)");
+    expect(main).not.toContain("Clear today's session");
+    expect(main).not.toContain("storageKey");
+  });
+});
+
 describe("the top bar clock", () => {
   it("shows the puzzle number, and a second line counting to the next puzzle", () => {
     expect(indexHtml).toContain('id="puzzle-line"');
@@ -268,7 +282,10 @@ describe("the top bar clock", () => {
     expect(label).toContain('id="puzzle-line"');
     expect(label).toContain('id="countdown"');
     expect(main).toContain('document.getElementById("puzzle-line")!');
-    expect(main).toContain("Puzzle ${dayIndex + 1} of bank v${bank.version}");
+    // How far through the bank this is, not which curation batch built it: the version
+    // number means nothing to a player.
+    expect(main).toContain("Puzzle ${dayIndex + 1} of ${totalPuzzles(bank)}");
+    expect(main).not.toContain("bank v");
   });
 
   it("ticks once a second, from the shared countdown module", () => {

@@ -2,6 +2,10 @@
  * Daily session state machine. Pure logic + injectable storage so the flow
  * (one round at a time, persisted after each guess, no score changes after
  * reveal) is unit-testable independent of the DOM.
+ *
+ * Everything the player has done today lives in storage: each scored round as it is
+ * locked in, and the round in progress as a draft, so a reload resumes the day rather
+ * than replaying it.
  */
 
 import { ROUNDS_PER_DAY } from "../../src/bank";
@@ -56,6 +60,12 @@ export interface Session {
   bankVersion: number;
   dayIndex: number;
   rounds: (StoredRound | null)[];
+  /**
+   * The round in progress, if the player has placed a window or a pin but not locked it
+   * in. See `saveDraft`: scored rounds are already durable, this is the part a reload
+   * would otherwise throw away.
+   */
+  draft?: { round: number; guess: StoredGuess };
 }
 
 export interface StorageLike {
@@ -76,7 +86,14 @@ export function loadSession(bank: WordBank, utcMs: number, storage: StorageLike)
     try {
       const parsed = JSON.parse(raw) as Session;
       if (parsed.bankVersion === bank.version && parsed.dayIndex === dayIndex) {
-        if (parsed.rounds.length === ROUNDS_PER_DAY) return parsed;
+        if (parsed.rounds.length === ROUNDS_PER_DAY) {
+          // A draft means something only for the round it was written in. A session saved
+          // mid-round and resumed after that round was scored must not put the pin back
+          // on the map: the score is the record, and the round is over.
+          const round = parsed.rounds.findIndex((r) => r === null);
+          if (round === -1 || parsed.draft?.round !== round) delete parsed.draft;
+          return parsed;
+        }
       }
     } catch {
       // corrupt storage: fall through to a fresh session
@@ -94,6 +111,27 @@ export function currentRoundIndex(session: Session): number | null {
   const index = session.rounds.findIndex((r) => r === null);
   return index === -1 ? null : index;
 }
+/**
+ * Save the round in progress: the window and pin placed but not yet locked in.
+ *
+ * Scored rounds are durable on their own (`rounds`), so this is only about what would
+ * otherwise be lost to a reload - a pin someone had chosen and was about to submit. A
+ * completed day has no round in progress, so the draft goes away rather than lingering.
+ */
+export function saveDraft(session: Session, guess: StoredGuess, storage: StorageLike): void {
+  const round = currentRoundIndex(session);
+  if (round === null) delete session.draft;
+  else session.draft = { round, guess: { ...guess } };
+  persist(storage, session);
+}
+
+/** The saved draft, if it belongs to the round now being played (else null). */
+export function currentDraft(session: Session): StoredGuess | null {
+  const round = currentRoundIndex(session);
+  if (round === null || session.draft?.round !== round) return null;
+  return session.draft.guess;
+}
+
 
 /**
  * Record a guess for the given round. The round's word comes from the bank's
@@ -129,6 +167,7 @@ export function submitGuess(
     kmMissed: score.kmMissed,
   };
   session.rounds[roundIndex] = stored;
+  delete session.draft;
   persist(storage, session);
   return stored;
 }

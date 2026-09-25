@@ -179,14 +179,18 @@ far the guess was off in years and kilometers (`60 y late · 1,535 km off`, or
 plain-text result on the clipboard with one coloured square per round: blue 90+, green
 60+, yellow 30+, red below that, plus the average and the URL. Progress is kept in
 `localStorage` under `etymystery:v<bankVersion>:d<dayIndex>` so a reload mid-day
-resumes and a finished day is never re-scored. `npm run build:web` emits a fully
-static `web/dist/` — any file host serves it.
+resumes and a finished day is never re-scored: each round is written as it is locked in,
+and the round in progress is written as a draft, so the window and the pin someone had
+placed come back with the page. There is no way to wipe the day from the UI — replaying
+is not part of the game. The key carries the bank version on purpose: a rebuild re-deals
+the day, so an answer to the old deal cannot be carried over to the new one.
+`npm run build:web` emits a fully static `web/dist/` — any file host serves it.
 
-The committed `web/public/word-bank.json` is the **bank v3**: 620 entries across
-10 balanced tiers (37 days of puzzles), built from
-`curated/curation.json`. Rebuild it after curating — see "Ship it" in
-[CURATION.md](CURATION.md); the old `npm run build:seed` path still exists as a
-30-word stand-in for bootstrapping without the 4.2M-edge download.
+The committed `web/public/word-bank.json` is **bank v6**: 450 entries across 5 balanced
+tiers, five rounds a day (90 days of puzzles), built from `curated/curation.json`.
+Rebuild it after curating — see "Ship it" in [CURATION.md](CURATION.md); the old
+`npm run build:seed` path still exists as a 30-word stand-in for bootstrapping without
+the 4.2M-edge download.
 
 ## Data pipeline
 
