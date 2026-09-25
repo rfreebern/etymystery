@@ -457,3 +457,29 @@ describe("native-answer words and the quota", () => {
     expect(words).not.toContain("go");
   });
 });
+
+describe("the register rule at build time", () => {
+  it("drops a word the sense cache marks obsolete, and says which", () => {
+    const result = buildBankFromInputs({
+      edgesText: EDGES_CSV,
+      languagesText: LANGUAGES_TSV,
+      curation: CURATION,
+      version: 1,
+      epochStartDay: 0,
+      // What `unusableSenseKeys()` returns for a cache that labels `tsunami` obsolete.
+      excludedSenses: new Set(["tsunami"]),
+    });
+    const words = result.bank!.tiers.flat().map((entry) => entry.word);
+    expect(words).not.toContain("tsunami");
+    expect(result.report.excludedByLabel).toBe(1);
+    expect(result.report.warnings.join(" ")).toContain("obsolete");
+  });
+
+  it("filters nothing when the caller supplies no sense data", () => {
+    // The rule lives in scripts/lib/register.ts and is applied by the caller, so a build
+    // with no cache behaves exactly as before; the CLI prints that it did not check.
+    const { bank, report } = build();
+    expect(report.excludedByLabel).toBe(0);
+    expect(bank!.tiers.flat().map((entry) => entry.word)).toContain("tsunami");
+  });
+});

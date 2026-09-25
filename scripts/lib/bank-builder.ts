@@ -52,6 +52,12 @@ export interface BuildBankOptions {
    * England") removes the words whose answer is the same place as the asker,
    * which are unguessable-looking but trivially won by always pinning Britain.
    */
+  /**
+   * Sense keys (`word:pos`) the sense cache marks obsolete, archaic or literary, from
+   * `unusableSenseKeys()` in ./register. Omitted (or a cache that predates labels) filters
+   * nothing, which is why the build reports how many entries it actually judged.
+   */
+  excludedSenses?: ReadonlySet<string>;
   excludeOriginCodes?: ReadonlySet<string>;
   /**
    * Admit native-answer words to the bank anyway, up to this FRACTION of the entries
@@ -110,6 +116,8 @@ export interface BuildBankReport {
   overrideEdges: number;
   /** Candidates dropped from the work list because their answer language was excluded. */
   excludedByOrigin: number;
+  /** Entries dropped because Wiktionary marks the sense obsolete, archaic or literary. */
+  excludedByLabel: number;
   /** Native-answer entries admitted to the bank under the quota. */
   nativeAdmitted: number;
   /** Native-answer entries left out because the quota was already filled. */
@@ -196,6 +204,7 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     unverifiedEntries: 0,
     overrideEdges: 0,
     excludedByOrigin: 0,
+    excludedByLabel: 0,
     nativeAdmitted: 0,
     nativeDropped: 0,
     warnings: [],
@@ -272,6 +281,8 @@ export function buildBankFromInputs(options: BuildBankOptions): {
   }
 
   const entries: BankEntry[] = [];
+  /** Words dropped by the register rule, for one summary warning rather than one each. */
+  const excludedForRegister: string[] = [];
   const warnedLanguages = new Set<string>();
   // ---- senses -------------------------------------------------------------
   // A puzzle entry is a SENSE, not a word. Each distinct chain variant is one
@@ -376,6 +387,15 @@ export function buildBankFromInputs(options: BuildBankOptions): {
           `"${key}": the entry's "pos" (${curated.pos}) does not match its sense key; the key wins`,
         );
       }
+      // A word the dictionary itself marks obsolete, archaic or literary never reaches a
+      // player: a daily puzzle has to be a word someone can plausibly know. `musard`
+      // reached one, which is what put this rule here.
+      const senseKey = sense.pos ? `${sense.word}:${sense.pos}` : sense.word;
+      if (options.excludedSenses?.has(senseKey) || options.excludedSenses?.has(sense.word)) {
+        report.excludedByLabel += 1;
+        excludedForRegister.push(sense.word);
+        continue;
+      }
       const nativeCodes = options.nativeOriginCodes ?? options.excludeOriginCodes;
       const isNative = nativeCodes?.has(deepestCode) ?? false;
       if (isNative && !(options.nativeQuota && options.nativeQuota > 0)) {
@@ -464,6 +484,14 @@ export function buildBankFromInputs(options: BuildBankOptions): {
     });
   report.nativeDropped = pendingNative.length - report.nativeAdmitted;
   report.acceptedWords = entries.length;
+  if (excludedForRegister.length > 0) {
+    const named = excludedForRegister.slice(0, 10).join(", ");
+    const rest = excludedForRegister.length > 10 ? `, and ${excludedForRegister.length - 10} more` : "";
+    report.warnings.push(
+      `${excludedForRegister.length} entr${excludedForRegister.length === 1 ? "y" : "ies"} dropped as obsolete, ` +
+        `archaic or literary (Wiktionary's own label): ${named}${rest}`,
+    );
+  }
 
   const bank = options.assembleBank === false
     ? null

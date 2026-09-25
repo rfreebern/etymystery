@@ -547,6 +547,35 @@ Two things to expect when the batch lands:
   spent and each tier's tail is whatever is left. That is the pool, not the scheduler;
   adding words from thin regions is what moves it.
 
+### Words the dictionary itself rules out
+
+A daily puzzle has to be a word the player can plausibly know, and Wiktionary marks the
+senses that fail that test itself: `musard`, which reached a player, is `{{tlb|en|literary}}`.
+Where that vocabulary lives is worth knowing too - every entry with no frequency rank sits in
+the hardest tier, the round played every day, which is exactly where the obsolete words
+collect (237 of the 701 tiered entries, at the time of the report).
+
+Two signals have to agree before the build refuses a word, because neither is reliable
+alone:
+
+- **The label.** `obsolete`, `archaic` and `literary` mean "not ordinary current English".
+  Wiktionary marks *definition lines*, so the rule reads all of them and refuses a part of
+  speech only when every line is labelled. That is what keeps `disparage` (an obsolete first
+  sense, an ordinary second one) and drops `musard`.
+- **The frequency list.** A labelled word the list knows is current English; a word with no
+  rank that carries no label is simply borrowed (`okra`, `tsetse`, `samovar`). Labelled and
+  unranked, together, is what gets refused.
+
+`scripts/fetch-senses.ts` fills `data/word-senses.json` with the labels (`--refresh` after a
+parser change), `scripts/lib/register.ts` owns the rule, and it is applied in three places: the build drops
+refused entries and prints `register labels: N dropped ...`; `npm run curate -- --mode check`
+lists them where a curator can act; and the admin app shows the labels on each sense button
+so the next `musard` is visible before it is picked. Without the cache nothing can be judged,
+and the build says `NOT checked` rather than looking like it checked.
+
+A refused word needs no special handling in `--mode tier`: the rule only ever refuses words
+with no frequency rank, and an unranked key never reaches a tier slice.
+
 ### Two traps in choosing the origin
 
 **Do not pick a thin sibling route.** A word often has several routes recorded as

@@ -79,7 +79,7 @@ export interface QueueItem {
    * speech, a gloss to tell two senses of one part of speech apart, and the donor
    * languages each etymology names. Empty when the file is absent.
    */
-  senses: Array<{ pos: string; gloss: string; etymology: string; donors: string[] }>;
+  senses: Array<{ pos: string; gloss: string; etymology: string; donors: string[]; definitionLabels?: string[][] }>;
   /**
    * The span each recorded route implies, with the period it names. A homograph's
    * routes are different words, so they carry different spans (or none).
@@ -157,11 +157,28 @@ export function readWorklist(path: string): WorklistCandidate[] {
  */
 function readSenses(
   path: string | undefined,
-): Map<string, Array<{ pos: string; gloss: string; etymology: string; donors: string[] }>> {
-  const map = new Map<string, Array<{ pos: string; gloss: string; etymology: string; donors: string[] }>>();
+): Map<
+  string,
+  Array<{ pos: string; gloss: string; etymology: string; donors: string[]; definitionLabels?: string[][] }>
+> {
+  const map = new Map<
+    string,
+    Array<{ pos: string; gloss: string; etymology: string; donors: string[]; definitionLabels?: string[][] }>
+  >();
   if (!path) return map;
   const file = readJsonFile<
-    Record<string, { senses?: Array<{ pos: string; gloss: string; etymology?: string; donors?: string[] }> }> | null
+    Record<
+      string,
+      {
+        senses?: Array<{
+          pos: string;
+          gloss: string;
+          etymology?: string;
+          donors?: string[];
+          definitionLabels?: string[][];
+        }>;
+      }
+    > | null
   >(path, null);
   for (const [word, record] of Object.entries(file ?? {})) {
     const senses = (record.senses ?? [])
@@ -171,6 +188,9 @@ function readSenses(
         gloss: sense.gloss ?? "",
         etymology: sense.etymology ?? "",
         donors: sense.donors ?? [],
+        // Register labels ride along so the app can show the ones the build refuses a
+        // word over (see scripts/lib/register.ts) while the sense is being picked.
+        ...(sense.definitionLabels ? { definitionLabels: sense.definitionLabels } : {}),
       }));
     if (senses.length > 0) map.set(word, senses);
   }

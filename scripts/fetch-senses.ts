@@ -42,6 +42,12 @@ export interface SenseRecord {
   gloss: string;
   etymology: string;
   donors: string[];
+  /**
+   * Register labels per definition line, lowercased: "obsolete", "archaic", "literary".
+   * The bank refuses a part of speech whose every definition line is labelled, which is how
+   * words like `musard` stop reaching a player (see CURATION.md and ./lib/register.ts).
+   */
+  definitionLabels: string[][];
 }
 
 type SenseFile = Record<string, { fetchedAt: string; senses: SenseRecord[]; error?: string }>;
@@ -159,6 +165,7 @@ for (const word of todo) {
       gloss: sense.gloss,
       etymology: sense.etymology,
       donors: sense.donors.map(nameOf),
+      definitionLabels: sense.definitionLabels,
     })),
     ...(error ? { error } : {}),
   };

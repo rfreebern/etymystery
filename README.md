@@ -287,7 +287,10 @@ route when the same word has a fuller recorded chain beneath it (that is how
 `kiosk` came to ask about Persia while its blurb said Turkish), and writing a blurb
 that names a language the route cannot credit — a player follows the prose, pins
 that country, and is told they are wrong. `tests/reveal.test.ts` now enforces the
-blurb rule over the shipped bank.
+blurb rule over the shipped bank. Words the dictionary itself marks obsolete, archaic or
+literary never ship either, and neither do words with no frequency rank that carry such a
+label: the build reads Wiktionary's own register labels (see "Words the dictionary itself
+rules out" in [CURATION.md](CURATION.md)).
 Curation is mostly automated now: `--mode derive` writes the answer span for every word
 whose etymology names an English period (one word in six), `scripts/fetch-senses.ts`
 supplies the part of speech, gloss and donors per sense from the Wiktionary API (one
@@ -408,9 +411,11 @@ requires GitHub Pro or Team; on any free plan the repository has to be public, o
 point the same build output at another static host.
 
 The published site serves whatever `web/public/word-bank.json` contains - today
-bank v5: 450 entries, 90 days of five rounds, 139 curated entries flagged
+bank v6: 450 entries, 90 days of five rounds, 219 curated entries flagged
 `unverified` until a human checks them against a reference (see
-[CURATION.md](CURATION.md)).
+[CURATION.md](CURATION.md)). The build also refuses words Wiktionary marks obsolete,
+archaic or literary, so the vocabulary floor rises with every rebuild rather than only
+the calendar lengthening.
 
 ## Licensing
 

@@ -4,18 +4,20 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-25, session 22)
+## Status (as of 2026-09-25, session 23)
 
 Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
 (GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
-URL redirects there): 372/372 tests passing, typecheck clean, static build green. The priced-in work
+URL redirects there): 393/393 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
 sense's part of speech, gloss and donors (so a click picks the sense and its route),
-and a dated EEBO-TCP sample can contradict a year a reference gave. The bank is now bank v5: **450
-entries / 90 days** from 701 curated words (139 of them `unverified` until a human checks
-them), and a day is **five rounds** - one word per tier - instead of ten. Sessions 19 and 20
+and a dated EEBO-TCP sample can contradict a year a reference gave. The bank is bank v6: **450 entries / 90 days** from 636 shippable curated words (219 of
+them `unverified` until a human checks them), and a day is **five rounds** - one word
+per tier - instead of ten. Session 23 put a floor under the vocabulary: the build now
+refuses words Wiktionary marks obsolete, archaic or literary, so `musard` (which reached
+a player) cannot come back. Sessions 19 and 20
 went after the calendar's worst property: the bank was 93% Europe with 13 of 37 days holding
 no non-European round at all, and the deal now puts a non-European origin in every one of
 the 90 days it has.
@@ -1125,10 +1127,42 @@ on-land anchors** (this batch)
   produced and a screenshot of the footer), not only against the stylesheet.
 - tests: 362 total (+4 for the footer's structure and layout).
 
+**Session 23 - keeping words nobody uses off the puzzle** (this batch)
+
+- Reported: today's puzzle included `musard`, a word most English speakers have never met.
+  It turned out to be one symptom of a shape. The entry came from the derived batch
+  (`yearSource: chain-period`, no blurb, never checked by a human), and measuring showed
+  where that vocabulary collects: **237 of the 701 tiered entries have no frequency rank at
+  all, and every one of them sits in tier 5**, the round that is played every day.
+- The fix reads Wiktionary's own register labels, which the pipeline had been throwing away.
+  `scripts/lib/wikitext.ts` captures the label templates on every definition line
+  (`{{lb|en|obsolete}}`, and the inline `{{tlb|en|literary}}` that `musard` carries),
+  `scripts/lib/register.ts` owns the rule, and the build refuses a word and says so:
+  `register labels: 65 dropped as obsolete, archaic or literary`.
+- **Two signals have to agree, and that is the lesson.** The label alone dropped
+  `disparage` - Wiktionary labels BOTH of its senses obsolete, which is simply wrong about a
+  word in daily use - and the frequency list alone would drop every unranked word, which is
+  most of the borrowed vocabulary the bank exists for (`okra`, `tsetse`, `samovar`). Labelled
+  AND unranked is the rule. The 65 it removes are unmistakable: `accustomance`, `advoutry`,
+  `annoyous`, `battailous`, `bourd`, `cousinage`, `crownment`, `reys`, `sparble`, `tect`.
+- Reading only the FIRST definition line was the first attempt, and it condemned `disparage`;
+  the parser now records the labels of every definition line, and a part of speech is refused
+  only when all of them are labelled. A word survives on any uncondemned line, which is why
+  `foison` (two `archaic` lines and one `scotland`) is still in the bank.
+- Where a curator meets it: `npm run curate -- --mode check` prints `register labels: 65
+  curated entries marked obsolete, archaic or literary, so they will not ship`, the build then
+  drops them, and the admin app shows the label on each sense button, so the next `musard` is
+  visible while the sense is being picked rather than after a player meets it.
+- bank v6: **450 entries / 90 days**, 636 accepted (was 701), tiers 90/98/93/90/265. The rule
+  cost **no capacity at all**: the scarce tiers are 1 and 4 at 90 days, and tier 5 was 330 deep
+  precisely because that is where the unranked vocabulary piles up (175 entries there still
+  never play). Last puzzle 2026-12-19, new bank needed 2026-12-20 - unchanged.
+- tests: 393 (+21: the label reader, the register rule, and the two build/UI guards).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 372 passed (24 files)
+    npx vitest run            # 393 passed (25 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
@@ -1137,11 +1171,14 @@ on-land anchors** (this batch)
                                  # 4,222,599 rows -> 772,224 kept (~30 s)
     npx tsx scripts/build-bank.ts --edges data/edges-filtered.csv.gz \
       --languages data/languages.tsv --curation curated/curation.json \
-      --out data/word-bank.json --version 5 --epoch-start 2026-09-21 \
+      --out data/word-bank.json --version 6 --epoch-start 2026-09-21 \
       --frequency data/en-frequency.txt --exclude-origin en,ang,enm \
       --native-quota 0.1 --native-tiers 1,2
-                                 # bank v5: 450 entries / 90 days (5 tiers x 5 rounds);
-                                 # 62,544 candidate senses, 701 accepted, 0 skipped
+                                 # bank v6: 450 entries / 90 days (5 tiers x 5 rounds);
+                                 # 62,544 candidate senses, 636 accepted, 0 skipped;
+                                 # register labels: 65 dropped as obsolete/archaic/literary
+    npx tsx scripts/fetch-senses.ts --words data/all-words.txt --refresh --delay 150
+                                 # 596 words -> 594 with senses AND register labels
     npm run curate -- --mode tier --frequency data/en-frequency.txt
                                  # 470 ranked entries -> 94 per tier; capacity 94 days
     npx tsx scripts/fetch-senses.ts --from-batch data/curation-batch.json
@@ -1160,9 +1197,13 @@ on-land anchors** (this batch)
 
 ## Remaining (next session)
 
-1. Curate more — the loop is in CURATION.md. The bank is now bank v5: **450 entries /
-   90 days** from 701 curated words (139 drafts plus session 19's 81 region words, all
-   still `unverified`). Three jobs, in order:
+1. Curate more — the loop is in CURATION.md. The bank is bank v6: **450 entries / 90 days** from 636 shippable curated words
+   (219 still `unverified`). Three jobs, in order:
+   a0. **Decide what to do with the 65 entries the register rule refuses**
+      (`npm run curate -- --mode check` lists them). They cannot ship as they stand, so
+      each wants either deletion or a re-curation onto a sense that is still current;
+      they are the derived batch's archaic borrowings (`accustomance`, `battailous`,
+      `reys`, `sparble`), not the borrowed regional words the bank wants.
    a. **Verify the drafts.** `npm run curate -- --mode check` lists them;
       `npm run admin` shows each word beside Etymonline/Wiktionary/Ngrams so the
       date can be confirmed in one screen. Tick "checked against a reference" to
@@ -1482,3 +1523,15 @@ on-land anchors** (this batch)
   with the parts of speech as level-3 siblings. A reader that only knows the first
   shape reports "no senses" for the second, which looks like missing data rather than
   a parser gap.
+
+- A dictionary's register label is a good signal and a bad oracle. Wiktionary labels BOTH of
+  `disparage`'s senses obsolete, which is wrong about a word in daily use, so the rule needs a
+  second opinion (the frequency list) and keeps a word when either source says it is fine. The
+  label also belongs to a definition LINE rather than to a word: `disparage`'s verb section is
+  an obsolete line followed by two ordinary ones, and reading only the first line is what made
+  the first version of the rule wrong.
+- The obscurity problem is a tiering problem, not only a vocabulary problem. Every entry with
+  no frequency rank lands in tier 5, the round played every day, so a word nobody knows is
+  guaranteed to appear daily-adjacent; the register rule took out the 65 that are also obsolete,
+  and 175 unranked entries in that tier still never play at all. Any future "the words are too
+  obscure" report is worth measuring that way first (count tier 5 by rank).

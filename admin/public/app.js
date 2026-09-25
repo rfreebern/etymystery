@@ -194,8 +194,16 @@ function render() {
             // A sense whose donor matches a recorded route is a free answer: the click
             // picks the origin too, which is the decision that was blocking homographs.
             const route = item.routes.find((r) => sense.donors.includes(r.origin));
+            // Wiktionary's register labels decide whether the word can ship at all
+            // (`musard` is `literary`, `accustomance` is `obsolete`), so show them on the
+            // sense the curator is about to pick rather than leaving it to the build to
+            // refuse the entry later.
+            const refused = new Set(["obsolete", "archaic", "literary"]);
+            const labels = [...new Set((sense.definitionLabels || []).flat())];
             return `<button type="button" class="sense" data-sense="${i}">
-              <span class="sense-pos">${sense.pos}</span>
+              <span class="sense-pos">${sense.pos}${labels
+                .map((label) => `<span class="sense-label${refused.has(label) ? " warn" : ""}">${label}</span>`)
+                .join("")}</span>
               <span class="sense-gloss">${sense.gloss}</span>
               <span class="sense-meta">${sense.etymology}${route ? ` · ${route.origin}` : ""}${
                 sense.donors.length ? ` · ${sense.donors.slice(0, 3).join(", ")}` : ""

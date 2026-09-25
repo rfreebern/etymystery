@@ -108,5 +108,13 @@ a { color: #7fb2ff; }
 }
 .sense:hover { border-color: #666; }
 .sense-pos { color: var(--accent, #e0a44b); font-weight: 600; }
+/* A register label: quiet for the harmless ones (informal, US), amber for the ones the
+   build refuses a word over (obsolete, archaic, literary). */
+.sense-label {
+  margin-left: 6px; padding: 1px 6px; border-radius: 999px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+  background: rgba(255, 255, 255, 0.08); color: #c9cede;
+}
+.sense-label.warn { background: rgba(224, 163, 60, 0.18); color: #e0a33c; }
 .sense-gloss { color: #ddd; }
 .sense-meta { grid-column: 2; font-size: 11px; opacity: 0.65; }

@@ -51,13 +51,15 @@ function makeWorkspace(): AdminPaths {
             gloss: "The rear of the body.",
             etymology: "Etymology 1",
             donors: ["Middle English", "Old English"],
+            definitionLabels: [[]],
           },
-          { pos: "noun", gloss: "A large shallow vat.", etymology: "Etymology 2", donors: [] },
+          { pos: "noun", gloss: "A large shallow vat.", etymology: "Etymology 2", donors: [], definitionLabels: [["obsolete"]] },
           {
             pos: "verb",
             gloss: "To go in the reverse direction.",
             etymology: "Etymology 1",
             donors: ["Middle English", "Old English"],
+            definitionLabels: [[]],
           },
         ],
       },
@@ -384,6 +386,22 @@ describe("coarse answer spans in the admin app", () => {
     const inherited = back.senses.find((sense) => sense.etymology === "Etymology 1")!;
     expect(inherited.donors).toContain("Old English");
     expect(back.routes.some((route) => inherited.donors.includes(route.origin))).toBe(true);
+  });
+
+  it("carries the register labels, and shows them", () => {
+    // The build refuses words Wiktionary marks obsolete, archaic or literary. The app shows
+    // the labels while the sense is being picked, so the next `musard` is visible first.
+    const paths = makeWorkspace();
+    pullNextBatch(paths, 10);
+    const back = buildQueue(paths).queue.find((item) => item.word === "back")!;
+    expect(back.senses.map((sense) => sense.definitionLabels)).toEqual([[[]], [["obsolete"]], [[]]]);
+
+    const app = readFileSync("admin/public/app.js", "utf8");
+    expect(app).toContain("sense.definitionLabels");
+    expect(app).toContain('new Set(["obsolete", "archaic", "literary"])');
+    expect(app).toContain("sense-label");
+    const css = readFileSync("admin/public/style.css", "utf8");
+    expect(css).toMatch(/\.sense-label\.warn\s*\{[^}]*e0a33c/);
   });
 
   it("works without the senses file at all", () => {

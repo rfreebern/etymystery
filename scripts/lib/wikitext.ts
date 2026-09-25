@@ -49,6 +49,13 @@ const POS_NAMES = [
   "postposition",
 ];
 
+/**
+ * Templates that mark the register of a sense: `{{lb|en|obsolete}}`, or `{{tlb|en|literary}}`
+ * for the inline variant. `okra` and `tsetse` carry none; `musard` is `{{tlb|en|literary}}`,
+ * which is the reason a player had never met that word.
+ */
+const LABEL_TEMPLATES = /^\{\{\s*(lb|tlb|label|lbl)\s*(\||\}\})/i;
+
 /** Templates that state where a word came from. */
 const DONOR_TEMPLATES =
   /^\{\{\s*(inh|bor|der|bor\+|inh\+|der\+|slbor|ubor|learned borrowing|learned|calque|clq|borrowed|derived|inherited|etyl)\s*(\||\}\})/i;
@@ -62,6 +69,12 @@ export interface WiktionarySense {
   gloss: string;
   /** Donor language codes in the order the etymology names them, e.g. ["enm", "ang"]. */
   donors: string[];
+  /**
+   * Register labels per definition line in this section, in order: `[[]]` for an ordinary
+   * current sense, `[["literary"]]` for `musard`, and `[["obsolete"], []]` for a word like
+   * `disparage` that carries an obsolete sense and a current one.
+   */
+  definitionLabels: string[][];
 }
 
 /** Undo the markup that would otherwise leak into a gloss or a donor name. */
@@ -148,19 +161,74 @@ export function donorCodes(etymologyText: string): string[] {
   return codes;
 }
 
+/**
+ * The register labels a definition line carries, lowercased.
+ *
+ * Both argument shapes occur (`{{lb|en|obsolete}}` and `{{lb|1=en|2=obsolete}}`), and the
+ * first argument is always the language the label applies to rather than a label, so it is
+ * dropped. Duplicates collapse: two templates saying "obsolete" are one label.
+ */
+/**
+ * Words that appear among a label template's arguments but are not labels themselves:
+ * Wiktionary writes `{{lb|en|archaic|or|historical}}` to mean "archaic or historical".
+ */
+const LABEL_CONNECTIVES = new Set(["or", "and", "sometimes", "chiefly", "now", "usually", "especially", "broadly"]);
+
+export function senseLabels(definitionLine: string): string[] {
+  const labels: string[] = [];
+  for (const template of definitionLine.match(/\{\{[^{}]*\}\}/g) ?? []) {
+    if (!LABEL_TEMPLATES.test(template)) continue;
+    const args = template.replace(/^\{\{|\}\}$/g, "").split("|").slice(1);
+    const positional: string[] = [];
+    const named = new Map<string, string>();
+    for (const arg of args) {
+      const eq = arg.indexOf("=");
+      if (eq > 0) named.set(arg.slice(0, eq).trim(), arg.slice(eq + 1).trim());
+      else positional.push(arg.trim());
+    }
+    const values = [
+      ...positional.slice(1),
+      ...[...named.entries()].filter(([key]) => key !== "1").map(([, value]) => value),
+    ];
+    for (const value of values) {
+      const label = value.toLowerCase();
+      if (label && !LABEL_CONNECTIVES.has(label) && !labels.includes(label)) labels.push(label);
+    }
+  }
+  return labels;
+}
 function isPos(label: string): boolean {
   const clean = label.toLowerCase().replace(/\s*\(.*?\)\s*/g, " ").trim();
   return POS_NAMES.includes(clean);
 }
 
-function firstGloss(body: string): string {
+/**
+ * The first definition line of a part-of-speech section: its gloss, and the register
+ * labels written on that same line. They come from one place because that is how
+ * Wiktionary marks a sense: `# {{tlb|en|literary}} A dreamer; an absent-minded person.`
+ */
+/**
+ * A part-of-speech section's definitions: the gloss of the first, and the register labels
+ * of EVERY definition line in the section.
+ *
+ * All of them, not just the first, because that is the question the bank has to answer:
+ * does this part of speech still have a sense in current use? Wiktionary gives `disparage`
+ * an obsolete first sense and an ordinary second one, and reading only the first would
+ * condemn a word in daily use.
+ */
+function firstDefinition(body: string): { gloss: string; definitionLabels: string[][] } {
+  let gloss = "";
+  const definitionLabels: string[][] = [];
   for (const line of body.split("\n")) {
     const match = /^#\s+(?!#|:|\*)(.*)$/.exec(line);
     if (!match) continue;
-    const gloss = stripMarkup(match[1] ?? "");
-    if (gloss) return gloss;
+    const definition = match[1] ?? "";
+    definitionLabels.push(senseLabels(definition));
+    if (!gloss) gloss = stripMarkup(definition);
   }
-  return "";
+  // A section with no definition lines at all still needs a gloss field, and an empty
+  // list of labels says "nothing was read", which is what the register rule expects.
+  return { gloss: gloss || "", definitionLabels };
 }
 
 /**
@@ -194,7 +262,7 @@ export function parseEnglishSenses(wikitext: string): WiktionarySense[] {
       senses.push({
         etymology,
         pos: normalisePos(section.label),
-        gloss: firstGloss(section.body),
+        ...firstDefinition(section.body),
         donors,
       });
     }
@@ -212,7 +280,7 @@ export function parseEnglishSenses(wikitext: string): WiktionarySense[] {
       senses.push({
         etymology: chunk.label,
         pos: normalisePos(part.label),
-        gloss: firstGloss(part.body),
+        ...firstDefinition(part.body),
         donors,
       });
     }
@@ -234,7 +302,7 @@ export function parseEnglishSenses(wikitext: string): WiktionarySense[] {
     senses.push({
       etymology,
       pos: normalisePos(section.label),
-      gloss: firstGloss(section.body),
+      ...firstDefinition(section.body),
       donors,
     });
   }
@@ -269,7 +337,7 @@ function linearSenses(english: string): WiktionarySense[] {
       senses.push({
         etymology,
         pos: normalisePos(previous.label),
-        gloss: firstGloss(buffer.join("\n")),
+        ...firstDefinition(buffer.join("\n")),
         donors,
       });
     }

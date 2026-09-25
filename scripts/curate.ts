@@ -15,6 +15,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { TIER_COUNT } from "../src/bank";
+import { unusableSenseKeys } from "./lib/register";
 import { ANSWER_YEAR_MAX, ANSWER_YEAR_MIN, earliestEnglishEra } from "../src/timeline";
 import { loadDrawableCountries } from "./lib/map-coverage";
 import { parseFrequencyList } from "./lib/frequency";
@@ -50,6 +51,8 @@ const { values } = parseArgs({
     floor: { type: "string", default: String(ANSWER_YEAR_MIN) },
     ceiling: { type: "string", default: String(ANSWER_YEAR_MAX) },
     frequency: { type: "string" },
+    /** Sense cache used for the register rule; see --mode check. */
+    senses: { type: "string", default: "data/word-senses.json" },
   },
 });
 
@@ -156,6 +159,41 @@ if (!["next", "merge", "check", "tier", "derive"].includes(mode)) {
 }
 
 const curation = readJson<Curation>(values.curation!);
+
+/**
+ * The sense keys the register rule refuses, or an empty set when the cache is missing.
+ *
+ * `scripts/lib/register.ts` owns the policy; the CLI reads it in one place so the tier
+ * slices, the progress report and the build all agree on what can ship.
+ */
+function unusableFromCache(path: string, isKnown: (word: string) => boolean): Set<string> {
+  if (!existsSync(path)) return new Set();
+  const senses = JSON.parse(readFileSync(path, "utf8")) as Record<
+    string,
+    { senses: Array<{ pos: string; definitionLabels?: string[][] }> }
+  >;
+  return unusableSenseKeys(senses, isKnown);
+}
+/**
+ * The frequency ranks the CLI knows: the work list's own ranks, plus the `--frequency`
+ * list for words that have left the work list (a curated word leaves it, so the work list
+ * cannot rank the very entries being curated).
+ */
+function rankLookup(): Map<string, number> {
+  const rankOf = new Map<string, number>();
+  for (const candidate of parseWorklist(readFileSync(values.worklist!, "utf8"))) {
+    if (candidate.frequencyRank !== undefined) rankOf.set(candidate.word, candidate.frequencyRank);
+  }
+  if (values.frequency && existsSync(values.frequency)) {
+    const frequency = parseFrequencyList(readFileSync(values.frequency, "utf8"));
+    for (const key of Object.keys(curation)) {
+      const bare = key.split(":")[0] ?? key;
+      const rank = frequency.rankOf(bare);
+      if (rank !== undefined && rankOf.get(bare) === undefined) rankOf.set(bare, rank);
+    }
+  }
+  return rankOf;
+}
 
 if (mode === "next") {
   const candidates = parseWorklist(readFileSync(values.worklist!, "utf8"));
@@ -272,19 +310,13 @@ if (mode === "next") {
   // Rank from the frequency list when there is one: a curated word has LEFT the work
   // list, so the work list cannot rank the very entries being tiered (they all fell
   // to the hardest tier as "unranked", which capped the bank at whatever the work list had).
-  const rankOf = new Map(candidates.map((candidate) => [candidate.word, candidate.frequencyRank]));
-  if (values.frequency && existsSync(values.frequency)) {
-    const frequency = parseFrequencyList(readFileSync(values.frequency, "utf8"));
-    for (const key of Object.keys(curation)) {
-      const bare = key.split(":")[0] ?? key;
-      const rank = frequency.rankOf(bare);
-      if (rank !== undefined && rankOf.get(bare) === undefined) rankOf.set(bare, rank);
-    }
-  }
+  const rankOf = rankLookup();
   const keys = Object.keys(curation).filter((key) => Number.isFinite(curation[key]!.year));
   // Only words we can rank and that the pipeline can bank (a rank means the word has
   // a mappable chain) enter a tier; the rest are unfinishable today.
   const ranked = keys.filter((key) => rankOf.get(key.split(":")[0] ?? key) !== undefined);
+  // No register filter is needed here: a refused word is one with no frequency rank (*that*
+  // is what the rule refuses), and an unranked key never reaches a slice in the first place.
   const ordered = ranked.sort((a, b) => {
     const ra = rankOf.get(a.split(":")[0] ?? a)!;
     const rb = rankOf.get(b.split(":")[0] ?? b)!;
@@ -331,6 +363,27 @@ if (mode === "next") {
   console.log(`${audit.curated} of ${candidates.length} candidate senses have a year`);
   console.log(`tier counts: ${tierCounts.join(", ")}`);
   console.log(`capacity: ${Math.min(...tierCounts)} days of puzzles (the scarcest tier sets it)`);
+  // The register rule drops these at build time, so they are not really capacity: a
+  // curator should see them here, where it is still actionable, and not only in a build
+  // log. `musard` (Wiktionary: literary) is what prompted the rule.
+  const sensesPath = values.senses;
+  if (existsSync(sensesPath)) {
+    const ranks = rankLookup();
+    const unusable = unusableFromCache(sensesPath, (word) => ranks.get(word) !== undefined);
+    const marked = Object.keys(curation).filter(
+      (key) => unusable.has(key) || unusable.has(key.split(":")[0] ?? key),
+    );
+    console.log(
+      `register labels: ${marked.length} curated entr${marked.length === 1 ? "y" : "ies"} marked obsolete, ` +
+        `archaic or literary, so they will not ship`,
+    );
+    if (marked.length > 0) {
+      const shown = marked.slice(0, 12).join(", ");
+      console.log(`   ${shown}${marked.length > 12 ? `, and ${marked.length - 12} more` : ""}`);
+    }
+  } else {
+    console.log(`register labels: not checked (no ${sensesPath})`);
+  }
   const unverified = Object.entries(curation)
     .filter(([, entry]) => entry.unverified && Number.isFinite(entry.year))
     .map(([word]) => word);

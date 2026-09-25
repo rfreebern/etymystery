@@ -19,6 +19,7 @@ import { ROUNDS_PER_DAY } from "../src/bank";
 import { dayNumberForDate } from "../src/daily";
 import { buildBankFromInputs, type CurationEntry } from "./lib/bank-builder";
 import { parseFrequencyList } from "./lib/frequency";
+import { unusableSenseKeys } from "./lib/register";
 
 const { values } = parseArgs({
   options: {
@@ -46,6 +47,8 @@ const { values } = parseArgs({
     "no-overrides": { type: "boolean", default: false },
     "worklist-only": { type: "boolean", default: false },
     worklist: { type: "string" },
+    /** Sense cache used for the register rule; see the load below. */
+    senses: { type: "string", default: "data/word-senses.json" },
   },
 });
 
@@ -104,6 +107,32 @@ if (overridePath) {
   }
 }
 
+/**
+ * The sense cache, for Wiktionary's register labels.
+ *
+ * A word whose curated sense is marked obsolete, archaic or literary does not reach the
+ * bank: a daily puzzle has to be a word someone can plausibly know, and `musard`
+ * ({{tlb|en|literary}}) reached a player before this rule existed. Without the cache
+ * nothing can be judged, and the build says so rather than looking like it checked.
+ */
+const sensesPath = values.senses!;
+let excludedSenses: Set<string> | undefined;
+let cachedWords = 0;
+let judgedWords = 0;
+if (existsSync(sensesPath)) {
+  const senses = JSON.parse(readFileSync(sensesPath, "utf8")) as Record<
+    string,
+    { senses: Array<{ pos: string; definitionLabels?: string[][] }> }
+  >;
+  cachedWords = Object.keys(senses).length;
+  judgedWords = Object.values(senses).filter(
+    (record) => record.senses.length > 0 && record.senses.every((sense) => Array.isArray(sense.definitionLabels)),
+  ).length;
+  // The label alone is not enough: Wiktionary also calls `disparage` obsolete, and it is
+  // an ordinary word. A labelled word the frequency list knows is current English.
+  excludedSenses = unusableSenseKeys(senses, (word) => frequency?.rankOf(word) !== undefined);
+}
+
 const worklist: Array<{ rank: number; line: string }> = [];
   const { bank, report } = buildBankFromInputs({
     edgesText: readMaybeGzip(values.edges!),
@@ -116,6 +145,7 @@ const worklist: Array<{ rank: number; line: string }> = [];
     maxChainDepth,
     frequency,
     excludeOriginCodes,
+    excludedSenses,
     nativeQuota: values["native-quota"] ? Number.parseFloat(values["native-quota"]!) : undefined,
     nativeTiers: values["native-tiers"]
       ? values["native-tiers"]!.split(",").map((tier) => Number.parseInt(tier, 10))
@@ -155,6 +185,17 @@ const worklist: Array<{ rank: number; line: string }> = [];
     );
   } else {
     console.log("override edges: disabled (--no-overrides)");
+  }
+  if (excludedSenses) {
+    console.log(
+      `register labels: ${report.excludedByLabel} dropped as obsolete, archaic or literary ` +
+        `(${judgedWords} of ${cachedWords} cached words carry labels, from ${sensesPath})`,
+    );
+  } else {
+    console.log(
+      `register labels: NOT checked (no ${sensesPath}; run scripts/fetch-senses.ts to fill it), ` +
+        `so obsolete words can still ship`,
+    );
   }
   if (report.ambiguousWords) {
     console.log(

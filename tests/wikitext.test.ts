@@ -12,7 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { donorCodes, parseEnglishSenses, stripMarkup } from "../scripts/lib/wikitext";
+import { donorCodes, parseEnglishSenses, senseLabels, stripMarkup } from "../scripts/lib/wikitext";
 
 const BACK = `==English==
 
@@ -148,5 +148,74 @@ describe("reading the senses of an English word", () => {
   it("returns nothing for a page with no English section", () => {
     expect(parseEnglishSenses("==French==\n\n===Noun===\n# mot\n")).toEqual([]);
     expect(parseEnglishSenses("")).toEqual([]);
+  });
+});
+
+describe("the register labels on a sense", () => {
+  // The signal that keeps words nobody uses off the puzzle: Wiktionary marks such senses
+  // itself, and `musard` carries `{{tlb|en|literary}}` on its only English noun sense.
+  const MUSARD = `==English==
+
+===Etymology===
+From {{bor|en|frm|musard}}.
+
+===Noun===
+# {{tlb|en|literary}} A [[dreamer]]; an [[absent-minded]] person.
+
+==French==
+
+===Adjective===
+# {{lb|fr|dated}} spending one's time musing
+`;
+
+  it("reads the labels off the definition line", () => {
+    const [sense] = parseEnglishSenses(MUSARD);
+    expect(sense!.gloss).toBe("A dreamer; an absent-minded person.");
+    expect(sense!.definitionLabels).toEqual([["literary"]]);
+  });
+
+  it("ignores the labels of other languages on the same page", () => {
+    // The French section's `dated` must not leak into the English sense.
+    expect(parseEnglishSenses(MUSARD).every((sense) => !sense.definitionLabels.flat().includes("dated"))).toBe(true);
+  });
+
+  it("collapses duplicates and keeps the order", () => {
+    expect(senseLabels("# {{lb|en|archaic|dialectal}} Old use.")).toEqual(["archaic", "dialectal"]);
+    expect(senseLabels("# {{lb|en|obsolete}}{{lb|en|obsolete}} Gone.")).toEqual(["obsolete"]);
+  });
+
+  it("accepts the named-argument shape", () => {
+    expect(senseLabels("# {{lb|1=en|2=obsolete}} Gone.")).toEqual(["obsolete"]);
+  });
+
+  it("reads the language code as a language, not as a label", () => {
+    expect(senseLabels("# {{lb|en}} A plain sense.")).toEqual([]);
+    expect(senseLabels("# {{tlb|en|US}} American.")).toEqual(["us"]);
+    expect(senseLabels("# No template at all.")).toEqual([]);
+  });
+
+  it("reports nothing for an ordinary current sense", () => {
+    // What the shipped regional words look like: no register label anywhere.
+    const [sense] = parseEnglishSenses(`==English==
+
+===Etymology===
+From {{bor|en|tn|tsetse}}.
+
+===Noun===
+# Any fly of the genus Glossina.
+`);
+    expect(sense!.definitionLabels).toEqual([[]]);
+  });
+
+  it("always carries the field, so a record can never look unlabelled by accident", () => {
+    for (const sense of parseEnglishSenses(BACK)) expect(Array.isArray(sense.definitionLabels)).toBe(true);
+  });
+});
+
+describe("connective words in a label template", () => {
+  it("does not read 'or' as a label", () => {
+    // Wiktionary writes `{{lb|en|archaic|or|historical}}` to mean "archaic or historical".
+    expect(senseLabels("# {{lb|en|archaic|or|historical}} A stew.")).toEqual(["archaic", "historical"]);
+    expect(senseLabels("# {{lb|en|chiefly|US}} American.")).toEqual(["us"]);
   });
 });
