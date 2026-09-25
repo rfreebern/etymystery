@@ -4,7 +4,7 @@
  */
 
 import { ROUNDS_PER_DAY, TIER_COUNT, validateBank } from "../../src/bank";
-import { dayIndexFor, getDailyPuzzle, totalPuzzles } from "../../src/daily";
+import { dayIndexFor, getDailyPuzzle } from "../../src/daily";
 import { answerSpan, spanGapYears } from "../../src/scoring";
 import {
   ANSWER_YEAR_MAX,
@@ -119,10 +119,17 @@ async function boot(): Promise<void> {
   }
 
 
-  /** The top bar: which puzzle this is, and the clock to the next one. */
+  /**
+   * The top bar: which puzzle this is, and the clock to the next one.
+   *
+   * Just the number and the date. Not which curation batch built the bank (a detail for
+   * whoever curates it), and not how many puzzles it holds: new puzzles are appended, so
+   * this number counts from the epoch and stays put as the bank grows, where a total would
+   * only ever read as a countdown to the game ending.
+   */
   function renderDayLabel(): void {
     document.getElementById("puzzle-line")!.textContent =
-      `Puzzle ${dayIndex + 1} of ${totalPuzzles(bank)} · ${dateLabel(utcMs)} UTC`;
+      `Puzzle ${dayIndex + 1} · ${dateLabel(utcMs)} UTC`;
   }
 
   /** Set once the day is finished, so a turnover has no round in progress to lose. */

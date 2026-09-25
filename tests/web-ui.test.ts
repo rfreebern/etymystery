@@ -309,10 +309,12 @@ describe("the top bar clock", () => {
     expect(label).toContain('id="puzzle-line"');
     expect(label).toContain('id="countdown"');
     expect(main).toContain('document.getElementById("puzzle-line")!');
-    // How far through the bank this is, not which curation batch built it: the version
-    // number means nothing to a player.
-    expect(main).toContain("Puzzle ${dayIndex + 1} of ${totalPuzzles(bank)}");
+    // Just which puzzle it is, plus the date. Not the bank's version (a curation detail),
+    // and not how many puzzles are banked: the bank keeps being extended, and appends
+    // preserve the day number, so a total would only read as a countdown to an ending.
+    expect(main).toContain("Puzzle ${dayIndex + 1} · ${dateLabel(utcMs)} UTC");
     expect(main).not.toContain("bank v");
+    expect(main).not.toContain("totalPuzzles");
   });
 
   it("ticks once a second, from the shared countdown module", () => {

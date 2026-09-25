@@ -4,7 +4,7 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-25, session 25)
+## Status (as of 2026-09-25, session 26)
 
 Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
 (GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
@@ -19,8 +19,9 @@ per tier - instead of ten. Session 23 put a floor under the vocabulary: the buil
 refuses words Wiktionary marks obsolete, archaic or literary, so `musard` (which reached
 a player) cannot come back. Session 24 removed the day-level reset and made the client keep
 the whole day - scored rounds and the round in progress - so a reload resumes rather than
-replays, and session 25 made the reveal frame both the guess and the answer, with every new
-word starting from the whole world. Sessions 19 and 20
+replays, session 25 made the reveal frame both the guess and the answer, with every new
+word starting from the whole world, and session 26 took the bank's size off the header, since
+the bank is meant to be extended indefinitely rather than counted down. Sessions 19 and 20
 went after the calendar's worst property: the bank was 93% Europe with 13 of 37 days holding
 no non-European round at all, and the deal now puts a non-European origin in every one of
 the 90 days it has.
@@ -1205,6 +1206,26 @@ on-land anchors** (this batch)
   `translate(0 0) scale(1)`.
 - tests: 406 (+8).
 
+**Session 26 - the header stops counting to an ending** (this batch)
+
+- Requested: drop `of 90` from the top bar, since the plan is to keep extending the bank for
+  years and a total only reads as a countdown. The line is now
+  `Puzzle 5 · September 25, 2026 UTC`.
+- The number is safe on its own: `appendToBank` indexes the days already shipped instead of
+  re-dealing them (its comment says why, and `tests/bank.test.ts` pins the behaviour), so
+  puzzle 5 stays puzzle 5 however large the bank grows.
+- `totalPuzzles` is no longer imported by the client, and the top-bar test now asserts the
+  client names neither the bank's size nor its version. That guard immediately caught this
+  session's own comment saying "bank version" - which is the guard doing its job, not a
+  false alarm to be papered over.
+- **Mechanism worth knowing for the years-long plan:** appending is how the bank is meant to
+  grow on a live game, and no script drives it yet. `npx tsx scripts/build-bank.ts ...` builds
+  a FRESH bank, which re-deals every existing day: that is what v5 -> v6 did to the puzzle of
+  the day it shipped. Extending without disturbing shipped days wants an `--append-to <bank>`
+  flag that loads the shipped bank, drops the entries it already has by id, and appends the
+  rest with `appendToBank(shipped, fresh, version + 1)`. Recorded under Remaining.
+- tests: 406 (no count change: the assertion moved, it did not multiply).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
@@ -1298,6 +1319,12 @@ on-land anchors** (this batch)
    countdown (works today; the nightly rebuild needs the 143 MB asset).
 6. Optional polish (not requested): share/streak summary, per-round distance
    readout on reveal, keyboard + screen-reader pass over slider and map.
+7. **Append-only growth for a live game** (see session 26): wire `appendToBank` into the CLI as
+   `--append-to <shipped bank>` — load it, drop the entries it already holds by id, append the
+   rest with the next version — so extending the bank does not re-deal days players have
+   already scored. Decide what a *correction* to a shipped entry does (append-only keeps the
+   old year, which is fair to scored players and wrong forever), and note that new days still
+   need words in every tier, because the day count is the smallest tier.
 
 ## Gotchas learned (do not re-fight)
 
