@@ -259,6 +259,33 @@ describe("the solution footer", () => {
   });
 });
 
+describe("framing the reveal", () => {
+  it("pulls the view back when a pin would be off screen, and only then", () => {
+    const reveal = functionBody(map, "revealAnswer");
+    // Both pins are considered together, and the fit runs only if one of them is off
+    // screen: the zoom was the player's choice, so it is otherwise left alone.
+    expect(reveal).toContain("[guess, entry.point]");
+    expect(reveal).toMatch(/points\.some\(\(point\) => !visibleAt/);
+    expect(reveal).toContain("fitPoints(view, points, WIDTH, HEIGHT)");
+    // The margin is the pin's own radius, which is counter-scaled, not a constant.
+    expect(reveal).toContain("PIN_RADIUS / view.k");
+  });
+
+  it("starts every word from the whole world", () => {
+    // The previous round may have been pulled in to frame a far-off answer.
+    const round = functionBody(main, "renderRound");
+    expect(round).toContain("worldMap.resetView()");
+    expect(round.indexOf("worldMap.clearReveal()")).toBeLessThan(
+      round.indexOf("worldMap.resetView()"),
+    );
+  });
+
+  it("resets to exactly the fitted view", () => {
+    // Not a remembered zoom: "fully zoomed out" has to mean the same thing every time.
+    expect(functionBody(map, "resetView")).toContain("...IDENTITY");
+  });
+});
+
 describe("a reload resumes the day", () => {
   it("writes the day to storage as it is played, and offers no way to wipe it", () => {
     // Each scored round is persisted on lock-in, and the round in progress as a draft, so

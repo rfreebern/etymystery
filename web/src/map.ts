@@ -10,7 +10,18 @@
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import type { CountryFeature } from "./geo-context";
 import type { BankEntry, LatLng } from "../../src/types";
-import { IDENTITY, ZOOM_STEP, panBy, pinch, toMapPoint, viewTransform, zoomAt, type View } from "./view";
+import {
+  IDENTITY,
+  ZOOM_STEP,
+  fitPoints,
+  panBy,
+  pinch,
+  toMapPoint,
+  viewTransform,
+  visibleAt,
+  zoomAt,
+  type View,
+} from "./view";
 
 const WIDTH = 960;
 const HEIGHT = 500;
@@ -250,7 +261,21 @@ export function createWorldMap(container: HTMLElement, features: CountryFeature[
       for (const pathEl of Array.from(layerHighlight.children)) {
         (pathEl as Element).setAttribute("class", "country-answer");
       }
-      drawMarkers();
+      // The answer can be an ocean away from the guess, and from wherever the player had
+      // zoomed in to drop the guess. If either pin would land off screen (or half off it),
+      // pull the view back until both are on it with a little room around them; otherwise
+      // leave the view exactly where the player left it, because the zoom was their choice.
+      const points = [guess, entry.point]
+        .map((point) => (point ? projection([point.lng, point.lat]) : null))
+        .filter((projected): projected is [number, number] => projected !== null)
+        .map(([x, y]) => ({ x, y }));
+      const margin = PIN_RADIUS / view.k;
+      if (points.some((point) => !visibleAt(view, point, WIDTH, HEIGHT, margin))) {
+        view = fitPoints(view, points, WIDTH, HEIGHT);
+        applyView();
+      } else {
+        drawMarkers();
+      }
     },
     clearReveal() {
       answer = null;

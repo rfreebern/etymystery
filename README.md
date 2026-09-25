@@ -163,7 +163,11 @@ guess would misrepresent it. The answer is then marked on the timeline: a green
 circle on its year, or a green band across those years when the record only bounds
 the date. Either way it shows *in front of* the tablet when the answer falls inside
 your 100 years rather than disappearing behind it. Zoom and pan stay live — inspecting
-the answer is what the map is for at that point. The reveal leads with the word in
+the answer is what the map is for at that point. If the answer's pin (or your own) would
+land off screen, the reveal pulls the view back until both are on it with a little padding
+around them, and never zooms in past the view you chose; the next word starts from the
+whole world again, so nothing is inherited from the answer before it. The reveal leads
+with the word in
 medium type, then the answer in larger type (`Latin · first used around 1200`, or
 `Old English · first recorded between 700 and 1150`) since the answer is what
 the round was about, then the score chips, the credit line and the full origin route

@@ -4,11 +4,11 @@ If a session drops, say "continue". Cline re-orients from this file, then runs:
 
     npx tsc --noEmit && npx vitest run && npx vite build web
 
-## Status (as of 2026-09-25, session 24)
+## Status (as of 2026-09-25, session 25)
 
 Engine + pipeline + web client COMPLETE, published at <https://etymystery.com/>
 (GitHub Pages, auto-deployed from `main`; the `rfreebern.github.io/etymystery/`
-URL redirects there): 398/398 tests passing, typecheck clean, static build green. The priced-in work
+URL redirects there): 406/406 tests passing, typecheck clean, static build green. The priced-in work
 of sessions 13-15 was making curation stop being manual: the timeline scores a coarse
 `year`..`yearTo` span, `--mode derive` fills that span in for the one word in six whose
 chain names an English period (490 drafted with no research), the admin app shows each
@@ -19,7 +19,8 @@ per tier - instead of ten. Session 23 put a floor under the vocabulary: the buil
 refuses words Wiktionary marks obsolete, archaic or literary, so `musard` (which reached
 a player) cannot come back. Session 24 removed the day-level reset and made the client keep
 the whole day - scored rounds and the round in progress - so a reload resumes rather than
-replays. Sessions 19 and 20
+replays, and session 25 made the reveal frame both the guess and the answer, with every new
+word starting from the whole world. Sessions 19 and 20
 went after the calendar's worst property: the bank was 93% Europe with 13 of 37 days holding
 no non-European round at all, and the deal now puts a non-European origin in every one of
 the 90 days it has.
@@ -1183,10 +1184,31 @@ on-land anchors** (this batch)
   score, and no draft, in storage. Commands in the Verification section.
 - tests: 398 (+5: four on the draft in `game.test.ts`, one guard on the client wiring).
 
+**Session 25 - the reveal frames itself, and every word starts from the whole world** (this batch)
+
+- Requested: when a guess is locked in, if the answer's pin is not on screen, pull the view
+  back until the guess and the answer are both visible (with a little space around the edges),
+  and start each new word fully zoomed out.
+- `web/src/view.ts` gained the geometry: `visibleAt` (is a point on screen, with a margin for
+  the pin's own counter-scaled radius) and `fitPoints` (the zoom and centre that hold every
+  point, clamped like all the other view maths, **never zooming in** past what the player had
+  chosen, and giving up padding before it gives up a point). Five new cases in
+  `tests/view.test.ts`, including the corner where the pan clamp is what decides.
+- `revealAnswer` runs that check on `[guess, entry.point]` and moves the view only when one of
+  them would be off screen, so a player who zoomed in to inspect the answer keeps that view.
+  `renderRound` now calls `resetView()` (k=1, no pan), so a word never inherits the framing of
+  the last answer.
+- Verified in the browser with the probe (`?act=map`, see the Verification section): four
+  zoom-in clicks took the view to 3.84x, the pin was dropped in a corner, and the reveal came
+  back at 2.67x with the guess at (354, 456) and the answer at (606, 44) - the 44-unit padding
+  exactly, because the pair's height was what set the zoom. `Next word` restored
+  `translate(0 0) scale(1)`.
+- tests: 406 (+8).
+
 ## Verification (re-run before trusting anything)
 
     npx tsc --noEmit          # clean
-    npx vitest run            # 398 passed (25 files)
+    npx vitest run            # 406 passed (25 files)
     npx vite build web        # 71.4 kB js (24.6 kB gzip) / 6.6 kB css (2.0 kB gzip)
     npx tsx scripts/bootstrap-languages.ts --codes data/wiktionary_codes.csv \
       --out data/languages.tsv   # 322 languages (overlay 284, derived 38)
@@ -1229,6 +1251,8 @@ on-land anchors** (this batch)
                                  # slider 1300 + a pin placed; storage shows the draft
     # Run the same command without ?act and the same profile: the window and the pin come
     # back, which is the reload a player experiences.
+    # ?act=map instead zooms in four times, drops a pin in a corner, locks it in, and reports
+    # both pins' screen positions plus the transform after `Next word`.
 
 ## Remaining (next session)
 

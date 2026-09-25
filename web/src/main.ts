@@ -186,6 +186,9 @@ async function boot(): Promise<void> {
   function renderRound(): void {
     const index = currentRoundIndex(session);
     worldMap.clearReveal();
+    // The reveal may have zoomed in to show an answer the guess was far from; the next
+    // word starts from the whole world again, so nothing is assumed about where it is.
+    worldMap.resetView();
     // The previous round's lock must not leak into this one.
     worldMap.allowPicking(true);
     // A fresh window each round: keeping the previous round's placement would

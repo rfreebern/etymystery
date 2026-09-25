@@ -5,15 +5,19 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  FIT_PADDING,
   IDENTITY,
   MAX_ZOOM,
   MIN_ZOOM,
   ZOOM_STEP,
   clampView,
+  fitPoints,
   panBy,
   pinch,
   toMapPoint,
+  toScreen,
   viewTransform,
+  visibleAt,
   zoomAt,
 } from "../web/src/view";
 
@@ -104,5 +108,62 @@ describe("pinch", () => {
   it("ignores a degenerate span instead of producing NaN", () => {
     const view = pinch(IDENTITY, { midX: 10, midY: 10, distance: 0 }, { midX: 10, midY: 10, distance: 0 }, W, H);
     expect(view).toEqual(IDENTITY);
+  });
+});
+
+describe("framing two points on the map", () => {
+  const W = 960;
+  const H = 500;
+  /** Zoomed in on (480, 250), the guess: the answer at (700, 300) is well off screen. */
+  const zoomed = { k: 6, tx: -2400, ty: -1000 };
+  const guess = { x: 480, y: 250 };
+  const answer = { x: 700, y: 300 };
+
+  it("sees what is off screen, with a margin for the pin's own radius", () => {
+    expect(visibleAt(zoomed, guess, W, H)).toBe(true);
+    expect(visibleAt(zoomed, answer, W, H)).toBe(false);
+    // A point a hair inside the edge is only half a pin, so a margin rejects it.
+    const edge = { x: 479, y: 250 };
+    expect(visibleAt(zoomed, edge, W, H, 0)).toBe(true);
+    expect(visibleAt(zoomed, edge, W, H, 20)).toBe(false);
+  });
+
+  it("zooms out until both fit, with padding at the edges", () => {
+    const fitted = fitPoints(zoomed, [guess, answer], W, H);
+    expect(fitted.k).toBeLessThan(zoomed.k);
+    for (const point of [guess, answer]) {
+      expect(visibleAt(fitted, point, W, H, 7)).toBe(true);
+      const screen = toScreen(fitted, point);
+      // The span is what set the zoom, so the padding is used on that axis.
+      expect(screen.x).toBeGreaterThanOrEqual(FIT_PADDING - 1e-6);
+      expect(screen.x).toBeLessThanOrEqual(W - FIT_PADDING + 1e-6);
+      expect(screen.y).toBeGreaterThanOrEqual(FIT_PADDING - 1e-6);
+      expect(screen.y).toBeLessThanOrEqual(H - FIT_PADDING + 1e-6);
+    }
+  });
+
+  it("never zooms in past the view it was given", () => {
+    // Two pins in the same city, on a player who had zoomed all the way out.
+    const near = fitPoints(IDENTITY, [{ x: 480, y: 250 }, { x: 484, y: 252 }], W, H);
+    expect(near.k).toBe(IDENTITY.k);
+    // And it centres them, so a pin near the edge of a hard zoom comes into view.
+    const panned = { k: 8, tx: -7000, ty: -3700 };
+    const centred = fitPoints(panned, [guess], W, H);
+    expect(centred.k).toBe(8);
+    expect(toScreen(centred, guess).x).toBeCloseTo(W / 2, 6);
+    expect(toScreen(centred, guess).y).toBeCloseTo(H / 2, 6);
+  });
+
+  it("stays within the pan limits, giving up padding rather than a point", () => {
+    // A corner of the map: the clamp is what decides, and both points still land.
+    const corner = fitPoints({ k: 5, tx: -4000, ty: -2000 }, [{ x: 4, y: 3 }, { x: 40, y: 30 }], W, H);
+    expect(corner).toEqual(clampView(corner, W, H));
+    for (const point of [{ x: 4, y: 3 }, { x: 40, y: 30 }]) {
+      expect(visibleAt(corner, point, W, H)).toBe(true);
+    }
+  });
+
+  it("leaves a view with nothing to fit exactly as it was", () => {
+    expect(fitPoints(zoomed, [], W, H)).toEqual(zoomed);
   });
 });
